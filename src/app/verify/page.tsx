@@ -140,7 +140,7 @@ function VerifyForm() {
             inputMode="numeric"
             autoComplete="one-time-code"
             maxLength={6}
-            className="rounded-xl border border-black/10 bg-white px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] outline-none placeholder:text-zinc-300 focus:border-indigo dark:border-white/10 dark:bg-ink"
+            className="rounded-xl border border-black/10 bg-white px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] outline-none placeholder:text-zinc-300 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
           />
         </label>
 

@@ -145,7 +145,7 @@ function LoginForm() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Adaeze Okafor"
               autoComplete="name"
-              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink"
+              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
             />
           </label>
 
@@ -156,7 +156,7 @@ function LoginForm() {
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value as CountryKey)}
-                  className="rounded-xl border border-black/10 bg-white px-3 py-3 text-[16px] outline-none focus:border-indigo dark:border-white/10 dark:bg-ink"
+                  className="rounded-xl border border-black/10 bg-white px-3 py-3 text-[16px] outline-none focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
                 >
                   {COUNTRIES.map((c) => (
                     <option key={c.key} value={c.key}>
@@ -176,7 +176,7 @@ function LoginForm() {
                   placeholder="801 234 5678"
                   autoComplete="tel"
                   inputMode="tel"
-                  className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink"
+                  className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
                 />
               </label>
             </div>
@@ -190,7 +190,7 @@ function LoginForm() {
                 placeholder="you@example.com"
                 autoComplete="email"
                 inputMode="email"
-                className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink"
+                className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
               />
             </label>
           )}

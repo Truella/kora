@@ -83,7 +83,7 @@ function AddPhoneForm() {
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value as CountryKey)}
-              className="rounded-xl border border-black/10 bg-white px-3 py-3 text-[16px] outline-none focus:border-indigo dark:border-white/10 dark:bg-ink"
+              className="rounded-xl border border-black/10 bg-white px-3 py-3 text-[16px] outline-none focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
             >
               {(Object.keys(COUNTRY_CODES) as CountryKey[]).map((key) => (
                 <option key={key} value={key}>
@@ -101,7 +101,7 @@ function AddPhoneForm() {
               placeholder="801 234 5678"
               autoComplete="tel"
               inputMode="tel"
-              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink"
+              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
             />
           </label>
         </div>
