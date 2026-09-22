@@ -4,6 +4,8 @@ import { UserGroupIcon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import PayButton from "./PayButton";
 import ConfirmingBanner from "./ConfirmingBanner";
+import InviteButton from "./InviteButton";
+import VoteButtons from "./VoteButtons";
 
 export const metadata = { title: "Circle" };
 
@@ -94,6 +96,37 @@ export default async function GroupDetailPage({
     (contributions ?? []).map((c) => [c.cycle_id, c]),
   );
 
+  // Pending join requests + their votes. Visible to members only via
+  // RLS; status flips come from the tally_join_votes trigger, never
+  // from the client.
+  const { data: requests } = member
+    ? await supabase
+        .from("join_requests")
+        .select("id, applicant_id, created_at")
+        .eq("group_id", id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: true })
+    : { data: [] };
+
+  const { data: votes } =
+    member && requests && requests.length > 0
+      ? await supabase
+          .from("join_votes")
+          .select("join_request_id, vote")
+          .in(
+            "join_request_id",
+            requests.map((r) => r.id),
+          )
+      : { data: [] };
+
+  const tally = new Map<string, { approve: number; reject: number }>();
+  for (const v of votes ?? []) {
+    const t = tally.get(v.join_request_id) ?? { approve: 0, reject: 0 };
+    if (v.vote === "approve") t.approve += 1;
+    else t.reject += 1;
+    tally.set(v.join_request_id, t);
+  }
+
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
       {confirming && <ConfirmingBanner />}
@@ -106,7 +139,7 @@ export default async function GroupDetailPage({
             className="text-indigo dark:text-gold"
           />
         </span>
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="font-display text-2xl font-semibold tracking-tight text-ink dark:text-white">
             {group.name}
           </h1>
@@ -114,6 +147,7 @@ export default async function GroupDetailPage({
             {amountLabel} {group.currency} · {group.frequency} · {group.status}
           </p>
         </div>
+        {member && <InviteButton groupId={group.id} />}
       </div>
 
       {!cycles || cycles.length === 0 ? (
@@ -171,6 +205,41 @@ export default async function GroupDetailPage({
             );
           })}
         </ul>
+      )}
+
+      {member && requests && requests.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-display text-lg font-semibold text-ink dark:text-white">
+            Pending requests
+          </h2>
+          <ul className="flex flex-col gap-3">
+            {requests.map((request) => {
+              const t = tally.get(request.id) ?? { approve: 0, reject: 0 };
+              return (
+                <li
+                  key={request.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm text-ink dark:text-white">
+                      Applicant{" "}
+                      <span className="font-mono text-xs text-zinc-500">
+                        ····{request.applicant_id.slice(-4)}
+                      </span>
+                    </p>
+                    <p className="font-mono text-xs text-zinc-500">
+                      {t.approve} yes · {t.reject} no
+                    </p>
+                  </div>
+                  <VoteButtons
+                    joinRequestId={request.id}
+                    memberId={member.id}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
     </main>
   );
