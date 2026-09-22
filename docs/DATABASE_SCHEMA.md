@@ -63,14 +63,30 @@ comment on column public.profiles.phone_verified is
   'True once the user completes phone OTP verification. Set by the app after verify; readable/writable by the owner via the existing "update own profile" policy — no new RLS policy.';
 ```
 
-Auto-create a profile row whenever a new auth user signs up:
+Auto-create a profile row whenever a new auth user signs up. The phone is
+normalized to canonical E.164 inside the trigger (strip separators, ensure
+leading `+`) because auth sources don't guarantee the format — dashboard
+test SMS numbers arrive without the `+`, which once broke signup against
+the `profiles_phone_e164` check:
 
 ```sql
 create function public.handle_new_user()
 returns trigger as $$
+declare
+  v_phone text;
 begin
+  if new.phone is not null then
+    v_phone := regexp_replace(new.phone, '[\s\-().]', '', 'g');
+    if v_phone <> '' and left(v_phone, 1) <> '+' then
+      v_phone := '+' || v_phone;
+    end if;
+    if v_phone = '' then
+      v_phone := null;
+    end if;
+  end if;
+
   insert into public.profiles (id, full_name, phone)
-  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', ''), new.phone);
+  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', ''), v_phone);
   return new;
 end;
 $$ language plpgsql security definer;
