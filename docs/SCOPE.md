@@ -37,7 +37,7 @@ A closed, invite-only digital savings circle app where the organizer never holds
 - **Backend:** None separate — Supabase handles auth, database, and realtime directly from the frontend
 - **Database + Realtime:** Supabase (Postgres) — realtime subscriptions drive the live shared ledger view
 - **Payments:** Paystack or Flutterwave (split payments / sub-accounts for direct member→recipient routing)
-- **Auth:** Supabase Auth (phone/email + OTP) — skip formal KYC entirely for MVP
+- **Auth:** Supabase Auth, phone-primary — phone number → phone OTP (test OTP numbers for now, real Twilio later), `phone_verified = true` on verify. Email OTP is the alternative path: account works in the PWA but the user must add + verify a phone number before anything USSD-related. Phone is the anchor identity (USSD has no email), stored E.164. Skip formal KYC entirely for MVP
 - **Icons:** Hugeicons
 - **Animation:** Motion
 - **Stretch (USSD):** Africa's Talking sandbox + simulator, plain webhook (Supabase Edge Function or Next.js API route)

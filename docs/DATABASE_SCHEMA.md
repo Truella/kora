@@ -21,9 +21,46 @@ create table public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null,
   phone text unique,
+  phone_verified boolean not null default false,
   avatar_url text,
   created_at timestamptz not null default now()
 );
+```
+
+Phone is the anchor identity: USSD has no concept of email — the USSD
+webhook identifies callers by looking up `profiles.phone` with an exact
+string match. That is why `phone` must always be stored in E.164 format
+(`+234…`, `+254…`, `+256…`, `+233…`): any formatting inconsistency
+(spaces, local `0…` prefixes, missing `+`) silently breaks the USSD lookup.
+The DB enforces the shape (`profiles_phone_e164` check, see migration
+below); the app normalizes input centrally in `src/lib/phone.ts`
+(`normalizeToE164`) before every write.
+
+`phone` stays nullable at the DB level because email-signup users have no
+phone until they complete the add-phone flow — but it is required at the
+app level for full functionality (anything USSD-related is gated on
+`phone_verified = true`). `phone_verified` is set by the app after a
+successful phone OTP verification; the existing "update own profile"
+policy already covers that write, so no new RLS policy is needed.
+
+Migration (`supabase/migrations/*_add_phone_verification.sql` — already
+applied, do not re-run from scratch; new environments run all migrations
+in order):
+
+```sql
+alter table public.profiles
+  add column if not exists phone_verified boolean not null default false;
+
+alter table public.profiles
+  drop constraint if exists profiles_phone_e164;
+alter table public.profiles
+  add constraint profiles_phone_e164
+  check (phone is null or phone ~ '^\+[1-9][0-9]{6,14}$');
+
+comment on column public.profiles.phone is
+  'Subscriber identity. Nullable for email-signup users; required (app-level) for USSD access. Always E.164 — the USSD webhook matches this column by exact string.';
+comment on column public.profiles.phone_verified is
+  'True once the user completes phone OTP verification. Set by the app after verify; readable/writable by the owner via the existing "update own profile" policy — no new RLS policy.';
 ```
 
 Auto-create a profile row whenever a new auth user signs up:
