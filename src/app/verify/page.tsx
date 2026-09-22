@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 
-type Flow = "phone" | "email" | "add-phone";
+type Flow = "phone" | "add-phone";
 
 function safeNext(raw: string | null): string {
   return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
@@ -15,7 +15,7 @@ function safeNext(raw: string | null): string {
 function VerifyForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const flow = (searchParams.get("flow") as Flow) || "phone";
+  const flow: Flow = searchParams.get("flow") === "add-phone" ? "add-phone" : "phone";
   const to = searchParams.get("to") ?? "";
   const next = safeNext(searchParams.get("next"));
 
@@ -44,15 +44,9 @@ function VerifyForm() {
     const supabase = createClient();
 
     const { data, error } =
-      flow === "email"
-        ? await supabase.auth.verifyOtp({ email: to, token, type: "email" })
-        : flow === "add-phone"
-          ? await supabase.auth.verifyOtp({
-              phone: to,
-              token,
-              type: "phone_change",
-            })
-          : await supabase.auth.verifyOtp({ phone: to, token, type: "sms" });
+      flow === "add-phone"
+        ? await supabase.auth.verifyOtp({ phone: to, token, type: "phone_change" })
+        : await supabase.auth.verifyOtp({ phone: to, token, type: "sms" });
 
     if (error || !data.user) {
       setVerifying(false);
@@ -62,35 +56,30 @@ function VerifyForm() {
       return;
     }
 
-    // Phone-based flows: anchor the verified E.164 number on the profile.
-    if (flow === "phone" || flow === "add-phone") {
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ phone: to, phone_verified: true })
-        .eq("id", data.user.id);
+    // Anchor the verified E.164 number on the profile.
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ phone: to, phone_verified: true })
+      .eq("id", data.user.id);
+    if (profileError) {
       setVerifying(false);
-      if (profileError) {
-        setError(
-          "Signed in, but we couldn't mark your number verified. Try again from your profile.",
-        );
-        return;
-      }
-      router.push(next);
+      setError(
+        "Signed in, but we couldn't mark your number verified. Try again from your profile.",
+      );
       return;
     }
 
-    // Email flow: profile exists via trigger with phone_verified = false.
-    // USSD needs a verified phone; the PWA doesn't — hence the prompt.
+    // New user (no name yet) → onboarding. Existing user → destination.
     const { data: profile } = await supabase
       .from("profiles")
-      .select("phone_verified")
+      .select("full_name")
       .eq("id", data.user.id)
       .single();
     setVerifying(false);
-    if (profile?.phone_verified) {
+    if (profile?.full_name) {
       router.push(next);
     } else {
-      router.push(`/add-phone?next=${encodeURIComponent(next)}`);
+      router.push(`/onboarding?next=${encodeURIComponent(next)}`);
     }
   }
 
@@ -99,11 +88,9 @@ function VerifyForm() {
     setResent(false);
     const supabase = createClient();
     const { error } =
-      flow === "email"
-        ? await supabase.auth.signInWithOtp({ email: to })
-        : flow === "add-phone"
-          ? await supabase.auth.updateUser({ phone: to })
-          : await supabase.auth.signInWithOtp({ phone: to });
+      flow === "add-phone"
+        ? await supabase.auth.updateUser({ phone: to })
+        : await supabase.auth.signInWithOtp({ phone: to });
     if (error) setError(error.message);
     else setResent(true);
   }
@@ -122,7 +109,7 @@ function VerifyForm() {
         transition={{ duration: 0.35 }}
       >
         <h1 className="font-display text-3xl font-semibold tracking-tight">
-          Check your {flow === "email" ? "email" : "texts"}
+          Check your texts
         </h1>
         <p className="mt-1 text-sm leading-6 text-zinc-500">
           6-digit code sent to{" "}

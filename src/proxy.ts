@@ -1,9 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Public without a session. /add-phone needs a session (updateUser), so it
-// stays protected — the email flow lands there only after verifying.
-const PUBLIC_PATHS = ["/login", "/verify", "/offline"];
+// Public without a session. /auth/callback receives the magic-link ?code=
+// before any session exists. /add-phone and /onboarding need a session
+// (updateUser / profile writes), so they stay protected.
+const PUBLIC_PATHS = ["/login", "/verify", "/offline", "/auth/callback"];
 
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next({ request });

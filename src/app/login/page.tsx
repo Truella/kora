@@ -26,14 +26,15 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = safeNext(searchParams.get("next"));
+  const authError = searchParams.get("error");
 
   const [tab, setTab] = useState<"phone" | "email">("phone");
   const [country, setCountry] = useState<CountryKey>("NG");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(authError);
   const [sending, setSending] = useState(false);
+  const [linkSentTo, setLinkSentTo] = useState<string | null>(null);
 
   async function sendPhoneOtp() {
     let e164: string;
@@ -50,10 +51,7 @@ function LoginForm() {
     setSending(true);
     setError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      phone: e164,
-      options: { data: { full_name: name.trim() } },
-    });
+    const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
     setSending(false);
     if (error) {
       setError(error.message);
@@ -64,7 +62,7 @@ function LoginForm() {
     );
   }
 
-  async function sendEmailOtp() {
+  async function sendEmailLink() {
     const trimmed = email.trim();
     if (!trimmed.includes("@")) {
       setError("Enter a valid email address.");
@@ -75,15 +73,44 @@ function LoginForm() {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmed,
-      options: { data: { full_name: name.trim() } },
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
     });
     setSending(false);
     if (error) {
       setError(error.message);
       return;
     }
-    router.push(
-      `/verify?flow=email&to=${encodeURIComponent(trimmed)}&next=${encodeURIComponent(next)}`,
+    setLinkSentTo(trimmed);
+  }
+
+  if (linkSentTo) {
+    return (
+      <main className="flex flex-1 flex-col px-4 py-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+        >
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
+            Check your inbox
+          </h1>
+          <p className="mt-1 text-sm leading-6 text-zinc-500">
+            We sent a sign-in link to{" "}
+            <span className="font-mono font-medium text-ink dark:text-white">
+              {linkSentTo}
+            </span>
+            . Tap it on this device and you&apos;re in — no code to type.
+          </p>
+          <button
+            onClick={() => setLinkSentTo(null)}
+            className="mt-4 w-full py-2 text-sm font-semibold text-indigo"
+          >
+            Use a different email
+          </button>
+        </motion.div>
+      </main>
     );
   }
 
@@ -101,7 +128,7 @@ function LoginForm() {
         <p className="mt-1 text-sm leading-6 text-zinc-500">
           {tab === "phone"
             ? "Enter your number — we'll text you a 6-digit code."
-            : "Enter your email for a code. You'll add a phone number after — USSD needs one, the PWA doesn't."}
+            : "Enter your email and we'll send a sign-in link. You'll add a phone number after — USSD needs one, the PWA doesn't."}
         </p>
 
         <div
@@ -137,18 +164,6 @@ function LoginForm() {
         </div>
 
         <div className="mt-5 flex flex-col gap-3">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium">Your name</span>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Adaeze Okafor"
-              autoComplete="name"
-              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
-            />
-          </label>
-
           {tab === "phone" ? (
             <div className="flex gap-2">
               <label className="flex w-32 shrink-0 flex-col gap-1.5">
@@ -204,10 +219,16 @@ function LoginForm() {
           <motion.button
             whileTap={{ scale: 0.98 }}
             disabled={sending}
-            onClick={tab === "phone" ? sendPhoneOtp : sendEmailOtp}
+            onClick={tab === "phone" ? sendPhoneOtp : sendEmailLink}
             className="mt-1 rounded-full bg-indigo py-3.5 text-sm font-semibold text-white disabled:opacity-60"
           >
-            {sending ? "Sending code…" : "Send code"}
+            {sending
+              ? tab === "phone"
+                ? "Sending code…"
+                : "Sending link…"
+              : tab === "phone"
+                ? "Send code"
+                : "Send sign-in link"}
           </motion.button>
         </div>
       </motion.div>
