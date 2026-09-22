@@ -1,0 +1,89 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
+import { createClient } from "@/lib/supabase/client";
+
+// Starts a contribution payment via the create-charge Edge Function.
+// Money rows are written server-side only — this just returns the
+// Flutterwave hosted link and redirects out. Webhook flips paid.
+export default function PayButton({
+  cycleId,
+  groupId,
+  amountLabel,
+}: {
+  cycleId: string;
+  groupId: string;
+  amountLabel: string;
+}) {
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function handlePay() {
+    setStarting(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const redirectUrl = `${window.location.origin}/groups/${groupId}?paid=1`;
+      const { data, error: fnError } = await supabase.functions.invoke(
+        "create-charge",
+        { body: { cycleId, redirectUrl } },
+      );
+      if (fnError) {
+        // Non-2xx comes back as FunctionsHttpError with data === null —
+        // notably the 409 "Already paid" on a stale page. Surface that
+        // distinctly instead of a generic connectivity error.
+        const status = (fnError as { context?: { status?: number } })?.context
+          ?.status;
+        if (status === 409) {
+          setError("This contribution is already paid.");
+          router.refresh();
+        } else {
+          setError(
+            "Could not reach the payment service. Check your connection and try again.",
+          );
+        }
+        return;
+      }
+      if (data?.error) {
+        setError(
+          data.error === "Already paid"
+            ? "This contribution is already paid."
+            : "Could not start the payment. Try again.",
+        );
+        return;
+      }
+      if (!data?.paymentLink) {
+        setError("Could not start the payment. Try again.");
+        return;
+      }
+      window.location.href = data.paymentLink as string;
+    } catch {
+      setError("Could not reach the payment service. Try again.");
+    } finally {
+      setStarting(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
+        onClick={handlePay}
+        disabled={starting}
+        className="flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink disabled:opacity-60"
+      >
+        {starting ? "Starting payment…" : `Pay ${amountLabel}`}
+        {!starting && <HugeiconsIcon icon={ArrowRight01Icon} size={18} />}
+      </button>
+      {error && (
+        <p className="rounded-xl bg-clay/10 px-4 py-2.5 text-sm text-clay">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
