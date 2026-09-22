@@ -66,8 +66,12 @@ export default async function GroupsPage() {
         {groups.map((group) => (
           <li
             key={group.id}
-            className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink"
+            className="rounded-2xl border border-black/10 bg-white dark:border-white/10 dark:bg-ink"
           >
+            <Link
+              href={`/groups/${group.id}`}
+              className="flex items-center gap-3 p-4"
+            >
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo/10 dark:bg-white/10">
               <HugeiconsIcon
                 icon={UserGroupIcon}
@@ -85,6 +89,7 @@ export default async function GroupsPage() {
                 {group.frequency} · {group.status}
               </p>
             </div>
+            </Link>
           </li>
         ))}
       </ul>
