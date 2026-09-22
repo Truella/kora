@@ -46,7 +46,7 @@ export default function Home() {
         transition={{ duration: 0.35, delay: 0.08 }}
         className="grid grid-cols-2 gap-3"
       >
-        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink">
+        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white">
           <HugeiconsIcon
             icon={Wallet01Icon}
             size={22}
@@ -57,7 +57,7 @@ export default function Home() {
             Split payments route contributions straight to the recipient.
           </p>
         </div>
-        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink">
+        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white">
           <HugeiconsIcon
             icon={ShieldCheckIcon}
             size={22}

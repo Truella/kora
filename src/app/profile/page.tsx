@@ -42,7 +42,7 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink">
+      <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white">
         <HugeiconsIcon
           icon={ShieldCheckIcon}
           size={22}

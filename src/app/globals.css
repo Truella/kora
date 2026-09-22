@@ -19,3 +19,9 @@ body {
   background-color: var(--color-paper);
   color: var(--color-ink);
 }
+
+input,
+select,
+textarea {
+  color-scheme: light dark;
+}
