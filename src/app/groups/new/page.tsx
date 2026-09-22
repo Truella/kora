@@ -133,7 +133,7 @@ export default function NewGroupPage() {
         <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-jade/10">
           <HugeiconsIcon icon={CheckmarkBadge01Icon} size={28} className="text-jade" />
         </span>
-        <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
+        <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight text-ink dark:text-white">
           {name.trim()} is live
         </h1>
         <p className="mt-2 max-w-xs font-mono text-sm text-ink dark:text-white">
@@ -149,7 +149,7 @@ export default function NewGroupPage() {
         <div className="mt-5 flex gap-3">
           <Link
             href="/groups"
-            className="rounded-full border border-black/10 px-6 py-2.5 text-sm font-medium hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+            className="rounded-full border border-black/10 px-6 py-2.5 text-sm font-medium text-ink hover:bg-black/5 dark:border-white/10 dark:text-white dark:hover:bg-white/10"
           >
             View circles
           </Link>
@@ -165,8 +165,9 @@ export default function NewGroupPage() {
     );
   }
 
+  const labelClass = "text-sm font-medium text-ink dark:text-white";
   const inputClass =
-    "rounded-xl border border-black/10 bg-white px-4 py-3 text-ink outline-none focus:border-indigo dark:border-white/10 dark:bg-white/5 dark:text-white";
+    "rounded-xl border border-black/10 bg-white px-4 py-3 text-ink outline-none focus:border-indigo dark:border-white/10 dark:bg-white/5 dark:text-white [&>option]:bg-white [&>option]:text-ink dark:[&>option]:bg-ink dark:[&>option]:text-white";
 
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
@@ -175,7 +176,7 @@ export default function NewGroupPage() {
           <HugeiconsIcon icon={UserGroupIcon} size={20} className="text-indigo dark:text-gold" />
         </span>
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink dark:text-white">
             Create a circle
           </h1>
           <p className="text-sm text-zinc-500">
@@ -187,10 +188,10 @@ export default function NewGroupPage() {
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="flex flex-col gap-5 rounded-2xl border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-ink"
+        className="flex flex-col gap-5 rounded-2xl border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-ink dark:text-white"
       >
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="group-name" className="text-sm font-medium">
+          <label htmlFor="group-name" className={labelClass}>
             Circle name
           </label>
           <input
@@ -204,7 +205,7 @@ export default function NewGroupPage() {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="group-desc" className="text-sm font-medium">
+          <label htmlFor="group-desc" className={labelClass}>
             Description{" "}
             <span className="font-normal text-zinc-400">(optional)</span>
           </label>
@@ -223,7 +224,7 @@ export default function NewGroupPage() {
 
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="group-amount" className="text-sm font-medium">
+            <label htmlFor="group-amount" className={labelClass}>
               Contribution per cycle
             </label>
             <div className="flex items-center rounded-xl border border-black/10 bg-white focus-within:border-indigo dark:border-white/10 dark:bg-white/5">
@@ -243,7 +244,7 @@ export default function NewGroupPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="group-currency" className="text-sm font-medium">
+            <label htmlFor="group-currency" className={labelClass}>
               Currency
             </label>
             <select
@@ -263,7 +264,7 @@ export default function NewGroupPage() {
         </div>
 
         <fieldset className="flex flex-col gap-2">
-          <legend className="text-sm font-medium">Payout rhythm</legend>
+          <legend className={labelClass}>Payout rhythm</legend>
           <div className="flex gap-3">
             {(["weekly", "monthly"] as const).map((option) => (
               <label
@@ -289,7 +290,7 @@ export default function NewGroupPage() {
         </fieldset>
 
         <div className="flex flex-col gap-2">
-          <label htmlFor="group-threshold" className="text-sm font-medium">
+          <label htmlFor="group-threshold" className={labelClass}>
             Votes needed to admit a member —{" "}
             <span className="font-mono text-indigo dark:text-gold">
               {threshold}%
@@ -315,7 +316,7 @@ export default function NewGroupPage() {
         </div>
 
         {status === "needs-login" && (
-          <p className="rounded-xl bg-gold/15 px-4 py-3 text-sm">
+          <p className="rounded-xl bg-gold/15 px-4 py-3 text-sm text-ink dark:text-white">
             Everything above checks out —{" "}
             <Link
               href="/login?next=/groups/new"
