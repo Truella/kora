@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112" fill="#0B3D2E"/>
+  <!-- savings-circle motif: three interlocking rings -->
+  <g fill="none" stroke="#E8B84B" stroke-width="26">
+    <circle cx="256" cy="212" r="96"/>
+    <circle cx="196" cy="300" r="96" stroke-opacity="0.65"/>
+    <circle cx="316" cy="300" r="96" stroke-opacity="0.65"/>
+  </g>
+  <text x="256" y="300" text-anchor="middle" font-family="Georgia, serif" font-size="150" font-weight="bold" fill="#FFFFFF">K</text>
+</svg>
