@@ -5,9 +5,9 @@
  * - Static assets (icons/manifest): cache-first.
  * - Everything else: pass through (Supabase realtime/API must never be cached).
  */
-const VERSION = "kora-shell-v1";
+const VERSION = "kora-shell-v2";
 const APP_SHELL = ["/", "/offline", "/manifest.webmanifest"];
-const STATIC_CACHE = "kora-static-v1";
+const STATIC_CACHE = "kora-static-v2";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
