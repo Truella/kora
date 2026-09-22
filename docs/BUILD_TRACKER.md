@@ -16,7 +16,7 @@ Legend: `done` · `in progress` · `pending` · `blocked`
 
 | Track | Scope (per BUILD_PLAN) | Status | Evidence / Notes |
 |---|---|---|---|
-| A | Auth flow — Supabase Auth OTP, profile creation, protected routes | pending | Track B needs auth session for `created_by` — sync by midday, not a full blocker. |
+| A | Auth flow — Supabase Auth OTP, profile creation, protected routes | done | Phone-primary per auth-model update: `src/lib/supabase/{client,server}.ts` + `src/proxy.ts` (Next 16 convention — `middleware.ts` is deprecated; session refresh, `getUser` check; public `/login` `/verify` `/offline`, rest protected, `next` passthrough). `/login` (phone tab default NG/KE/UG/GH via `normalizeToE164` + email tab, name → user_metadata for `handle_new_user` trigger), `/verify` (auto-submit 6-digit, sms/email/phone_change per flow; sets `profiles.phone` + `phone_verified=true` via existing update policy; email-unverified → `/add-phone`), `/add-phone` (`updateUser` + skippable), `/profile` rewritten (session, jade/clay verified badge, sign-out). Verified: `pnpm lint` clean, `pnpm build` 11/11 routes + middleware. NOT yet verified: live OTP send/verify — needs dashboard test SMS numbers + sender config, then one real phone + email pass. |
 | B | Group creation form + UI (name, amount, frequency, threshold) wired to `groups` table | pending | — |
 
 ## 🔴 PAIR — Split-Payment Integration (highest risk)
