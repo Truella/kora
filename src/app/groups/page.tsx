@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { UserGroupIcon } from "@hugeicons/core-free-icons";
+import { UserGroupIcon, Add01Icon } from "@hugeicons/core-free-icons";
 
 export const metadata = { title: "Circles" };
 
@@ -15,9 +16,16 @@ export default function GroupsPage() {
       </span>
       <h1 className="font-display text-2xl font-semibold tracking-tight">No circles yet</h1>
       <p className="max-w-xs text-sm leading-6 text-zinc-500">
-        Circle creation and invite voting land on Day 2. Once you join a
-        circle, it will show up here.
+        Create one to get started — once you join a circle, it will show up
+        here.
       </p>
+      <Link
+        href="/groups/new"
+        className="mt-2 inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-ink"
+      >
+        <HugeiconsIcon icon={Add01Icon} size={18} />
+        Create a circle
+      </Link>
     </main>
   );
 }
