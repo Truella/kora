@@ -1,69 +1,74 @@
-import Image from "next/image";
+"use client";
+
+import Link from "next/link";
+import { motion } from "motion/react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  UserGroupIcon,
+  Wallet01Icon,
+  ShieldCheckIcon,
+} from "@hugeicons/core-free-icons";
+
+const fadeUp = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+};
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="flex flex-1 flex-col gap-4 px-4 py-6">
+      <motion.section
+        {...fadeUp}
+        transition={{ duration: 0.35 }}
+        className="rounded-2xl bg-[#0B3D2E] p-5 text-white"
+      >
+        <p className="text-sm text-white/60">Welcome to Kora</p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+          Save together, without handing anyone the pot.
+        </h1>
+        <p className="mt-2 text-sm leading-6 text-white/70">
+          Invite-only circles. Members vote who joins. Money moves
+          member&nbsp;→&nbsp;recipient directly — the organizer never holds it.
+        </p>
+        <motion.div whileTap={{ scale: 0.97 }}>
+          <Link
+            href="/groups"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#E8B84B] px-5 py-2.5 text-sm font-semibold text-[#0B3D2E]"
+          >
+            <HugeiconsIcon icon={UserGroupIcon} size={18} strokeWidth={2} />
+            View your circles
+          </Link>
+        </motion.div>
+      </motion.section>
+
+      <motion.section
+        {...fadeUp}
+        transition={{ duration: 0.35, delay: 0.08 }}
+        className="grid grid-cols-2 gap-3"
+      >
+        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+          <HugeiconsIcon
+            icon={Wallet01Icon}
+            size={22}
+            className="text-[#0B3D2E] dark:text-[#E8B84B]"
+          />
+          <p className="mt-2 text-sm font-semibold">Direct payouts</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-500">
+            Split payments route contributions straight to the recipient.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+          <HugeiconsIcon
+            icon={ShieldCheckIcon}
+            size={22}
+            className="text-[#0B3D2E] dark:text-[#E8B84B]"
+          />
+          <p className="mt-2 text-sm font-semibold">Trust score</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-500">
+            On-time payments build a visible record in every circle.
+          </p>
         </div>
-      </main>
-    </div>
+      </motion.section>
+    </main>
   );
 }

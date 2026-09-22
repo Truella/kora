@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Image from "next/image";
 import ServiceWorkerRegister from "./sw-register";
+import BottomNav from "./nav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -51,9 +53,29 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-dvh flex flex-col bg-zinc-50 dark:bg-black">
         <ServiceWorkerRegister />
-        {children}
+        <header className="sticky top-0 z-10 border-b border-black/10 bg-[#0B3D2E] pt-[env(safe-area-inset-top)] text-white">
+          <div className="mx-auto flex max-w-md items-center gap-2.5 px-4 py-3">
+            <Image
+              src="/icons/icon.svg"
+              alt="Kora logo"
+              width={32}
+              height={32}
+              className="rounded-lg"
+            />
+            <div className="leading-tight">
+              <p className="text-[17px] font-semibold tracking-tight">Kora</p>
+              <p className="text-[11px] text-white/60">
+                Savings circles, without the custody risk
+              </p>
+            </div>
+          </div>
+        </header>
+        <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
+          {children}
+        </div>
+        <BottomNav />
       </body>
     </html>
   );

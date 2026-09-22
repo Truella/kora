@@ -1,0 +1,59 @@
+# Build Tracker — Digital Ajo/Chama App
+
+Mirrors `BUILD_PLAN.md`. Every row is a Track A / Track B unit — update status
+as work lands (see `AGENTS.md` for the update rule).
+
+Legend: `done` · `in progress` · `pending` · `blocked`
+
+## Day 1 — Foundation (fully parallel, zero dependencies)
+
+| Track | Scope (per BUILD_PLAN) | Status | Evidence / Notes |
+|---|---|---|---|
+| A | Supabase project setup, run schema + RLS SQL from `DATABASE_SCHEMA.md`, verify tables/policies via dashboard | done | `supabase/migrations/20260922112403_initial_schema.sql` pushed to linked project `kora`; 8/8 tables, RLS on all 8, 13/13 policies, 3/3 triggers verified via `supabase db query --linked`. Deviations: `uuid_generate_v4()` → `gen_random_uuid()` (doc version errors on current Supabase); added `nullif` divide-by-zero guard in `tally_join_votes`. |
+| B | PWA scaffold (Next.js, manifest, service worker), Tailwind + Hugeicons + Motion wired in, base layout/nav shell | done | PWA: `public/manifest.webmanifest`, `public/icons/` (192/512/maskable/apple + SVG mark), `public/sw.js`, `src/app/offline/page.tsx`, `src/app/sw-register.tsx`, PWA metadata in `layout.tsx`. Shell: brand header + bottom tab nav (`src/app/nav.tsx`, active-pill via Motion `layoutId`, `usePathname`), Kora home (`page.tsx`), stubs for `/groups` `/activity` `/profile` (replaced Day 2+). Motion v13 (`motion/react`) + Hugeicons (`HugeiconsIcon` + core-free icons) wired and used. Verified: `pnpm lint` clean, `pnpm build` passes, 6/6 routes prerender. Note: PWA PNGs are solid-brand placeholders — final art optional Day 5. |
+
+## Day 2 — Auth + Group Creation (parallel, light coordination)
+
+| Track | Scope (per BUILD_PLAN) | Status | Evidence / Notes |
+|---|---|---|---|
+| A | Auth flow — Supabase Auth OTP, profile creation, protected routes | pending | Track B needs auth session for `created_by` — sync by midday, not a full blocker. |
+| B | Group creation form + UI (name, amount, frequency, threshold) wired to `groups` table | pending | — |
+
+## 🔴 PAIR — Split-Payment Integration (highest risk)
+
+| Scope (per BUILD_PLAN) | Status | Evidence / Notes |
+|---|---|---|
+| Sandbox charge → webhook → `contributions.status = 'paid'` end-to-end, both teammates. Per `PAYMENT_SETUP.md`: Flutterwave v3, keys as Edge Function secrets, `verif-hash` check, server-side re-verify. | pending | Do NOT start Day 3 until this is green. |
+
+## Day 3 (after pairing) — Contribution + Join Flow (parallel)
+
+| Track | Scope (per BUILD_PLAN) | Status | Evidence / Notes |
+|---|---|---|---|
+| A | Contribution UI (pay screen, status display) hitting the working payment flow | pending | Depends on PAIR piece above. |
+| B | Invite/join-request UI + vote-casting UI, tested against the `tally_join_votes` trigger | pending | — |
+
+## Day 4 — Ledger + Scheduling (parallel)
+
+| Track | Scope (per BUILD_PLAN) | Status | Evidence / Notes |
+|---|---|---|---|
+| A | Realtime ledger view (Supabase Realtime subscription, live updates across members) | pending | Must work live in the demo — rehearse on stage conditions. |
+| B | Cycle generator Edge Function + payout scheduling UI + reminder logic | pending | Cycles have no client insert policy by design — Edge Function with service role only. |
+
+## Day 5 — Trust Score + Polish (parallel)
+
+| Track | Scope (per BUILD_PLAN) | Status | Evidence / Notes |
+|---|---|---|---|
+| A | Trust score display, "invited by X" chain UI, Motion pass on core screens | pending | Requires `motion` package (see Day 1 Track B gap). |
+| B | Edge cases — late payment handling, vote-rejection flow, empty/error states | pending | — |
+
+## Day 6 — Stretch + Hardening
+
+| Scope (per BUILD_PLAN) | Status | Evidence / Notes |
+|---|---|---|
+| USSD stretch (only if core stable) + full click-through QA + realistic demo seed data | pending | USSD is read-only per `SCOPE.md` (status, confirm payment, next payout) — not a PWA rebuild. |
+
+## 🔴 PAIR — Day 7 — Demo + Submission
+
+| Scope (per BUILD_PLAN) | Status | Evidence / Notes |
+|---|---|---|
+| Rehearse live demo together, record pitch video, deploy, submission copy, final QA, submit before 11:59 PM | pending | Lead pitch with Trust Paradox framing; keep nice-to-haves out of the demo script. |
