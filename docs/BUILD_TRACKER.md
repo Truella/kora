@@ -23,7 +23,7 @@ Legend: `done` · `in progress` · `pending` · `blocked`
 
 | Scope (per BUILD_PLAN) | Status | Evidence / Notes |
 |---|---|---|
-| Sandbox charge → webhook → `contributions.status = 'paid'` end-to-end, both teammates. Per `PAYMENT_SETUP.md`: Flutterwave v3, keys as Edge Function secrets, `verif-hash` check, server-side re-verify. | pending | Do NOT start Day 3 until this is green. |
+| Sandbox charge → webhook → `contributions.status = 'paid'` end-to-end, both teammates. Per `PAYMENT_SETUP.md`: Flutterwave v3, keys as Edge Function secrets, `verif-hash` check, server-side re-verify. | pending | Prep done: `FLW_SECRET_KEY` / `FLW_ENCRYPTION_KEY` / `FLW_WEBHOOK_HASH` confirmed set (`supabase secrets list`); `flutterwave-node-v3` installed but in root `package.json` — relocate into `supabase/functions/` when scaffolding the webhook. Still to do in pairing: `payment-webhook` Edge Function + deploy + dashboard webhook URL + test subaccounts + first sandbox charge. Do NOT start Day 3 until this is green. |
 
 ## Day 3 (after pairing) — Contribution + Join Flow (parallel)
 
