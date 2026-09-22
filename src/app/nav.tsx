@@ -23,7 +23,7 @@ export default function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="sticky bottom-0 z-10 border-t border-black/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-white/10 dark:bg-black/95"
+      className="sticky bottom-0 z-10 border-t border-black/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-white/10 dark:bg-ink/95"
     >
       <ul className="mx-auto grid max-w-md grid-cols-4">
         {TABS.map(({ href, label, icon }) => {
@@ -36,14 +36,14 @@ export default function BottomNav() {
                 aria-current={active ? "page" : undefined}
                 className={`relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
                   active
-                    ? "text-[#0B3D2E] dark:text-[#E8B84B]"
+                    ? "text-indigo dark:text-gold"
                     : "text-zinc-500 dark:text-zinc-400"
                 }`}
               >
                 {active && (
                   <motion.span
                     layoutId="nav-active-pill"
-                    className="absolute -top-px h-0.5 w-10 rounded-full bg-[#E8B84B]"
+                    className="absolute -top-px h-0.5 w-10 rounded-full bg-gold"
                     transition={{ type: "spring", stiffness: 500, damping: 40 }}
                   />
                 )}

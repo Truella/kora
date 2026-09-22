@@ -52,6 +52,12 @@ Legend: `done` · `in progress` · `pending` · `blocked`
 |---|---|---|
 | USSD stretch (only if core stable) + full click-through QA + realistic demo seed data | pending | USSD is read-only per `SCOPE.md` (status, confirm payment, next payout) — not a PWA rebuild. |
 
+## Side tracks (outside BUILD_PLAN)
+
+| Spec | Status | Evidence / Notes |
+|---|---|---|
+| `DESIGN_TOKENS.md` — adire-indigo palette + Newsreader/Plex type system | done | `globals.css` replaced with `@theme` tokens (`ink/indigo/paper/gold/jade/clay`, `font-display/sans/mono`); Geist → Newsreader + IBM Plex Sans/Mono via `next/font/google` in `layout.tsx`; shell re-skinned (`bg-indigo`, `bg-gold`/`text-ink` CTAs, `font-display` empty-state/hero copy, `text-indigo`/`dark:text-gold` nav); manifest + theme-color + icon mark moved to indigo `#26306B`/gold `#C98A2C`. Verified: `pnpm lint` clean, `pnpm build` passes, 6/6 routes prerender. |
+
 ## 🔴 PAIR — Day 7 — Demo + Submission
 
 | Scope (per BUILD_PLAN) | Status | Evidence / Notes |

@@ -20,10 +20,10 @@ export default function Home() {
       <motion.section
         {...fadeUp}
         transition={{ duration: 0.35 }}
-        className="rounded-2xl bg-[#0B3D2E] p-5 text-white"
+        className="rounded-2xl bg-indigo p-5 text-white"
       >
         <p className="text-sm text-white/60">Welcome to Kora</p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">
           Save together, without handing anyone the pot.
         </h1>
         <p className="mt-2 text-sm leading-6 text-white/70">
@@ -33,7 +33,7 @@ export default function Home() {
         <motion.div whileTap={{ scale: 0.97 }}>
           <Link
             href="/groups"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#E8B84B] px-5 py-2.5 text-sm font-semibold text-[#0B3D2E]"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-ink"
           >
             <HugeiconsIcon icon={UserGroupIcon} size={18} strokeWidth={2} />
             View your circles
@@ -46,22 +46,22 @@ export default function Home() {
         transition={{ duration: 0.35, delay: 0.08 }}
         className="grid grid-cols-2 gap-3"
       >
-        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink">
           <HugeiconsIcon
             icon={Wallet01Icon}
             size={22}
-            className="text-[#0B3D2E] dark:text-[#E8B84B]"
+            className="text-indigo dark:text-gold"
           />
           <p className="mt-2 text-sm font-semibold">Direct payouts</p>
           <p className="mt-1 text-xs leading-5 text-zinc-500">
             Split payments route contributions straight to the recipient.
           </p>
         </div>
-        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-950">
+        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink">
           <HugeiconsIcon
             icon={ShieldCheckIcon}
             size={22}
-            className="text-[#0B3D2E] dark:text-[#E8B84B]"
+            className="text-indigo dark:text-gold"
           />
           <p className="mt-2 text-sm font-semibold">Trust score</p>
           <p className="mt-1 text-xs leading-5 text-zinc-500">
