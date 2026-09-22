@@ -129,8 +129,7 @@ Deno.serve(async (req) => {
 
     return json({ paymentLink, contributionId, txRef });
   } catch (e) {
-    // TEMP debug: surface the real error until the first green charge.
     console.error("create-charge failed:", e);
-    return json({ error: "Charge failed to start", detail: String(e) }, 500);
+    return json({ error: "Charge failed to start" }, 500);
   }
 });
