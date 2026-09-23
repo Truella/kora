@@ -8,10 +8,22 @@ export const metadata = { title: "Join circle" };
 
 export default async function JoinPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ by?: string }>;
 }) {
   const { id } = await params;
+  const { by } = await searchParams;
+  // Attribution is best-effort: UUID-shaped ids ride along for the DB
+  // to validate (is_valid_inviter), anything else rides as nothing.
+  const invitedBy =
+    by &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      by,
+    )
+      ? by
+      : null;
   const supabase = await createClient();
   const {
     data: { user },
@@ -80,12 +92,15 @@ export default async function JoinPage({
             group will tell you the outcome.
           </p>
         ) : myStatus === "rejected" ? (
-          <p className="rounded-2xl bg-clay/10 px-4 py-3 text-sm leading-6 text-clay">
-            The circle voted not to admit you this time. If you think
-            that&apos;s a mistake, talk to the member who shared the link.
-          </p>
+          <div className="flex flex-col gap-3">
+            <p className="rounded-2xl bg-clay/10 px-4 py-3 text-sm leading-6 text-clay">
+              The circle voted not to admit you this time. If that was a
+              mistake, you can ask once more — it starts a fresh vote.
+            </p>
+            <JoinRequestButton groupId={id} invitedBy={invitedBy} />
+          </div>
         ) : (
-          <JoinRequestButton groupId={id} />
+          <JoinRequestButton groupId={id} invitedBy={invitedBy} />
         )}
       </div>
     </main>

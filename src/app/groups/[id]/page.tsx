@@ -316,7 +316,7 @@ export default async function GroupDetailPage({
             {amountLabel} {group.currency} · {group.frequency} · {group.status}
           </p>
         </div>
-        {member && <InviteButton groupId={group.id} />}
+        {member && <InviteButton groupId={group.id} memberId={member.id} />}
       </div>
 
       {!cycles || cycles.length === 0 ? (        member && isCreator ? (
