@@ -29,6 +29,21 @@ export default async function JoinPage({
         .maybeSingle()
     : { data: null };
 
+  // Applicant's own request (Day 5B). Readable via the "applicants view
+  // own requests" policy; pre-migration this is simply null and the page
+  // falls through to the request button — same as today. Status only,
+  // never vote counts: applicant-blindness stays intact.
+  const { data: myRequest } =
+    user && !member
+      ? await supabase
+          .from("join_requests")
+          .select("status")
+          .eq("group_id", id)
+          .eq("applicant_id", user.id)
+          .maybeSingle()
+      : { data: null };
+  const myStatus = (myRequest as { status?: string } | null)?.status ?? null;
+
   return (
     <main className="flex flex-1 flex-col items-center px-8 py-12 text-center">
       <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10 dark:bg-white/10">
@@ -59,6 +74,16 @@ export default async function JoinPage({
               Open the circle
             </Link>
           </div>
+        ) : myStatus === "pending" ? (
+          <p className="rounded-2xl bg-gold/15 px-4 py-3 text-sm leading-6 text-ink dark:text-white">
+            Request sent — the circle is still voting. Someone from the
+            group will tell you the outcome.
+          </p>
+        ) : myStatus === "rejected" ? (
+          <p className="rounded-2xl bg-clay/10 px-4 py-3 text-sm leading-6 text-clay">
+            The circle voted not to admit you this time. If you think
+            that&apos;s a mistake, talk to the member who shared the link.
+          </p>
         ) : (
           <JoinRequestButton groupId={id} />
         )}
