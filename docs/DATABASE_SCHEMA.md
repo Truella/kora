@@ -105,9 +105,9 @@ create table public.groups (
   description text,
   created_by uuid not null references public.profiles(id),
   contribution_amount numeric(12,2) not null,
-  currency text not null default 'NGN',
-  frequency text not null check (frequency in ('weekly','monthly')),
-  vote_threshold numeric(3,2) not null default 0.60,
+  currency text not null default 'NGN'
+    check (currency in ('NGN', 'GHS', 'KES', 'UGX')),
+  frequency text not null check (frequency in ('weekly','monthly')),  vote_threshold numeric(3,2) not null default 0.60,
   status text not null default 'forming' check (status in ('forming','active','completed')),
   created_at timestamptz not null default now()
 );
@@ -387,6 +387,8 @@ using (created_by = auth.uid());
 ```
 
 *(Consider restricting which columns can change via a `before update` trigger — e.g. block changes to `contribution_amount` after status = 'active'.)*
+
+Locked by migration `20260923140000_lock_group_terms.sql`: `groups_currency_allowed` check (`NGN`/`GHS`/`KES`/`UGX` only) plus the `freeze_group_terms` trigger — `contribution_amount`/`currency` updates raise once the group is no longer `forming` or a second active member exists. This is what the creation form promises ("Locked once members join"); without it a mid-rotation switch would break the payment webhook's amount/currency re-check for in-flight contributions.
 
 ### group_members
 
