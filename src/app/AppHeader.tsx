@@ -22,7 +22,7 @@ export default function AppHeader() {
   if (!user && pathname === "/") return null;
 
   return (
-    <header className="sticky top-0 z-10 border-b border-black/5 bg-white/95 pt-[env(safe-area-inset-top)] backdrop-blur">
+    <header className="sticky top-0 z-10 border-b border-indigo/5 bg-paper/95 pt-[env(safe-area-inset-top)] backdrop-blur">
       <div className="mx-auto flex w-full max-w-md items-center gap-2.5 px-4 py-3 lg:max-w-5xl">
         <Image
           src="/icons/icon.svg"
@@ -33,7 +33,7 @@ export default function AppHeader() {
         />
         <div className="leading-tight">
           <p className="text-[17px] font-semibold tracking-tight">Kora</p>
-          <p className="text-[11px] text-zinc-500">
+          <p className="text-[11px] text-indigo/60">
             Savings circles, without the custody risk
           </p>
         </div>
