@@ -1,9 +1,11 @@
-// payment-webhook — Flutterwave → contributions.status = 'paid'.
+// payment-webhook — Flutterwave → contributions.status = 'paid' or 'late'.
 //
 // 1. Reject anything whose `verif-hash` header ≠ FLW_WEBHOOK_HASH.
 // 2. On charge.completed: re-verify server-side (never trust the payload).
 // 3. Match by payment_reference = tx_ref, confirm amount + currency,
-//    then mark paid. The update_trust_score trigger fires automatically.
+//    then mark paid — or late when the money arrives after the cycle
+//    due date (Day 5B: this is what moves trust scores off 100).
+//    The update_trust_score trigger fires automatically.
 // Always 200 known events (Flutterwave retries 500s); 401 only on bad hash.
 
 import "@supabase/functions-js/edge-runtime.d.ts";
@@ -51,7 +53,9 @@ Deno.serve(async (req) => {
 
     const { data: contribution } = await admin
       .from("contributions")
-      .select("id, amount, status, cycles!inner(group_id, groups!inner(currency))")
+      .select(
+        "id, amount, status, cycles!inner(group_id, due_date, groups!inner(currency))",
+      )
       .eq("payment_reference", tx.txRef)
       .maybeSingle();
 
@@ -59,32 +63,50 @@ Deno.serve(async (req) => {
       console.error(`No contribution for tx_ref ${tx.txRef}`);
       return json({ received: true, unmatched: true });
     }
-    if (contribution.status === "paid") {
+    // Terminal states — a retried webhook must never flip late back
+    // to paid (that would repair a trust hit the member earned).
+    if (contribution.status === "paid" || contribution.status === "late") {
       return json({ received: true, duplicate: true });
     }
 
-    const group = (
-      contribution.cycles as unknown as {
-        groups: { currency: string };
-      }
-    ).groups;
-    if (Number(contribution.amount) !== tx.amount || group.currency !== tx.currency) {
+    const cycle = contribution.cycles as unknown as {
+      due_date: string;
+      groups: { currency: string };
+    };
+    if (
+      Number(contribution.amount) !== tx.amount ||
+      cycle.groups.currency !== tx.currency
+    ) {
       console.error(
-        `Amount/currency mismatch for ${contribution.id}: expected ${contribution.amount} ${group.currency}, got ${tx.amount} ${tx.currency}`,
+        `Amount/currency mismatch for ${contribution.id}: expected ${contribution.amount} ${cycle.groups.currency}, got ${tx.amount} ${tx.currency}`,
       );
       return json({ received: true, mismatch: true });
     }
 
+    // Late rule: money arriving after the cycle due date settles as
+    // 'late', not 'paid'. Date-only compare in UTC — the same basis as
+    // the app's reminder windows, so webhook and banners never disagree
+    // about which side of the due date a payment falls on.
+    const today = new Date().toISOString().slice(0, 10);
+    const finalStatus = today > cycle.due_date ? "late" : "paid";
+
     const { error: updateError } = await admin
       .from("contributions")
-      .update({ status: "paid", paid_at: new Date().toISOString() })
+      .update({ status: finalStatus, paid_at: new Date().toISOString() })
       .eq("id", contribution.id);
     if (updateError) {
-      console.error(`Mark-paid failed for ${contribution.id}:`, updateError);
-      return json({ error: "Mark-paid failed" }, 500);
+      console.error(
+        `Mark-${finalStatus} failed for ${contribution.id}:`,
+        updateError,
+      );
+      return json({ error: "Could not confirm payment" }, 500);
     }
 
-    return json({ received: true, contributionId: contribution.id });
+    return json({
+      received: true,
+      contributionId: contribution.id,
+      status: finalStatus,
+    });
   } catch (e) {
     console.error("payment-webhook failed:", e);
     return json({ error: "Webhook processing failed" }, 500);

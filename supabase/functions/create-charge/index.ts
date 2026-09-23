@@ -62,15 +62,20 @@ Deno.serve(async (req) => {
       .single();
     if (!member) return json({ error: "Not an active member" }, 403);
 
-    // Reuse a pending row (payment retry); refuse if already paid.
+    // Reuse a pending row (payment retry); refuse if already settled —
+    // paid or late both mean the money arrived, never charge twice.
     const { data: existing } = await admin
       .from("contributions")
       .select("id, status, payment_reference")
       .eq("cycle_id", cycleId)
       .eq("member_id", member.id)
       .maybeSingle();
-    if (existing?.status === "paid") {
-      return json({ error: "Already paid" }, 409);
+    if (existing?.status === "paid" || existing?.status === "late") {
+      // Settled either way — the client words it without guessing which.
+      return json(
+        { error: "Already settled", status: existing.status },
+        409,
+      );
     }
 
     const amount = Number(group.contribution_amount);
