@@ -181,6 +181,7 @@ create table public.contributions (
   status text not null default 'pending' check (status in ('pending','paid','late')),
   payment_reference text,
   paid_at timestamptz,
+  created_at timestamptz default now(), -- promise stamp; pre-migration rows stay NULL by choice (no rewritten history), ledger sorts those by due date
   unique (cycle_id, member_id)
 );
 ```
@@ -389,6 +390,8 @@ using (created_by = auth.uid());
 *(Consider restricting which columns can change via a `before update` trigger — e.g. block changes to `contribution_amount` after status = 'active'.)*
 
 Locked by migration `20260923140000_lock_group_terms.sql`: `groups_currency_allowed` check (`NGN`/`GHS`/`KES`/`UGX` only) plus the `freeze_group_terms` trigger — `contribution_amount`/`currency` updates raise once the group is no longer `forming` or a second active member exists. This is what the creation form promises ("Locked once members join"); without it a mid-rotation switch would break the payment webhook's amount/currency re-check for in-flight contributions.
+
+Locked further by migration `20260923160000_lock_group_governance.sql`: the `lock_group_governance` trigger freezes `vote_threshold`/`frequency` under the same gate (active or second member joined), and `status` may only move forward (`forming` → `active` → `completed`, so the generator's flip still works). Name/description stay editable always.
 
 ### group_members
 
