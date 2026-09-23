@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -9,6 +9,7 @@ import {
   CheckmarkBadge01Icon,
 } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
+import type { CountryKey } from "@/lib/phone";
 
 type Currency = "NGN" | "GHS" | "KES" | "UGX";
 
@@ -18,6 +19,15 @@ const CURRENCIES: { code: Currency; symbol: string; label: string }[] = [
   { code: "KES", symbol: "KSh", label: "Kenyan shilling" },
   { code: "UGX", symbol: "USh", label: "Ugandan shilling" },
 ];
+
+// Onboarding stores home country in auth metadata — the first-choice
+// default. Timezone is only a heuristic for guests / unset countries.
+const COUNTRY_TO_CURRENCY: Record<CountryKey, Currency> = {
+  NG: "NGN",
+  GH: "GHS",
+  KE: "KES",
+  UG: "UGX",
+};
 
 const TIMEZONE_TO_CURRENCY: Record<string, Currency> = {
   "Africa/Lagos": "NGN",
@@ -49,6 +59,26 @@ export default function NewGroupPage() {
   const [status, setStatus] = useState<Status>("idle");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Resolved home default (stored country beats the timezone guess).
+  const homeCurrency = useRef<Currency | null>(null);
+
+  // Prefer the member's stored home country over the timezone heuristic.
+  // Runs once on mount — before any interaction, so it never clobbers a
+  // user-picked currency. Guests (no session) keep the timezone guess.
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        const stored = data.user?.user_metadata?.country as
+          | CountryKey
+          | undefined;
+        const mapped = stored ? COUNTRY_TO_CURRENCY[stored] : undefined;
+        if (mapped) {
+          homeCurrency.current = mapped;
+          setCurrency(mapped);
+        }
+      });
+  }, []);
 
   const symbol =
     CURRENCIES.find((c) => c.code === currency)?.symbol ?? currency;
@@ -119,7 +149,7 @@ export default function NewGroupPage() {
     setName("");
     setDescription("");
     setAmount("");
-    setCurrency(guessCurrency());
+    setCurrency(homeCurrency.current ?? guessCurrency());
     setFrequency("weekly");
     setThreshold(60);
     setErrors({});

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
@@ -29,6 +29,19 @@ function AddPhoneForm() {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
+
+  // Signed-in users already told us their home country at onboarding —
+  // default the dial code to it (mount-only, never clobbers a pick).
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        const stored = data.user?.user_metadata?.country as
+          | CountryKey
+          | undefined;
+        if (stored && COUNTRY_CODES[stored]) setCountry(stored);
+      });
+  }, []);
 
   async function submit() {
     let e164: string;

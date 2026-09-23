@@ -103,3 +103,60 @@ if (response.data.status === "successful") {
 
 - Confirm test mode is still active (don't accidentally flip to Live on stage).
 - Re-run the full charge → webhook → ledger-update flow once, end-to-end, the morning of the demo — sandbox test data can be archived/reset, so don't assume last week's setup still works.
+
+## 11. Payout details collection (post-MVP — live transfers)
+
+Status: specced, not built. `process-payout` currently records disbursement
+(completed/failed) without moving money — the completion record is the proof.
+When live transfers get built, the missing input is *where to send each
+recipient's payout*. This section is that build's spec.
+
+### When to collect — never in onboarding
+
+Payout details are captured at payout time, not signup: a
+"Where should your payout go?" prompt when a member's first receiving turn
+approaches (or a profile section for the impatient). Front-loading bank
+forms before someone ever saves kills conversion; the circle works fully
+without them until money needs to leave.
+
+### Fields per country
+
+| Country | Method | Fields |
+|---|---|---|
+| NG | bank | `bank_code` (Flutterwave `/v3/banks/NG` list) + `account_number` (10 digits) |
+| GH | bank | `bank_code` (`/v3/banks/GH`) + `account_number` |
+| KE | momo | `provider` (`MPESA`) + mobile number (E.164, may equal the profile phone) |
+| UG | momo | `provider` (`MTN` / `AIRTEL`) + mobile number (E.164) |
+
+The member's home country (auth metadata, set at onboarding) preselects the
+method — bank for NG/GH, mobile money for KE/UG — with manual override.
+
+### Verification before first use
+
+Never trust a typed account number. In sandbox AND live, resolve it first:
+
+- Banks: Flutterwave account verification (`/v3/accounts/resolve`-family —
+  pull the current endpoint from the docs at build time) must return the
+  account name; show it back to the member ("Is this you?") before saving.
+- Mobile money: an OTP or a GH₵/KSh/USh 1 micro-charge confirm loop.
+
+Only `verified = true` rows are transfer-eligible. Re-verify on every edit.
+
+### Storage
+
+New table `payout_details` (migration at build time):
+
+- `user_id uuid primary key references profiles(id)` — one destination per member (update in place on change + re-verify).
+- `country`, `method ('bank'|'momo')`, `bank_code`, `account_number`, `provider`, `verified boolean not null default false`, `verified_at`.
+- Account numbers are secrets: store via Supabase Vault (or app-level
+  encryption with the key in Edge Function secrets) — never plaintext in a
+  readable table. RLS: owner insert/select/update own row only, no delete;
+  transfers read it exclusively through the service role.
+
+### Money-state rule preserved
+
+No client writes to money state — the details form calls an Edge Function
+that verifies (Flutterwave resolve) then writes; `process-payout` grows a
+transfer attempt *after* its all-settled check, marking `completed` only on
+a successful transfer response and `failed` otherwise (current record-only
+behavior stays as the fallback when details are missing/unverified).
