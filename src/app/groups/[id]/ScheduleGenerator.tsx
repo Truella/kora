@@ -89,15 +89,15 @@ export default function ScheduleGenerator({
 
   if (mode === "sync") {
     return (
-      <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-ink">
-        <p className="text-sm leading-6 text-zinc-500">
+      <div className="flex flex-col gap-3 rounded-2xl border border-indigo/10 bg-paper p-5">
+        <p className="text-sm leading-6 text-indigo/60">
           {newCount} new member{newCount === 1 ? "" : "s"} joined after the
           rotation started — sync appends their cycle
           {newCount === 1 ? "" : "s"} at the end.
         </p>
         {message && (
           <p
-            className={`rounded-xl px-4 py-2.5 text-sm ${state === "error" ? "bg-clay/10 text-clay" : "bg-jade/10 text-ink dark:text-white"}`}
+            className={`rounded-xl px-4 py-2.5 text-sm ${state === "error" ? "bg-gold/15 text-indigo" : "bg-indigo/10 text-indigo"}`}
           >
             {message}
           </p>
@@ -108,7 +108,7 @@ export default function ScheduleGenerator({
             onClick={handleGenerate}
             disabled={state === "working"}
             whileTap={{ scale: 0.97 }}
-            className="flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink disabled:opacity-60"
+            className="flex items-center justify-center gap-2 rounded-full bg-indigo px-6 py-3 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
           >
             {state === "working" ? "Syncing…" : "Sync schedule"}
             {state !== "working" && (
@@ -121,18 +121,18 @@ export default function ScheduleGenerator({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-white p-5 dark:border-white/10 dark:bg-ink">
-      <p className="font-display text-lg font-semibold text-ink dark:text-white">
+    <div className="flex flex-col gap-3 rounded-2xl border border-indigo/10 bg-paper p-5">
+      <p className="font-display text-lg font-semibold text-indigo">
         Start the rotation
       </p>
-      <p className="text-sm leading-6 text-zinc-500">
+      <p className="text-sm leading-6 text-indigo/60">
         Creates one cycle per member in payout order ({memberCount} member
         {memberCount === 1 ? "" : "s"}), each with its pooled payout. New
         members voted in later get appended automatically when you rerun this.
       </p>
       <label
         htmlFor="first-due"
-        className="text-sm font-medium text-ink dark:text-white"
+        className="text-sm font-medium text-indigo"
       >
         First contribution due date
       </label>
@@ -141,11 +141,11 @@ export default function ScheduleGenerator({
         type="date"
         value={firstDue}
         onChange={(e) => setFirstDue(e.target.value)}
-        className="rounded-xl border border-black/10 bg-white px-4 py-3 font-mono text-sm text-ink outline-none focus:border-indigo dark:border-white/10 dark:bg-white/5 dark:text-white"
+        className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 font-mono text-sm text-indigo outline-none focus:border-indigo"
       />
       {message && (
         <p
-          className={`rounded-xl px-4 py-2.5 text-sm ${state === "error" ? "bg-clay/10 text-clay" : "bg-jade/10 text-ink dark:text-white"}`}
+          className={`rounded-xl px-4 py-2.5 text-sm ${state === "error" ? "bg-gold/15 text-indigo" : "bg-indigo/10 text-indigo"}`}
         >
           {message}
         </p>
@@ -156,7 +156,7 @@ export default function ScheduleGenerator({
             onClick={handleGenerate}
             disabled={state === "working" || !firstDue}
             whileTap={{ scale: 0.97 }}
-            className="flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink disabled:opacity-60"
+            className="flex items-center justify-center gap-2 rounded-full bg-indigo px-6 py-3 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
           >
             {state === "working" ? "Generating…" : "Generate schedule"}
             {state !== "working" && (
