@@ -22,7 +22,7 @@ export function friendlyAuthError(
 
   if (msg.includes("expired")) {
     if (kind === "code") {
-      return "That code expired — tap Resend code below for a fresh one.";
+      return "That code expired — tap Resend below for a fresh one.";
     }
     return "That link expired — head back and request a fresh one.";
   }
@@ -52,7 +52,7 @@ export function friendlyAuthError(
     msg.includes("twilio") ||
     msg.includes("vonage")
   ) {
-    return "We couldn't send the text right now — the line may be down. Try again shortly, or use email instead.";
+    return "We couldn't send the text right now — line may be down. Try again shortly, or use email instead.";
   }
 
   if (msg.includes("signup") || msg.includes("sign up")) {
@@ -60,7 +60,7 @@ export function friendlyAuthError(
   }
 
   if (kind === "send") {
-    return "We couldn't send the code. Check the details and try again.";
+    return "We couldn't send the code. Check details and try again.";
   }
   if (kind === "link") {
     return "That sign-in link failed. Head back and request a fresh one.";
