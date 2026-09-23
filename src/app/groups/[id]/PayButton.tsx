@@ -34,12 +34,14 @@ export default function PayButton({
       );
       if (fnError) {
         // Non-2xx comes back as FunctionsHttpError with data === null —
-        // notably the 409 "Already paid" on a stale page. Surface that
-        // distinctly instead of a generic connectivity error.
+        // notably the 409 on a stale page for an already-settled share
+        // (paid or late — the body isn't parsed here, so word it to cover
+        // both). Surface that distinctly instead of a generic
+        // connectivity error.
         const status = (fnError as { context?: { status?: number } })?.context
           ?.status;
         if (status === 409) {
-          setError("This contribution is already paid.");
+          setError("This contribution is already settled.");
           router.refresh();
         } else {
           setError(
@@ -50,8 +52,8 @@ export default function PayButton({
       }
       if (data?.error) {
         setError(
-          data.error === "Already paid"
-            ? "This contribution is already paid."
+          data.error === "Already settled" || data.error === "Already paid"
+            ? "This contribution is already settled."
             : "Could not start the payment. Try again.",
         );
         return;
