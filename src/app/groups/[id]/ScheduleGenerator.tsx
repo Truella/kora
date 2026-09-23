@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
@@ -102,17 +103,18 @@ export default function ScheduleGenerator({
           </p>
         )}
         {state !== "done" && (
-          <button
+          <motion.button
             type="button"
             onClick={handleGenerate}
             disabled={state === "working"}
+            whileTap={{ scale: 0.97 }}
             className="flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink disabled:opacity-60"
           >
             {state === "working" ? "Syncing…" : "Sync schedule"}
             {state !== "working" && (
               <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
             )}
-          </button>
+          </motion.button>
         )}
       </div>
     );
@@ -148,19 +150,20 @@ export default function ScheduleGenerator({
           {message}
         </p>
       )}
-      {state !== "done" && (
-        <button
-          type="button"
-          onClick={handleGenerate}
-          disabled={state === "working" || !firstDue}
-          className="flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink disabled:opacity-60"
-        >
-          {state === "working" ? "Generating…" : "Generate schedule"}
-          {state !== "working" && (
-            <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
-          )}
-        </button>
-      )}
+        {state !== "done" && (
+          <motion.button
+            type="button"
+            onClick={handleGenerate}
+            disabled={state === "working" || !firstDue}
+            whileTap={{ scale: 0.97 }}
+            className="flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink disabled:opacity-60"
+          >
+            {state === "working" ? "Generating…" : "Generate schedule"}
+            {state !== "working" && (
+              <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
+            )}
+          </motion.button>
+        )}
     </div>
   );
 }

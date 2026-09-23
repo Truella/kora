@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserGroupIcon, Add01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
+import { RevealLi } from "../Reveal";
 
 export const metadata = { title: "Circles" };
 
@@ -63,9 +64,10 @@ export default async function GroupsPage() {
         </Link>
       </div>
       <ul className="flex flex-col gap-3">
-        {groups.map((group) => (
-          <li
+        {groups.map((group, i) => (
+          <RevealLi
             key={group.id}
+            delay={Math.min(i * 0.05, 0.25)}
             className="rounded-2xl border border-black/10 bg-white dark:border-white/10 dark:bg-ink"
           >
             <Link
@@ -90,7 +92,7 @@ export default async function GroupsPage() {
               </p>
             </div>
             </Link>
-          </li>
+          </RevealLi>
         ))}
       </ul>
     </main>

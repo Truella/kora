@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
@@ -104,17 +105,18 @@ export default function JoinRequestButton({
 
   return (
     <div className="flex flex-col gap-2">
-      <button
+      <motion.button
         type="button"
         onClick={handleApply}
         disabled={state === "sending"}
+        whileTap={{ scale: 0.97 }}
         className="flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink disabled:opacity-60"
       >
         {state === "sending" ? "Sending…" : "Request to join"}
         {state !== "sending" && (
           <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
         )}
-      </button>
+      </motion.button>
       {state === "error" && (
         <p className="rounded-xl bg-clay/10 px-4 py-2.5 text-sm text-clay">
           Could not send the request. Check your connection and try again.

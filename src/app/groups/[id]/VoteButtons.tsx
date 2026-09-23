@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 
 // Casts one vote on a join request. voter_id is the caller's
@@ -63,11 +64,12 @@ export default function VoteButtons({
     <div className="flex flex-col gap-2">
       <div className="flex gap-2">
         {(["approve", "reject"] as const).map((choice) => (
-          <button
+          <motion.button
             key={choice}
             type="button"
             onClick={() => vote(choice)}
             disabled={voting !== null}
+            whileTap={{ scale: 0.97 }}
             className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold capitalize disabled:opacity-60 ${
               choice === "approve"
                 ? "bg-jade/15 text-jade"
@@ -75,7 +77,7 @@ export default function VoteButtons({
             }`}
           >
             {voting === choice ? "Voting…" : choice}
-          </button>
+          </motion.button>
         ))}
       </div>
       {error && <p className="text-sm text-clay">{error}</p>}

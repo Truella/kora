@@ -8,6 +8,7 @@ import ConfirmingBanner from "./ConfirmingBanner";
 import InviteButton from "./InviteButton";
 import VoteButtons from "./VoteButtons";
 import ScheduleGenerator from "./ScheduleGenerator";
+import { RevealLi } from "../../Reveal";
 import LedgerFeed from "../../activity/LedgerFeed";
 import { getLedgerEvents } from "@/lib/ledger";
 
@@ -372,7 +373,7 @@ export default async function GroupDetailPage({
             share, even on another member&apos;s turn.
           </p>
           <ul className="flex flex-col gap-3">
-          {cycles.map((cycle) => {            const contribution = byCycle.get(cycle.id);
+          {cycles.map((cycle, i) => {            const contribution = byCycle.get(cycle.id);
             const status = contribution?.status ?? "pending";
             const isPaid = status === "paid";
             // Late is settled money (webhook-verified, just past due) —
@@ -386,8 +387,9 @@ export default async function GroupDetailPage({
               | undefined;
             const payoutStatus = payout?.status ?? "pending";
             return (
-              <li
+              <RevealLi
                 key={cycle.id}
+                delay={Math.min(i * 0.05, 0.25)}
                 className="flex flex-col gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink"
               >
                 <div className="flex items-center justify-between gap-3">
@@ -456,7 +458,7 @@ export default async function GroupDetailPage({
                     />
                   </div>
                 )}
-              </li>
+              </RevealLi>
             );
           })}
           </ul>
@@ -479,7 +481,7 @@ export default async function GroupDetailPage({
             Members
           </h2>
           <ul className="flex flex-col gap-2">
-            {circleRows.map((m) => {
+            {circleRows.map((m, i) => {
               const name =
                 profileNames.get(m.user_id) ?? `····${m.user_id.slice(-4)}`;
               const isFounder = m.user_id === group.created_by;
@@ -501,8 +503,9 @@ export default async function GroupDetailPage({
                   ? "No payments yet"
                   : `${record?.onTime ?? 0} on-time · ${record?.late ?? 0} late`;
               return (
-                <li
+                <RevealLi
                   key={m.id}
+                  delay={Math.min(i * 0.05, 0.2)}
                   className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink"
                 >
                   <div className="min-w-0">
@@ -525,7 +528,7 @@ export default async function GroupDetailPage({
                   <span className="shrink-0 rounded-full bg-jade/15 px-3 py-1 text-xs font-semibold text-jade">
                     Trust {Number.isFinite(score) ? score : 100}
                   </span>
-                </li>
+                </RevealLi>
               );
             })}
           </ul>

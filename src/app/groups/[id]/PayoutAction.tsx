@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
@@ -87,15 +88,16 @@ export default function PayoutAction({
 
   return (
     <div className="flex flex-col gap-2">
-      <button
+      <motion.button
         type="button"
         onClick={handleComplete}
         disabled={working}
+        whileTap={{ scale: 0.97 }}
         className="flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink disabled:opacity-60"
       >
         {working ? "Disbursing…" : "Mark payout disbursed"}
         {!working && <HugeiconsIcon icon={ArrowRight01Icon} size={18} />}
-      </button>
+      </motion.button>
       {message && (
         <p className="rounded-xl bg-gold/15 px-4 py-2.5 text-sm text-ink dark:text-white">
           {message}

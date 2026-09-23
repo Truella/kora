@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserIcon, ShieldCheckIcon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
+import { RevealLi } from "../Reveal";
 import SignOutButton from "./signout-button";
 
 export const metadata = { title: "Profile" };
@@ -130,7 +131,7 @@ export default async function ProfilePage() {
             Trust in each circle
           </h2>
           <ul className="flex flex-col gap-2">
-            {myCircles.map((g) => {
+            {myCircles.map((g, i) => {
               const score = scoreByGroup.get(g.id);
               const record = recordByGroup.get(g.id);
               const settledTotal =
@@ -140,8 +141,9 @@ export default async function ProfilePage() {
                   ? "No payments yet"
                   : `${record?.onTime ?? 0} on-time · ${record?.late ?? 0} late`;
               return (
-                <li
+                <RevealLi
                   key={g.id}
+                  delay={Math.min(i * 0.05, 0.2)}
                   className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white"
                 >
                   <div className="min-w-0 flex-1">
@@ -161,7 +163,7 @@ export default async function ProfilePage() {
                       ? score
                       : 100}
                   </span>
-                </li>
+                </RevealLi>
               );
             })}
           </ul>
