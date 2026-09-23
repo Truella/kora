@@ -54,6 +54,7 @@ type ContributionRow = {
   amount: number | string;
   status: string;
   paid_at: string | null;
+  created_at: string | null;
   member_id: string;
   cycles: CycleJoin;
 };
@@ -77,7 +78,7 @@ export async function getLedgerEvents(
     supabase
       .from("contributions")
       .select(
-        "id, amount, status, paid_at, member_id, cycles!inner(id, cycle_number, due_date, group_id, groups!inner(id, name, currency))",
+        "id, amount, status, paid_at, created_at, member_id, cycles!inner(id, cycle_number, due_date, group_id, groups!inner(id, name, currency))",
       )
       .limit(200),
     supabase
@@ -132,8 +133,9 @@ export async function getLedgerEvents(
 
   for (const c of contributions) {
     if (groupId && c.cycles.group_id !== groupId) continue;
-    // Contributions carry no created_at — pendings order by cycle due
-    // date, settled rows by paid_at. Both are pre-formatted server-side
+    // Contributions carry created_at for new rows (old/sandbox rows stay
+    // NULL by choice — no rewritten history). Pendings order by cycle due
+    // date, so NULL rows render exactly as today; settled rows by paid_at. Both are pre-formatted server-side
     // so server and client renders never disagree (no hydration drift).
     // Late means the money arrived (webhook-verified, just past due),
     // so late rows are history, never upcoming.

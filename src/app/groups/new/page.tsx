@@ -144,7 +144,8 @@ export default function NewGroupPage() {
           {threshold}% vote to admit · you are member 1.
         </p>
         <p className="mt-1 max-w-xs text-sm leading-6 text-zinc-500">
-          Member invites open next — there is no link to share yet.
+          Open your circle from View circles and tap Invite to share the
+          join link.
         </p>
         <div className="mt-5 flex gap-3">
           <Link
