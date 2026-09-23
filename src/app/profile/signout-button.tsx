@@ -20,7 +20,7 @@ export default function SignOutButton() {
     <button
       onClick={signOut}
       disabled={signingOut}
-      className="w-full rounded-full border border-clay/40 py-3 text-sm font-semibold text-clay disabled:opacity-60"
+      className="w-full rounded-full border border-gold/40 py-3 text-sm font-semibold text-indigo disabled:opacity-60"
     >
       {signingOut ? "Signing out…" : "Sign out"}
     </button>
