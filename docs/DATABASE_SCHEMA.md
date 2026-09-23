@@ -41,7 +41,11 @@ phone until they complete the add-phone flow — but it is required at the
 app level for full functionality (anything USSD-related is gated on
 `phone_verified = true`). `phone_verified` is set by the app after a
 successful phone OTP verification; the existing "update own profile"
-policy already covers that write, so no new RLS policy is needed.
+policy already covers that write, so no new RLS policy was needed —
+but migration `20260923190000_guard_phone_verification.sql` adds the
+`guard_phone_verification` trigger on top, so a false→true flip (or a
+number change under a true stamp) only sticks when the digits match the
+auth user's OTP'd phone. Console self-grants fail; both OTP flows pass.
 
 Migration (`supabase/migrations/*_add_phone_verification.sql` — already
 applied, do not re-run from scratch; new environments run all migrations
@@ -371,6 +375,8 @@ on public.profiles for update
 using (id = auth.uid());
 ```
 
+Guarded by migration `20260923190000_guard_phone_verification.sql`: the `guard_phone_verification` trigger requires a false→true `phone_verified` flip (or a number change under a true stamp) to match the auth user's OTP'd phone digits — console self-grants fail, real `sms`/`phone_change` flows pass, service-role/owner writes stay allowed for repairs.
+
 ### groups
 
 ```sql
@@ -412,18 +418,33 @@ using (public.is_active_member(group_id, auth.uid()));
 
 create policy "apply to join"
 on public.join_requests for insert
-with check (applicant_id = auth.uid());
+with check (
+  applicant_id = auth.uid()
+  and (
+    invited_by is null
+    or public.is_valid_inviter(group_id, invited_by)
+  )
+);
+
+create policy "applicants view own requests"
+on public.join_requests for select
+using (applicant_id = auth.uid());
+
+create policy "applicants delete own rejected requests"
+on public.join_requests for delete
+using (
+  applicant_id = auth.uid()
+  and status = 'rejected'
+);
 ```
 
 No update policy for regular users — status flips only via `tally_join_votes`.
 
-```sql
-create policy "applicants view own requests"
-on public.join_requests for select
-using (applicant_id = auth.uid());
-```
+Migration `20260923150000_applicant_view_own_requests.sql` (Day 5B): lets the join page read the caller's own rows (status only, never vote counts — applicant-blindness stays) so it can render "still voting" vs re-apply copy. Members' views unchanged.
 
-Migration `20260923150000_applicant_view_own_requests.sql` (Day 5B): lets the join page read the caller's own rows (status only, never vote counts — applicant-blindness stays) so it can render "still voting" vs "not admitted" terminal copy. Members' views unchanged; re-application stays blocked by the `(group_id, applicant_id)` unique constraint — deliberate for MVP.
+Migration `20260923180000_vote_integrity.sql` (bad-fix): `can_cast_vote()` helper tightens the vote insert check to same-circle voters (closes the cross-group hole); `tally_join_votes` rewritten with a pending-only terminal guard (late votes recorded but inert) plus conflict-safe member insert.
+
+Migration `20260923200000_invite_attribution.sql` (bad-fix): `is_valid_inviter()` enforces inviter-must-be-active-member-of-that-circle at insert time (faked ids fail, app retries bare → NULL); adds the rejected-only applicant delete policy so declined applicants can ask again without ever wiping a pending tally (vote-reset exploit closed). Re-application is now allowed — the old "blocked by unique constraint, deliberate" note is superseded.
 
 ### join_votes
 
@@ -440,13 +461,10 @@ using (
 
 create policy "cast vote as active member"
 on public.join_votes for insert
-with check (
-  voter_id in (
-    select id from public.group_members
-    where user_id = auth.uid() and status = 'active'
-  )
-);
+with check (public.can_cast_vote(join_request_id, voter_id));
 ```
+
+`can_cast_vote()` (migration `20260923180000_vote_integrity.sql`) restricts voters to active members of the request's own circle — cross-group voting fails the check.
 
 ### cycles
 
@@ -473,6 +491,8 @@ using (
 
 No client insert/update — written only by the payment-webhook Edge Function (service role bypasses RLS).
 
+Append-only since migration `20260923210000_money_immutability.sql`: only `pending → paid | late` transitions and no deletes — anything else raises, including for the service role (repairs go through a migration that disables/re-enables the trigger).
+
 ### payouts
 
 ```sql
@@ -487,6 +507,8 @@ using (
 ```
 
 No client insert/update — written only by the payout-processing Edge Function.
+
+Append-only since migration `20260923210000_money_immutability.sql`: only `pending → completed | failed` transitions and no deletes — anything else raises, including for the service role (repairs go through a migration that disables/re-enables the trigger).
 
 ---
 
