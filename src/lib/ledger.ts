@@ -133,9 +133,11 @@ export async function getLedgerEvents(
   for (const c of contributions) {
     if (groupId && c.cycles.group_id !== groupId) continue;
     // Contributions carry no created_at — pendings order by cycle due
-    // date, paid rows by paid_at. Both are pre-formatted server-side
+    // date, settled rows by paid_at. Both are pre-formatted server-side
     // so server and client renders never disagree (no hydration drift).
-    const paid = c.status === "paid";
+    // Late means the money arrived (webhook-verified, just past due),
+    // so late rows are history, never upcoming.
+    const settled = c.status === "paid" || c.status === "late";
     const event: LedgerEvent = {
       id: `c:${c.id}`,
       kind: "contribution",
@@ -145,13 +147,15 @@ export async function getLedgerEvents(
       currency: c.cycles.groups.currency,
       status: c.status,
       actor: names.get(c.member_id) ?? "A member",
-      detail: paid
-        ? `Cycle ${c.cycles.cycle_number} · paid ${fmtDate(c.paid_at)}`
+      detail: settled
+        ? c.status === "late"
+          ? `Cycle ${c.cycles.cycle_number} · paid late ${fmtDate(c.paid_at)}`
+          : `Cycle ${c.cycles.cycle_number} · paid ${fmtDate(c.paid_at)}`
         : `Cycle ${c.cycles.cycle_number} · due ${fmtDate(c.cycles.due_date)}`,
       paidAt: c.paid_at,
       dueDate: c.cycles.due_date,
     };
-    (paid ? history : due).push(event);
+    (settled ? history : due).push(event);
   }
 
   for (const p of payouts) {
