@@ -76,7 +76,7 @@ export default function PayButton({
         disabled={starting}
         className="flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink disabled:opacity-60"
       >
-        {starting ? "Starting payment…" : `Pay ${amountLabel}`}
+        {starting ? "Starting payment…" : `Pay your ${amountLabel} share`}
         {!starting && <HugeiconsIcon icon={ArrowRight01Icon} size={18} />}
       </button>
       {error && (

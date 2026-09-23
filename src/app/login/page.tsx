@@ -4,10 +4,13 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyAuthError } from "@/lib/auth-errors";
 import {
   normalizeToE164,
   InvalidPhoneError,
+  MismatchedCountryError,
   COUNTRY_CODES,
+  COUNTRY_NAMES,
   type CountryKey,
 } from "@/lib/phone";
 
@@ -32,7 +35,11 @@ function LoginForm() {
   const [country, setCountry] = useState<CountryKey>("NG");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [error, setError] = useState<string | null>(authError);
+  const [error, setError] = useState<string | null>(
+    // Callback failures arrive pre-mapped, but map again so a raw
+    // ?error= value can never render provider jargon.
+    authError ? friendlyAuthError(authError, "link") : null,
+  );
   const [sending, setSending] = useState(false);
   const [linkSentTo, setLinkSentTo] = useState<string | null>(null);
 
@@ -41,11 +48,17 @@ function LoginForm() {
     try {
       e164 = normalizeToE164(phone, country);
     } catch (err) {
-      setError(
-        err instanceof InvalidPhoneError
-          ? "That number doesn't look right — check the country and try again."
-          : "That number doesn't look right.",
-      );
+      if (err instanceof MismatchedCountryError) {
+        setError(
+          `That looks like a ${COUNTRY_NAMES[err.detected]} number — switch the country selector to ${COUNTRY_NAMES[err.detected]} (+${COUNTRY_CODES[err.detected]}).`,
+        );
+      } else {
+        setError(
+          err instanceof InvalidPhoneError
+            ? "That number doesn't look right — check the country and try again."
+            : "That number doesn't look right.",
+        );
+      }
       return;
     }
     setSending(true);
@@ -54,7 +67,7 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithOtp({ phone: e164 });
     setSending(false);
     if (error) {
-      setError(error.message);
+      setError(friendlyAuthError(error.message, "send"));
       return;
     }
     router.push(
@@ -79,7 +92,7 @@ function LoginForm() {
     });
     setSending(false);
     if (error) {
-      setError(error.message);
+      setError(friendlyAuthError(error.message, "send"));
       return;
     }
     setLinkSentTo(trimmed);
