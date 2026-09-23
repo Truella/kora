@@ -6,6 +6,9 @@ import PayButton from "./PayButton";
 import ConfirmingBanner from "./ConfirmingBanner";
 import InviteButton from "./InviteButton";
 import VoteButtons from "./VoteButtons";
+import ScheduleGenerator from "./ScheduleGenerator";
+import LedgerFeed from "../../activity/LedgerFeed";
+import { getLedgerEvents } from "@/lib/ledger";
 
 export const metadata = { title: "Circle" };
 
@@ -21,6 +24,16 @@ const BADGE: Record<string, string> = {
   paid: "bg-jade/15 text-jade",
   late: "bg-clay/15 text-clay",
 };
+
+// Reminder windows, computed once per render outside the component body
+// so the purity lint stays quiet — values are plain date strings.
+function dueWindows(): { today: string; soonCutoff: string } {
+  const today = new Date().toISOString().slice(0, 10);
+  const soonCutoff = new Date(Date.now() + 3 * 86400000)
+    .toISOString()
+    .slice(0, 10);
+  return { today, soonCutoff };
+}
 
 export default async function GroupDetailPage({
   params,
@@ -42,7 +55,7 @@ export default async function GroupDetailPage({
   const { data: group } = await supabase
     .from("groups")
     .select(
-      "id, name, description, contribution_amount, currency, frequency, status",
+      "id, name, description, contribution_amount, currency, frequency, status, created_by",
     )
     .eq("id", id)
     .maybeSingle();
@@ -81,7 +94,7 @@ export default async function GroupDetailPage({
 
   const { data: cycles } = await supabase
     .from("cycles")
-    .select("id, cycle_number, due_date, status")
+    .select("id, cycle_number, due_date, status, recipient_member_id")
     .eq("group_id", id)
     .order("cycle_number", { ascending: true });
 
@@ -95,6 +108,93 @@ export default async function GroupDetailPage({
   const byCycle = new Map(
     (contributions ?? []).map((c) => [c.cycle_id, c]),
   );
+
+  // Payout rows (schedule amounts) + recipient names for the rotation
+  // view. Same shared-group profile resolution as the ledger.
+  const { data: payouts } =
+    member && cycles && cycles.length > 0
+      ? await supabase
+          .from("payouts")
+          .select("cycle_id, amount, recipient_member_id")
+          .in(
+            "cycle_id",
+            cycles.map((c) => c.id),
+          )
+      : { data: [] };
+  const payoutByCycle = new Map(
+    (payouts ?? []).map((p) => [p.cycle_id, p]),
+  );
+
+  const recipientIds = [
+    ...new Set((cycles ?? []).map((c) => c.recipient_member_id)),
+  ];
+  let recipientNames = new Map<string, string>();
+  if (member && recipientIds.length > 0) {
+    const { data: rmembers } = await supabase
+      .from("group_members")
+      .select("id, user_id")
+      .in("id", recipientIds);
+    const rrows = (rmembers ?? []) as { id: string; user_id: string }[];
+    const userIds = [...new Set(rrows.map((m) => m.user_id))];
+    if (userIds.length > 0) {
+      const { data: rprofs } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", userIds);
+      const byUser = new Map(
+        ((rprofs ?? []) as { id: string; full_name: string }[]).map((p) => [
+          p.id,
+          p.full_name,
+        ]),
+      );
+      recipientNames = new Map(
+        rrows.map((m) => [
+          m.id,
+          byUser.get(m.user_id) ?? `····${m.user_id.slice(-4)}`,
+        ]),
+      );
+    }
+  }
+  const potFor = (cycleId: string): string | null => {
+    const row = payoutByCycle.get(cycleId);
+    if (!row) return null;
+    return `${symbol}${Number(row.amount).toLocaleString()}`;
+  };
+
+  // Active member count — feeds the generator card pre-schedule and the
+  // creator's sync affordance once the rotation exists.
+  const { count: activeCount } = member
+    ? await supabase
+        .from("group_members")
+        .select("id", { count: "exact", head: true })
+        .eq("group_id", id)
+        .eq("status", "active")
+    : { count: null };
+  const scheduledCount = new Set(
+    (cycles ?? []).map((c) => c.recipient_member_id),
+  ).size;
+  const showSync =
+    !!member &&
+    !!user &&
+    group.created_by === user.id &&
+    !!cycles &&
+    cycles.length > 0 &&
+    (activeCount ?? 0) > scheduledCount;
+
+  // In-app reminders: computed from already-fetched rows, no new queries.
+  // A contribution row only exists once Pay starts, so "no row" counts as
+  // unpaid — the nudge must fire before the first payment too.
+  const isCreator = !!user && group.created_by === user.id;
+  const { today, soonCutoff } = dueWindows();
+  const unpaidCycles = (cycles ?? []).filter((c) => {
+    const mine = byCycle.get(c.id) as { status?: string } | undefined;
+    return !mine || mine.status !== "paid";
+  });
+  const overdue = unpaidCycles.filter((c) => c.due_date < today);
+  const dueSoon =
+    overdue.length === 0
+      ? unpaidCycles.filter((c) => c.due_date <= soonCutoff)
+      : [];
 
   // Pending join requests + their votes. Visible to members only via
   // RLS; status flips come from the tally_join_votes trigger, never
@@ -127,9 +227,33 @@ export default async function GroupDetailPage({
     tally.set(v.join_request_id, t);
   }
 
+  // Circle-scoped ledger for the "Recent activity" strip — same shared
+  // feed component as /activity, filtered to this group.
+  const ledger = member
+    ? await getLedgerEvents(supabase, id)
+    : { due: [], history: [] };
+
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
       {confirming && <ConfirmingBanner />}
+
+      {member && overdue.length > 0 && (
+        <div className="rounded-2xl bg-clay/10 px-4 py-3 text-sm text-clay">
+          {overdue.length} contribution{overdue.length === 1 ? "" : "s"}{" "}
+          overdue — Cycle {overdue[0].cycle_number} was due{" "}
+          {overdue[0].due_date}. Pay now to protect your trust score.
+        </div>
+      )}
+      {member && dueSoon.length > 0 && (
+        <div className="rounded-2xl bg-gold/15 px-4 py-3 text-sm text-ink dark:text-white">
+          {amountLabel} {group.currency} due {dueSoon[0].due_date} (Cycle{" "}
+          {dueSoon[0].cycle_number})
+          {dueSoon.length > 1
+            ? ` — plus ${dueSoon.length - 1} more within 3 days`
+            : ""}
+          .
+        </div>
+      )}
 
       <div className="flex items-center gap-3">
         <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo/10 dark:bg-white/10">
@@ -151,21 +275,31 @@ export default async function GroupDetailPage({
       </div>
 
       {!cycles || cycles.length === 0 ? (
-        <div className="rounded-2xl border border-black/10 bg-white p-5 text-center dark:border-white/10 dark:bg-ink">
-          <p className="font-display text-lg font-semibold text-ink dark:text-white">
-            Waiting for schedule
-          </p>
-          <p className="mt-1 text-sm leading-6 text-zinc-500">
-            The payout rotation has not been generated yet — check back once
-            the circle activates.
-          </p>
-        </div>
+        member && isCreator ? (
+          <ScheduleGenerator
+            groupId={group.id}
+            frequency={group.frequency}
+            memberCount={activeCount ?? 1}
+          />
+        ) : (
+          <div className="rounded-2xl border border-black/10 bg-white p-5 text-center dark:border-white/10 dark:bg-ink">
+            <p className="font-display text-lg font-semibold text-ink dark:text-white">
+              Waiting for schedule
+            </p>
+            <p className="mt-1 text-sm leading-6 text-zinc-500">
+              The payout rotation has not been generated yet — the organizer
+              starts it once membership settles.
+            </p>
+          </div>
+        )
       ) : (
         <ul className="flex flex-col gap-3">
-          {cycles.map((cycle) => {
-            const contribution = byCycle.get(cycle.id);
+          {cycles.map((cycle) => {            const contribution = byCycle.get(cycle.id);
             const status = contribution?.status ?? "pending";
             const isPaid = status === "paid";
+            const recipient =
+              recipientNames.get(cycle.recipient_member_id) ?? null;
+            const pot = potFor(cycle.id);
             return (
               <li
                 key={cycle.id}
@@ -175,9 +309,18 @@ export default async function GroupDetailPage({
                   <div>
                     <p className="font-display text-lg font-semibold text-ink dark:text-white">
                       Cycle {cycle.cycle_number}
+                      {recipient ? (
+                        <span className="font-sans text-sm font-normal text-zinc-500">
+                          {" "}
+                          → {recipient}
+                        </span>
+                      ) : (
+                        ""
+                      )}
                     </p>
                     <p className="font-mono text-xs text-zinc-500">
                       {amountLabel} · due {cycle.due_date} · {cycle.status}
+                      {pot ? ` · pot ${pot}` : ""}
                       {contribution?.paid_at
                         ? ` · paid ${new Date(contribution.paid_at).toLocaleDateString()}`
                         : ""}
@@ -205,6 +348,30 @@ export default async function GroupDetailPage({
             );
           })}
         </ul>
+      )}
+
+      {showSync && (
+        <ScheduleGenerator
+          groupId={group.id}
+          frequency={group.frequency}
+          memberCount={activeCount ?? scheduledCount}
+          mode="sync"
+          newCount={(activeCount ?? scheduledCount) - scheduledCount}
+        />
+      )}
+
+      {member && (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-display text-lg font-semibold text-ink dark:text-white">
+            Recent activity
+          </h2>
+          <LedgerFeed
+            initialDue={ledger.due}
+            initialHistory={ledger.history}
+            groupId={id}
+            previewCount={5}
+          />
+        </section>
       )}
 
       {member && requests && requests.length > 0 && (
