@@ -52,7 +52,7 @@ export default function ConfirmingBanner({ groupId }: { groupId: string }) {
           .select("id")
           .eq("member_id", memberId)
           .in("cycle_id", ids)
-          .eq("status", "paid")
+          .in("status", ["paid", "late"])
           .gte("paid_at", since)
           .limit(1);
         return (rows ?? []).length > 0;
