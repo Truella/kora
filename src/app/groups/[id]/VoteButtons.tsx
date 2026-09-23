@@ -52,7 +52,7 @@ export default function VoteButtons({
 
   if (voted) {
     return (
-      <p className="text-xs text-zinc-400">
+      <p className="text-xs text-indigo/50">
         {voted === "already"
           ? "You already voted on this request."
           : `You voted ${voted}.`}
@@ -72,15 +72,15 @@ export default function VoteButtons({
             whileTap={{ scale: 0.97 }}
             className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold capitalize disabled:opacity-60 ${
               choice === "approve"
-                ? "bg-jade/15 text-jade"
-                : "bg-clay/15 text-clay"
+                ? "bg-indigo/15 text-indigo"
+                : "bg-gold/15 text-indigo"
             }`}
           >
             {voting === choice ? "Voting…" : choice}
           </motion.button>
         ))}
       </div>
-      {error && <p className="text-sm text-clay">{error}</p>}
+      {error && <p className="text-sm text-indigo">{error}</p>}
     </div>
   );
 }
