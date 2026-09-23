@@ -82,34 +82,34 @@ export default async function ProfilePage() {
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
       <div className="flex items-center gap-3">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10 dark:bg-white/10">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10">
           <HugeiconsIcon
             icon={UserIcon}
             size={26}
-            className="text-indigo dark:text-gold"
+            className="text-indigo"
           />
         </span>
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight">
             {profile?.full_name || "Your profile"}
           </h1>
-          <p className="font-mono text-xs text-zinc-500">
+          <p className="font-mono text-xs text-indigo/60">
             {profile?.phone ?? user?.email ?? ""}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white">
+      <div className="flex items-center gap-3 rounded-2xl border border-indigo/10 bg-paper p-4">
         <HugeiconsIcon
           icon={ShieldCheckIcon}
           size={22}
-          className={verified ? "text-jade" : "text-clay"}
+          className={verified ? "text-indigo" : "text-indigo"}
         />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold">
             {verified ? "Number verified" : "Number not verified"}
           </p>
-          <p className="text-xs leading-5 text-zinc-500">
+          <p className="text-xs leading-5 text-indigo/60">
             {verified
               ? "USSD can identify you by this number."
               : "Verify a number to unlock anything USSD-related."}
@@ -118,7 +118,7 @@ export default async function ProfilePage() {
         {!verified && (
           <Link
             href="/add-phone?next=/profile"
-            className="shrink-0 rounded-full bg-indigo px-4 py-2 text-xs font-semibold text-white"
+            className="shrink-0 rounded-full bg-indigo px-4 py-2 text-xs font-semibold text-paper"
           >
             Verify
           </Link>
@@ -144,7 +144,7 @@ export default async function ProfilePage() {
                 <RevealLi
                   key={g.id}
                   delay={Math.min(i * 0.05, 0.2)}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white"
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-indigo/10 bg-paper p-4"
                 >
                   <div className="min-w-0 flex-1">
                     <Link
@@ -153,12 +153,12 @@ export default async function ProfilePage() {
                     >
                       {g.name}
                     </Link>
-                    <p className="font-mono text-xs text-zinc-400">
+                    <p className="font-mono text-xs text-indigo/50">
                       {recordDetail}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-jade/15 px-3 py-1 text-xs font-semibold text-jade">
-                    Trust{" "}
+                  <span className="shrink-0 rounded-full bg-indigo/15 px-3 py-1 text-xs font-semibold text-indigo">
+                    Trust{""}
                     {score !== undefined && Number.isFinite(score)
                       ? score
                       : 100}
@@ -167,7 +167,7 @@ export default async function ProfilePage() {
               );
             })}
           </ul>
-          <p className="text-xs leading-5 text-zinc-500">
+          <p className="text-xs leading-5 text-indigo/60">
             Scores are per-circle and move with on-time payments — the counts
             show what each score is built from.
           </p>
