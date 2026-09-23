@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 // Casts one vote on a join request. voter_id is the caller's
-// group_members row id (not the user id) — enforced by RLS.
-// The tally_join_votes trigger decides approve/reject from here.
+// group_members row id (not the user id) — RLS enforces same-circle
+// voting, so a member of one circle can't vote on another's requests.
+// The tally_join_votes trigger decides approve/reject from here, and
+// only while the request is still pending.
 export default function VoteButtons({
   joinRequestId,
   memberId,

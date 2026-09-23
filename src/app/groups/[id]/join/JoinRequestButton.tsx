@@ -10,7 +10,20 @@ import { createClient } from "@/lib/supabase/client";
 // Applicants can read their own request status (never vote counts) via
 // the "applicants view own requests" policy — success copy sets that
 // expectation.
-export default function JoinRequestButton({ groupId }: { groupId: string }) {
+//
+// Re-apply: the (group_id, applicant_id) unique row persists after a
+// decision, so a rejected applicant first deletes their own rejected
+// row (allowed by the rejected-only delete policy — pending rows can
+// never be wiped, closing the vote-reset exploit), then inserts fresh.
+// invited_by rides along best-effort: a faked id fails the DB check,
+// so the insert is retried bare and attribution falls back to NULL.
+export default function JoinRequestButton({
+  groupId,
+  invitedBy,
+}: {
+  groupId: string;
+  invitedBy?: string | null;
+}) {
   const [state, setState] = useState<
     "idle" | "sending" | "sent" | "duplicate" | "invalid" | "error"
   >("idle");
@@ -26,17 +39,34 @@ export default function JoinRequestButton({ groupId }: { groupId: string }) {
         setState("error");
         return;
       }
-      const { error } = await supabase.from("join_requests").insert({
-        group_id: groupId,
-        applicant_id: user.id,
-      });
+      // Clear a past rejection first (no-op when there is none) so a
+      // second application starts a fresh vote. Only rejected rows are
+      // deletable — the policy refuses pending ones.
+      await supabase
+        .from("join_requests")
+        .delete()
+        .eq("group_id", groupId)
+        .eq("applicant_id", user.id)
+        .eq("status", "rejected");
+      const insertRequest = (inviter: string | null) =>
+        supabase.from("join_requests").insert({
+          group_id: groupId,
+          applicant_id: user.id,
+          ...(inviter ? { invited_by: inviter } : {}),
+        });
+      let { error } = await insertRequest(invitedBy ?? null);
+      // A faked/foreign inviter id fails the DB membership check —
+      // retry bare so attribution degrades to NULL instead of an error.
+      if (error && error.code !== "23505" && error.code !== "23503") {
+        ({ error } = await insertRequest(null));
+      }
       if (!error) {
         setState("sent");
         return;
       }
-      // Unique (group_id, applicant_id) — one request row each. The row
-      // persists after a decision, so this covers pending, approved,
-      // and rejected alike: neutral copy, the member knows the outcome.
+      // Unique (group_id, applicant_id) — one request row each. After
+      // the pre-delete above, a duplicate means the request is pending
+      // (or approved): the outcome is known to members, not shown here.
       if (error.code === "23505") setState("duplicate");
       // FK violation — the link's group id matches no circle.
       else if (error.code === "23503") setState("invalid");
@@ -58,8 +88,8 @@ export default function JoinRequestButton({ groupId }: { groupId: string }) {
   if (state === "duplicate") {
     return (
       <p className="rounded-2xl bg-gold/15 px-4 py-3 text-sm leading-6 text-ink dark:text-white">
-        You already have a request in for this circle — ask a member for
-        the outcome.
+        You already have a request in for this circle — the vote is still
+        going. Ask a member for the outcome.
       </p>
     );
   }
