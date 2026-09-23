@@ -8,11 +8,11 @@ import { createClient } from "@/lib/supabase/client";
 import { getLedgerEvents, type LedgerEvent } from "@/lib/ledger";
 
 const BADGE: Record<string, string> = {
-  pending: "bg-gold/15 text-ink dark:text-white",
-  paid: "bg-jade/15 text-jade",
-  completed: "bg-jade/15 text-jade",
-  late: "bg-clay/15 text-clay",
-  failed: "bg-clay/15 text-clay",
+  pending: "bg-gold/15 text-indigo",
+  paid: "bg-indigo/15 text-indigo",
+  completed: "bg-indigo/15 text-indigo",
+  late: "bg-gold/15 text-indigo",
+  failed: "bg-gold/15 text-indigo",
 };
 
 // Live ledger: server snapshot in, realtime merges on top. Any INSERT or
@@ -110,26 +110,26 @@ export default function LedgerFeed({
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <span
-          className={`h-2 w-2 rounded-full ${live ? "bg-jade" : "bg-zinc-400"}`}
+          className={`h-2 w-2 rounded-full ${live ? "bg-indigo" : "bg-indigo/50"}`}
         />
-        <p className="text-xs text-zinc-500">
+        <p className="text-xs text-indigo/60">
           {live ? "Live" : "Connecting…"}
         </p>
       </div>
 
       {empty ? (
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-black/10 bg-white px-8 py-12 text-center dark:border-white/10 dark:bg-ink">
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10 dark:bg-white/10">
+        <div className="flex flex-col items-center gap-3 rounded-2xl border border-indigo/10 bg-paper px-8 py-12 text-center">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10">
             <HugeiconsIcon
               icon={Activity01Icon}
               size={26}
-              className="text-indigo dark:text-gold"
+              className="text-indigo"
             />
           </span>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-ink dark:text-white">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-indigo">
             Nothing yet
           </h1>
-          <p className="max-w-xs text-sm leading-6 text-zinc-500">
+          <p className="max-w-xs text-sm leading-6 text-indigo/60">
             Contributions and payouts will stream in here once your circles
             are active.
           </p>
@@ -138,7 +138,7 @@ export default function LedgerFeed({
         <>
           {shownDue.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="font-display text-lg font-semibold text-ink dark:text-white">
+              <h2 className="font-display text-lg font-semibold text-indigo">
                 Due now
               </h2>
               <ul className="flex flex-col gap-2">
@@ -151,7 +151,7 @@ export default function LedgerFeed({
 
           {shownHistory.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="font-display text-lg font-semibold text-ink dark:text-white">
+              <h2 className="font-display text-lg font-semibold text-indigo">
                 History
               </h2>
               <ul className="flex flex-col gap-2">
@@ -164,7 +164,7 @@ export default function LedgerFeed({
                   due.length > previewCount) && (
                   <Link
                     href="/activity"
-                    className="text-sm font-medium text-indigo dark:text-gold"
+                    className="text-sm font-medium text-indigo"
                   >
                     View all activity
                   </Link>
@@ -185,16 +185,16 @@ function LedgerRow({
   showGroup: boolean;
 }) {
   return (
-    <li className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white px-4 py-3 dark:border-white/10 dark:bg-ink">
+    <li className="flex items-center justify-between gap-3 rounded-2xl border border-indigo/10 bg-paper px-4 py-3">
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-ink dark:text-white">
-          {event.actor}{" "}
-          <span className="font-normal text-zinc-500">
-            · {event.kind === "payout" ? "receives" : "owes"} {event.amountLabel}{" "}
+        <p className="truncate text-sm font-medium text-indigo">
+          {event.actor}{""}
+          <span className="font-normal text-indigo/60">
+            · {event.kind === "payout" ? "receives" : "owes"} {event.amountLabel}{""}
             {event.currency}
           </span>
         </p>
-        <p className="truncate font-mono text-xs text-zinc-500">
+        <p className="truncate font-mono text-xs text-indigo/60">
           {showGroup ? `${event.groupName} · ` : ""}
           {event.detail}
         </p>
