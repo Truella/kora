@@ -7,8 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 
 // Sends one join request. RLS ("apply to join") lets any signed-in
 // user insert their own row — no membership needed to apply.
-// Applicants can't read the request afterwards (no select policy
-// for outsiders), so success copy sets that expectation.
+// Applicants can read their own request status (never vote counts) via
+// the "applicants view own requests" policy — success copy sets that
+// expectation.
 export default function JoinRequestButton({ groupId }: { groupId: string }) {
   const [state, setState] = useState<
     "idle" | "sending" | "sent" | "duplicate" | "invalid" | "error"
