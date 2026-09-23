@@ -22,6 +22,36 @@ export default async function ProfilePage() {
 
   const verified = profile?.phone_verified ?? false;
 
+  // Per-circle trust (Day 5A). trust_score_cache lives on the membership
+  // row, so this is a per-circle list — never a cross-circle average.
+  // RLS ("view members of your groups" + "view groups you belong to")
+  // scopes both reads to the caller's own circles.
+  type MyMembership = {
+    group_id: string;
+    trust_score_cache: number | string;
+  };
+  const { data: memberships } = user
+    ? await supabase
+        .from("group_members")
+        .select("group_id, trust_score_cache")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+    : { data: [] };
+  const myRows = (memberships ?? []) as MyMembership[];
+  const scoreByGroup = new Map(
+    myRows.map((m) => [m.group_id, Number(m.trust_score_cache)]),
+  );
+  const circleIds = [...scoreByGroup.keys()];
+  const { data: circles } =
+    user && circleIds.length > 0
+      ? await supabase
+          .from("groups")
+          .select("id, name")
+          .in("id", circleIds)
+          .order("name", { ascending: true })
+      : { data: [] };
+  const myCircles = (circles ?? []) as { id: string; name: string }[];
+
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
       <div className="flex items-center gap-3">
@@ -67,6 +97,41 @@ export default async function ProfilePage() {
           </Link>
         )}
       </div>
+
+      {user && myCircles.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <h2 className="font-display text-lg font-semibold">
+            Trust in each circle
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {myCircles.map((g) => {
+              const score = scoreByGroup.get(g.id);
+              return (
+                <li
+                  key={g.id}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white"
+                >
+                  <Link
+                    href={`/groups/${g.id}`}
+                    className="min-w-0 flex-1 truncate text-sm font-semibold"
+                  >
+                    {g.name}
+                  </Link>
+                  <span className="shrink-0 rounded-full bg-jade/15 px-3 py-1 text-xs font-semibold text-jade">
+                    Trust{" "}
+                    {score !== undefined && Number.isFinite(score)
+                      ? score
+                      : 100}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="text-xs leading-5 text-zinc-500">
+            Scores are per-circle and move with on-time payments.
+          </p>
+        </section>
+      )}
 
       <div className="mt-auto flex flex-col gap-2">
         <SignOutButton />
