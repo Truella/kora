@@ -440,3 +440,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/generate-schedule/deno.json"
 entrypoint = "./functions/generate-schedule/index.ts"
+
+[functions.process-payout]
+enabled = true
+verify_jwt = false
+import_map = "./functions/process-payout/deno.json"
+entrypoint = "./functions/process-payout/index.ts"

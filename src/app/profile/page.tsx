@@ -27,13 +27,14 @@ export default async function ProfilePage() {
   // RLS ("view members of your groups" + "view groups you belong to")
   // scopes both reads to the caller's own circles.
   type MyMembership = {
+    id: string;
     group_id: string;
     trust_score_cache: number | string;
   };
   const { data: memberships } = user
     ? await supabase
         .from("group_members")
-        .select("group_id, trust_score_cache")
+        .select("id, group_id, trust_score_cache")
         .eq("user_id", user.id)
         .eq("status", "active")
     : { data: [] };
@@ -41,6 +42,31 @@ export default async function ProfilePage() {
   const scoreByGroup = new Map(
     myRows.map((m) => [m.group_id, Number(m.trust_score_cache)]),
   );
+  // On-time/late record behind each score: settled contributions on the
+  // caller's own membership rows. Missing/pending rows are not trust events.
+  const recordByGroup = new Map<string, { onTime: number; late: number }>();
+  if (user && myRows.length > 0) {
+    const { data: settledMine } = await supabase
+      .from("contributions")
+      .select("member_id, status")
+      .in(
+        "member_id",
+        myRows.map((m) => m.id),
+      )
+      .in("status", ["paid", "late"]);
+    const memberToGroup = new Map(myRows.map((m) => [m.id, m.group_id]));
+    for (const row of (settledMine ?? []) as {
+      member_id: string;
+      status: string;
+    }[]) {
+      const gid = memberToGroup.get(row.member_id);
+      if (!gid) continue;
+      const t = recordByGroup.get(gid) ?? { onTime: 0, late: 0 };
+      if (row.status === "late") t.late += 1;
+      else t.onTime += 1;
+      recordByGroup.set(gid, t);
+    }
+  }
   const circleIds = [...scoreByGroup.keys()];
   const { data: circles } =
     user && circleIds.length > 0
@@ -106,17 +132,29 @@ export default async function ProfilePage() {
           <ul className="flex flex-col gap-2">
             {myCircles.map((g) => {
               const score = scoreByGroup.get(g.id);
+              const record = recordByGroup.get(g.id);
+              const settledTotal =
+                (record?.onTime ?? 0) + (record?.late ?? 0);
+              const recordDetail =
+                settledTotal === 0
+                  ? "No payments yet"
+                  : `${record?.onTime ?? 0} on-time · ${record?.late ?? 0} late`;
               return (
                 <li
                   key={g.id}
                   className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white"
                 >
-                  <Link
-                    href={`/groups/${g.id}`}
-                    className="min-w-0 flex-1 truncate text-sm font-semibold"
-                  >
-                    {g.name}
-                  </Link>
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/groups/${g.id}`}
+                      className="block truncate text-sm font-semibold"
+                    >
+                      {g.name}
+                    </Link>
+                    <p className="font-mono text-xs text-zinc-400">
+                      {recordDetail}
+                    </p>
+                  </div>
                   <span className="shrink-0 rounded-full bg-jade/15 px-3 py-1 text-xs font-semibold text-jade">
                     Trust{" "}
                     {score !== undefined && Number.isFinite(score)
@@ -128,7 +166,8 @@ export default async function ProfilePage() {
             })}
           </ul>
           <p className="text-xs leading-5 text-zinc-500">
-            Scores are per-circle and move with on-time payments.
+            Scores are per-circle and move with on-time payments — the counts
+            show what each score is built from.
           </p>
         </section>
       )}

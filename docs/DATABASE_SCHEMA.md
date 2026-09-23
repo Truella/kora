@@ -515,7 +515,7 @@ Append-only since migration `20260923210000_money_immutability.sql`: only `pendi
 ## 5. What still needs an Edge Function (service role, bypasses RLS)
 
 1. **Payment webhook handler** — receives Paystack/Flutterwave confirmation, writes `contributions.status = 'paid'` + `payment_reference` — or `'late'` when the money arrives after the cycle's `due_date` (Day 5B late rule; this is what moves trust scores off 100 via the existing `update_trust_score` trigger).
-2. **Payout processor** — on cycle due date, triggers split payment to recipient, writes `payouts` row.
+2. **Payout processor** (`supabase/functions/process-payout`) — walks `payouts` `pending → completed | failed` (the only writer; RLS blocks clients, the append-only guard enforces the transition). `complete` requires every active member's contribution for the cycle to be settled (`paid`/`late`, webhook-verified; missing row = unpaid → 409 with settled/expected counts), then stamps `paid_at` + `payout_reference` and flips the cycle to `completed`. `fail` records a missed disbursement. Demo scope: the completion record is the disbursement proof — a live bank/mobile-money transfer to the recipient is roadmap (needs recipient account capture first).
 3. **Cycle generator** — on group activation (once membership is stable), creates one `cycles` row per member per rotation, in `payout_position` order.
 
 These three are the only places money-adjacent state changes — everything else (votes, membership, trust score) is enforced entirely by triggers and RLS inside Postgres.

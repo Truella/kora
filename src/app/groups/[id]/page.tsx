@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { UserGroupIcon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import PayButton from "./PayButton";
+import PayoutAction from "./PayoutAction";
 import ConfirmingBanner from "./ConfirmingBanner";
 import InviteButton from "./InviteButton";
 import VoteButtons from "./VoteButtons";
@@ -23,6 +24,8 @@ const BADGE: Record<string, string> = {
   pending: "bg-gold/15 text-ink dark:text-white",
   paid: "bg-jade/15 text-jade",
   late: "bg-clay/15 text-clay",
+  completed: "bg-jade/15 text-jade",
+  failed: "bg-clay/15 text-clay",
 };
 
 // Reminder windows, computed once per render outside the component body
@@ -109,13 +112,14 @@ export default async function GroupDetailPage({
     (contributions ?? []).map((c) => [c.cycle_id, c]),
   );
 
-  // Payout rows (schedule amounts) + recipient names for the rotation
-  // view. Same shared-group profile resolution as the ledger.
+  // Payout rows (schedule amounts + disbursement state) + recipient names
+  // for the rotation view. Same shared-group profile resolution as the
+  // ledger. Status drives the PayoutAction disbursement button.
   const { data: payouts } =
     member && cycles && cycles.length > 0
       ? await supabase
           .from("payouts")
-          .select("cycle_id, amount, recipient_member_id")
+          .select("cycle_id, amount, recipient_member_id, status")
           .in(
             "cycle_id",
             cycles.map((c) => c.id),
@@ -278,6 +282,30 @@ export default async function GroupDetailPage({
     );
   }
 
+  // Trust breakdown: per-member on-time vs late counts behind the cached
+  // score. Contributions are member-readable via RLS; only settled rows
+  // (paid/late) count — pendings and missing rows are not trust events.
+  const trustBreakdown = new Map<string, { onTime: number; late: number }>();
+  if (member && circleRows.length > 0 && cycles && cycles.length > 0) {
+    const { data: settledRows } = await supabase
+      .from("contributions")
+      .select("member_id, status")
+      .in(
+        "cycle_id",
+        cycles.map((c) => c.id),
+      )
+      .in("status", ["paid", "late"]);
+    for (const row of (settledRows ?? []) as {
+      member_id: string;
+      status: string;
+    }[]) {
+      const t = trustBreakdown.get(row.member_id) ?? { onTime: 0, late: 0 };
+      if (row.status === "late") t.late += 1;
+      else t.onTime += 1;
+      trustBreakdown.set(row.member_id, t);
+    }
+  }
+
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
       {confirming && <ConfirmingBanner groupId={group.id} />}
@@ -353,6 +381,10 @@ export default async function GroupDetailPage({
             const recipient =
               recipientNames.get(cycle.recipient_member_id) ?? null;
             const pot = potFor(cycle.id);
+            const payout = payoutByCycle.get(cycle.id) as
+              | { status?: string }
+              | undefined;
+            const payoutStatus = payout?.status ?? "pending";
             return (
               <li
                 key={cycle.id}
@@ -408,6 +440,22 @@ export default async function GroupDetailPage({
                     trust took a hit.
                   </p>
                 )}
+                {member && (
+                  <div className="flex flex-col gap-2 border-t border-black/5 pt-3 dark:border-white/10">
+                    <p className="font-mono text-xs text-zinc-500">
+                      Payout ·{" "}
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${BADGE[payoutStatus] ?? BADGE.pending}`}
+                      >
+                        {payoutStatus}
+                      </span>
+                    </p>
+                    <PayoutAction
+                      cycleId={cycle.id}
+                      payoutStatus={payoutStatus}
+                    />
+                  </div>
+                )}
               </li>
             );
           })}
@@ -445,6 +493,13 @@ export default async function GroupDetailPage({
                   ? `Invited by ${inviter ?? "a member"}`
                   : "Joined via link";
               const score = Number(m.trust_score_cache);
+              const record = trustBreakdown.get(m.id);
+              const settledTotal =
+                (record?.onTime ?? 0) + (record?.late ?? 0);
+              const recordDetail =
+                settledTotal === 0
+                  ? "No payments yet"
+                  : `${record?.onTime ?? 0} on-time · ${record?.late ?? 0} late`;
               return (
                 <li
                   key={m.id}
@@ -463,6 +518,9 @@ export default async function GroupDetailPage({
                       )}
                     </p>
                     <p className="font-mono text-xs text-zinc-500">{sub}</p>
+                    <p className="font-mono text-xs text-zinc-400">
+                      {recordDetail}
+                    </p>
                   </div>
                   <span className="shrink-0 rounded-full bg-jade/15 px-3 py-1 text-xs font-semibold text-jade">
                     Trust {Number.isFinite(score) ? score : 100}
@@ -472,7 +530,8 @@ export default async function GroupDetailPage({
             })}
           </ul>
           <p className="text-xs leading-5 text-zinc-500">
-            Scores start at 100 for everyone and move with on-time payments.
+            Scores start at 100 for everyone and move with on-time payments —
+            the counts underneath show what each score is built from.
           </p>
         </section>
       )}
