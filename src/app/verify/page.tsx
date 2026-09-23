@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyAuthError } from "@/lib/auth-errors";
 
 type Flow = "phone" | "add-phone";
 
@@ -50,9 +51,7 @@ function VerifyForm() {
 
     if (error || !data.user) {
       setVerifying(false);
-      setError(
-        error?.message ?? "That code didn't work — check it and try again.",
-      );
+      setError(friendlyAuthError(error?.message, "code"));
       return;
     }
 
@@ -91,7 +90,7 @@ function VerifyForm() {
       flow === "add-phone"
         ? await supabase.auth.updateUser({ phone: to })
         : await supabase.auth.signInWithOtp({ phone: to });
-    if (error) setError(error.message);
+    if (error) setError(friendlyAuthError(error.message, "send"));
     else setResent(true);
   }
 
