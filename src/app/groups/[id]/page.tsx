@@ -183,12 +183,14 @@ export default async function GroupDetailPage({
 
   // In-app reminders: computed from already-fetched rows, no new queries.
   // A contribution row only exists once Pay starts, so "no row" counts as
-  // unpaid — the nudge must fire before the first payment too.
+  // unpaid — the nudge must fire before the first payment too. Late rows
+  // are settled money (the webhook wrote them on verified payment), so
+  // they leave the nudge lists alone.
   const isCreator = !!user && group.created_by === user.id;
   const { today, soonCutoff } = dueWindows();
   const unpaidCycles = (cycles ?? []).filter((c) => {
     const mine = byCycle.get(c.id) as { status?: string } | undefined;
-    return !mine || mine.status !== "paid";
+    return !mine || (mine.status !== "paid" && mine.status !== "late");
   });
   const overdue = unpaidCycles.filter((c) => c.due_date < today);
   const dueSoon =
@@ -232,6 +234,49 @@ export default async function GroupDetailPage({
   const ledger = member
     ? await getLedgerEvents(supabase, id)
     : { due: [], history: [] };
+
+  // Members with trust + inviter labels (Day 5A). Read-only: RLS
+  // "view members of your groups" scopes to fellow members; profiles
+  // resolve via the shared-group policy with a masked fallback.
+  type CircleMemberRow = {
+    id: string;
+    user_id: string;
+    invited_by: string | null;
+    trust_score_cache: number | string;
+    payout_position: number | null;
+  };
+  const { data: circleMembers } = member
+    ? await supabase
+        .from("group_members")
+        .select("id, user_id, invited_by, trust_score_cache, payout_position")
+        .eq("group_id", id)
+        .eq("status", "active")
+        .order("payout_position", { ascending: true })
+    : { data: [] };
+  const circleRows = (circleMembers ?? []) as CircleMemberRow[];
+  // invited_by references profiles(id), so one profile map covers both
+  // member names and inviter names.
+  let profileNames = new Map<string, string>();
+  if (member && circleRows.length > 0) {
+    const needIds = [
+      ...new Set([
+        ...circleRows.map((m) => m.user_id),
+        ...circleRows
+          .map((m) => m.invited_by)
+          .filter((v): v is string => v !== null),
+      ]),
+    ];
+    const { data: mprofs } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", needIds);
+    profileNames = new Map(
+      ((mprofs ?? []) as { id: string; full_name: string }[]).map((p) => [
+        p.id,
+        p.full_name,
+      ]),
+    );
+  }
 
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
@@ -302,6 +347,9 @@ export default async function GroupDetailPage({
           {cycles.map((cycle) => {            const contribution = byCycle.get(cycle.id);
             const status = contribution?.status ?? "pending";
             const isPaid = status === "paid";
+            // Late is settled money (webhook-verified, just past due) —
+            // no second Pay button, terminal copy instead.
+            const isSettled = isPaid || status === "late";
             const recipient =
               recipientNames.get(cycle.recipient_member_id) ?? null;
             const pot = potFor(cycle.id);
@@ -342,7 +390,7 @@ export default async function GroupDetailPage({
                     </span>
                   </div>
                 </div>
-                {member && !isPaid && (
+                {member && !isSettled && (
                   <PayButton
                     cycleId={cycle.id}
                     groupId={group.id}
@@ -352,6 +400,12 @@ export default async function GroupDetailPage({
                 {isPaid && (
                   <p className="text-xs text-zinc-400">
                     Paid — receipt confirmed by webhook.
+                  </p>
+                )}
+                {status === "late" && (
+                  <p className="text-xs text-clay">
+                    Paid late — the money arrived after the due date, so
+                    trust took a hit.
                   </p>
                 )}
               </li>
@@ -369,6 +423,58 @@ export default async function GroupDetailPage({
           mode="sync"
           newCount={(activeCount ?? scheduledCount) - scheduledCount}
         />
+      )}
+
+      {member && circleRows.length > 0 && (
+        <section className="flex flex-col gap-3">
+          <h2 className="font-display text-lg font-semibold text-ink dark:text-white">
+            Members
+          </h2>
+          <ul className="flex flex-col gap-2">
+            {circleRows.map((m) => {
+              const name =
+                profileNames.get(m.user_id) ?? `····${m.user_id.slice(-4)}`;
+              const isFounder = m.user_id === group.created_by;
+              const isYou = !!user && m.user_id === user.id;
+              const inviter = m.invited_by
+                ? profileNames.get(m.invited_by)
+                : null;
+              const sub = isFounder
+                ? "Founder"
+                : m.invited_by
+                  ? `Invited by ${inviter ?? "a member"}`
+                  : "Joined via link";
+              const score = Number(m.trust_score_cache);
+              return (
+                <li
+                  key={m.id}
+                  className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-ink dark:text-white">
+                      {name}
+                      {isYou ? (
+                        <span className="font-normal text-zinc-400">
+                          {" "}
+                          · You
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </p>
+                    <p className="font-mono text-xs text-zinc-500">{sub}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-jade/15 px-3 py-1 text-xs font-semibold text-jade">
+                    Trust {Number.isFinite(score) ? score : 100}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="text-xs leading-5 text-zinc-500">
+            Scores start at 100 for everyone and move with on-time payments.
+          </p>
+        </section>
       )}
 
       {member && (
