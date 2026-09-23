@@ -2,27 +2,48 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
-import { type CountryKey } from "@/lib/phone";
+import AuthShell from "../AuthShell";
+import { COUNTRY_CODES, type CountryKey } from "@/lib/phone";
 
 function safeNext(raw: string | null): string {
   return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
 }
+
+const COUNTRIES: { key: CountryKey; name: string }[] = [
+  { key: "NG", name: "Nigeria" },
+  { key: "KE", name: "Kenya" },
+  { key: "UG", name: "Uganda" },
+  { key: "GH", name: "Ghana" },
+];
+
+const STEP_LABELS = ["Your name", "Home country", "Review"];
 
 function OnboardingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = safeNext(searchParams.get("next"));
 
+  const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [country, setCountry] = useState<CountryKey>("NG");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  function continueFromName() {
+    if (name.trim().length < 2) {
+      setError("Tell us your name — your circle members will see it.");
+      return;
+    }
+    setError(null);
+    setStep(1);
+  }
+
   async function submit() {
     const trimmed = name.trim();
     if (trimmed.length < 2) {
+      setStep(0);
       setError("Tell us your name — your circle members will see it.");
       return;
     }
@@ -62,47 +83,117 @@ function OnboardingForm() {
     }
   }
 
+  const chosen = COUNTRIES.find((c) => c.key === country);
+
   return (
-    <main className="flex flex-1 flex-col px-4 py-6">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-      >
-        <h1 className="font-display text-3xl font-semibold tracking-tight">
-          You&apos;re in. Who are you?
-        </h1>
-        <p className="mt-1 text-sm leading-6 text-zinc-500">
-          Your name is how circle members recognize you — it shows on invites,
-          votes, and the ledger.
-        </p>
-
-        <div className="mt-5 flex flex-col gap-3">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium">Full name</span>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Adaeze Okafor"
-              autoComplete="name"
-              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
+    <AuthShell
+      kicker="Onboarding"
+      title="You're in."
+      intro="Three quick steps — this is the profile your circle members will see."
+    >
+      <div className="flex items-center gap-2">
+        {STEP_LABELS.map((label, i) => (
+          <div key={label} className="flex flex-1 flex-col gap-1.5">
+            <span
+              className={`h-1.5 rounded-full ${
+                i <= step ? "bg-gold" : "bg-black/10"
+              }`}
             />
-          </label>
-
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium">Home country</span>
-            <select
-              value={country}
-              onChange={(e) => setCountry(e.target.value as CountryKey)}
-              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
+            <span
+              className={`text-[11px] font-semibold ${
+                i === step ? "text-ink" : "text-zinc-400"
+              }`}
             >
-              <option value="NG">Nigeria</option>
-              <option value="KE">Kenya</option>
-              <option value="UG">Uganda</option>
-              <option value="GH">Ghana</option>
-            </select>
-          </label>
+              {i + 1}. {label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0, x: 24 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -24 }}
+          transition={{ duration: 0.25 }}
+          className="mt-5 flex flex-col gap-3"
+        >
+          {step === 0 && (
+            <>
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium">Full name</span>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Adaeze Okafor"
+                  autoComplete="name"
+                  autoFocus
+                  className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo"
+                />
+              </label>
+              <p className="text-xs leading-5 text-zinc-500">
+                Shows on invites, votes, and the ledger.
+              </p>
+            </>
+          )}
+
+          {step === 1 && (
+            <>
+              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Home country">
+                {COUNTRIES.map((c) => {
+                  const selected = c.key === country;
+                  return (
+                    <button
+                      key={c.key}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setCountry(c.key)}
+                      className={`flex flex-col rounded-2xl border-2 px-4 py-3 text-left transition-colors ${
+                        selected
+                          ? "border-gold bg-gold/10"
+                          : "border-black/10 bg-white"
+                      }`}
+                    >
+                      <span className="text-sm font-semibold text-ink">
+                        {c.name}
+                      </span>
+                      <span className="font-mono text-xs text-zinc-500">
+                        +{COUNTRY_CODES[c.key]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs leading-5 text-zinc-500">
+                Sets your default dial code and currency.
+              </p>
+            </>
+          )}
+
+          {step === 2 && (
+            <>
+              <dl className="flex flex-col gap-2 rounded-2xl border border-black/10 bg-white p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-sm text-zinc-500">Name</dt>
+                  <dd className="text-sm font-semibold text-ink">
+                    {name.trim()}
+                  </dd>
+                </div>
+                <div className="flex items-center justify-between gap-3 border-t border-black/5 pt-2">
+                  <dt className="text-sm text-zinc-500">Home country</dt>
+                  <dd className="text-sm font-semibold text-ink">
+                    {chosen?.name} (+{chosen && COUNTRY_CODES[chosen.key]})
+                  </dd>
+                </div>
+              </dl>
+              <p className="text-xs leading-5 text-zinc-500">
+                Looks right? Circle members will recognize you by this name.
+              </p>
+            </>
+          )}
 
           {error && (
             <p role="alert" className="text-sm font-medium text-clay">
@@ -110,17 +201,43 @@ function OnboardingForm() {
             </p>
           )}
 
-          <motion.button
-            whileTap={{ scale: 0.98 }}
-            disabled={saving}
-            onClick={submit}
-            className="mt-1 rounded-full bg-indigo py-3.5 text-sm font-semibold text-white disabled:opacity-60"
-          >
-            {saving ? "Saving…" : "Continue"}
-          </motion.button>
-        </div>
-      </motion.div>
-    </main>
+          <div className="mt-1 flex gap-2">
+            {step > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setStep(step - 1);
+                }}
+                className="rounded-full border border-black/10 px-6 py-3.5 text-sm font-semibold text-ink"
+              >
+                Back
+              </button>
+            )}
+            {step < 2 ? (
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                onClick={() => (step === 0 ? continueFromName() : setStep(2))}
+                className="flex-1 rounded-full bg-gold py-3.5 text-sm font-semibold text-ink"
+              >
+                Continue
+              </motion.button>
+            ) : (
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                type="button"
+                disabled={saving}
+                onClick={submit}
+                className="flex-1 rounded-full bg-gold py-3.5 text-sm font-semibold text-ink disabled:opacity-60"
+              >
+                {saving ? "Saving…" : "Finish setup"}
+              </motion.button>
+            )}
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </AuthShell>
   );
 }
 

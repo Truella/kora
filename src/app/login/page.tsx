@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
+import AuthShell from "../AuthShell";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import {
   normalizeToE164,
@@ -100,54 +101,44 @@ function LoginForm() {
 
   if (linkSentTo) {
     return (
-      <main className="flex flex-1 flex-col px-4 py-6">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-        >
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Check your inbox
-          </h1>
-          <p className="mt-1 text-sm leading-6 text-zinc-500">
+      <AuthShell
+        kicker="Sign in"
+        title="Check your inbox"
+        intro={
+          <>
             We sent a sign-in link to{" "}
-            <span className="font-mono font-medium text-ink dark:text-white">
+            <span className="font-mono font-medium text-ink">
               {linkSentTo}
             </span>
             . Tap it on this device and you&apos;re in — no code to type.
-          </p>
-          <button
-            onClick={() => setLinkSentTo(null)}
-            className="mt-4 w-full py-2 text-sm font-semibold text-indigo"
-          >
-            Use a different email
-          </button>
-        </motion.div>
-      </main>
+          </>
+        }
+      >
+        <button
+          onClick={() => setLinkSentTo(null)}
+          className="mt-4 w-full py-2 text-sm font-semibold text-indigo"
+        >
+          Use a different email
+        </button>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="flex flex-1 flex-col px-4 py-6">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="flex flex-1 flex-col"
-      >
-        <h1 className="font-display text-3xl font-semibold tracking-tight">
-          Join Kora
-        </h1>
-        <p className="mt-1 text-sm leading-6 text-zinc-500">
-          {tab === "phone"
-            ? "Enter your number — we'll text you a 6-digit code."
-            : "Enter your email and we'll send a sign-in link. You'll add a phone number after — USSD needs one, the PWA doesn't."}
-        </p>
+    <AuthShell
+      kicker="Sign in"
+      title="Join Kora"
+      intro={
+        tab === "phone"
+          ? "Enter your number — we'll text you a 6-digit code."
+          : "Enter your email and we'll send a sign-in link. You'll add a phone number after — USSD needs one, the PWA doesn't."
+      }
+    >
 
         <div
           role="tablist"
           aria-label="Sign-in method"
-          className="mt-5 grid grid-cols-2 rounded-full bg-black/5 p-1 dark:bg-white/10"
+          className="grid grid-cols-2 rounded-full bg-mist p-1"
         >
           {(["phone", "email"] as const).map((t) => (
             <button
@@ -184,7 +175,7 @@ function LoginForm() {
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value as CountryKey)}
-                  className="rounded-xl border border-black/10 bg-white px-3 py-3 text-[16px] outline-none focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
+                  className="rounded-xl border border-black/10 bg-white px-3 py-3 text-[16px] outline-none focus:border-indigo"
                 >
                   {COUNTRIES.map((c) => (
                     <option key={c.key} value={c.key}>
@@ -204,7 +195,7 @@ function LoginForm() {
                   placeholder="801 234 5678"
                   autoComplete="tel"
                   inputMode="tel"
-                  className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
+                  className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo"
                 />
               </label>
             </div>
@@ -218,7 +209,7 @@ function LoginForm() {
                 placeholder="you@example.com"
                 autoComplete="email"
                 inputMode="email"
-                className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
+                className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo"
               />
             </label>
           )}
@@ -233,7 +224,7 @@ function LoginForm() {
             whileTap={{ scale: 0.98 }}
             disabled={sending}
             onClick={tab === "phone" ? sendPhoneOtp : sendEmailLink}
-            className="mt-1 rounded-full bg-indigo py-3.5 text-sm font-semibold text-white disabled:opacity-60"
+            className="mt-1 rounded-full bg-gold py-3.5 text-sm font-semibold text-ink disabled:opacity-60"
           >
             {sending
               ? tab === "phone"
@@ -244,8 +235,7 @@ function LoginForm() {
                 : "Send sign-in link"}
           </motion.button>
         </div>
-      </motion.div>
-    </main>
+    </AuthShell>
   );
 }
 

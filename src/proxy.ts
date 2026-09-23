@@ -1,12 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Public without a session. /auth/callback receives the magic-link ?code=
-// before any session exists. /api/ussd is the Africa's Talking webhook —
+// Public without a session. / is the public landing page for guests
+// (the page itself renders the dashboard when a session exists).
+// /auth/callback receives the magic-link ?code= before any session exists.
+// /api/ussd is the Africa's Talking webhook —
 // callers have no Supabase session (phone-number identity, read-only), so
 // it authenticates itself and stays public. /add-phone and /onboarding
 // need a session (updateUser / profile writes), so they stay protected.
 const PUBLIC_PATHS = [
+  "/",
   "/login",
   "/verify",
   "/offline",

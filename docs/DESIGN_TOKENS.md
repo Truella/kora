@@ -2,16 +2,19 @@
 
 ## Palette rationale
 
-Grounded in the *adire* indigo-dye tradition (West African hand-craft, historically tied to trade and community) rather than a generic fintech blue/green. Ledger paper background reads like a passbook page, not the warm-cream-plus-terracotta combo that's become an AI-design default.
+Grounded in the *adire* indigo-dye tradition (West African hand-craft, historically tied to trade and community) rather than a generic fintech blue/green. White is the main color, gold the primary accent, indigo secondary — no neutral black anywhere: surfaces are white, text runs on deep indigo.
 
 | Token | Hex | Role |
 |---|---|---|
-| `ink` | `#14171F` | Text, dark surfaces |
-| `indigo` | `#26306B` | Brand/primary — nav, primary buttons, group headers |
-| `paper` | `#EEF0F2` | Background — main surface, ledger screen |
-| `gold` | `#C98A2C` | Accent — contribution amounts, payout highlights (used sparingly) |
+| `ink` | `#232B5C` | Text — deep indigo, never neutral black |
+| `indigo` | `#26306B` | Secondary — nav, sidebar active, headlines on light panels |
+| `paper` | `#FFFFFF` | Background — main surface |
+| `mist` | `#EEF0F2` | Alt band — landing sections, tab tracks, ledger mock rows |
+| `gold` | `#C98A2C` | Primary accent — CTAs, contribution amounts, payout highlights (used sparingly) |
 | `jade` | `#2F6F5E` | Positive/paid status, healthy trust score |
 | `clay` | `#9C4A26` | Late/pending status — never full red, keeps tone community-accountable not punitive |
+
+Light-only theme: `dark:` variants are disabled globally (`@custom-variant`), so every screen renders this system regardless of OS setting.
 
 ## Type rationale
 
@@ -28,11 +31,15 @@ Grounded in the *adire* indigo-dye tradition (West African hand-craft, historica
 ```css
 @import "tailwindcss";
 
+/* Light-only: dark: variants disabled globally — white/gold/indigo always. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  /* Colors */
-  --color-ink: #14171F;
+  /* Colors — no neutral black: text on deep indigo, surfaces on white */
+  --color-ink: #232B5C;
   --color-indigo: #26306B;
-  --color-paper: #EEF0F2;
+  --color-paper: #FFFFFF;
+  --color-mist: #EEF0F2;
   --color-gold: #C98A2C;
   --color-jade: #2F6F5E;
   --color-clay: #9C4A26;
@@ -90,6 +97,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ## Usage guide
 
 - **Ledger/contribution amounts:** always `font-mono` with tabular figures — this is what makes the ledger screen feel like a real passbook rather than a generic list.
-- **Gold accent:** reserve for money-specific highlights (contribution due, payout amount) — don't apply to every button or it stops meaning anything.
+- **Gold accent:** primary CTA color (all primary buttons, `bg-gold` + `text-ink`) plus money-specific highlights (contribution due, payout amount).
 - **Jade/Clay:** paid vs. late contribution status, and the trust score display. Decide with your teammate whether trust score renders as a jade→clay gradient by score, or stays binary paid/late.
 - **Newsreader:** group names, empty-state copy, trust-score narrative lines — not nav, not buttons, not form labels (those stay Plex Sans).

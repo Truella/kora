@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Newsreader, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
-import Image from "next/image";
 import ServiceWorkerRegister from "./sw-register";
-import BottomNav from "./nav";
+import AppHeader from "./AppHeader";
+import AppNav from "./AppNav";
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -67,29 +67,15 @@ export default function RootLayout({
       lang="en"
       className={`${newsreader.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-dvh flex flex-col font-sans">
+      <body className="min-h-dvh bg-white font-sans text-ink">
         <ServiceWorkerRegister />
-        <header className="sticky top-0 z-10 bg-indigo pt-[env(safe-area-inset-top)] text-white">
-          <div className="mx-auto flex max-w-md items-center gap-2.5 px-4 py-3">
-            <Image
-              src="/icons/icon.svg"
-              alt="Kora logo"
-              width={32}
-              height={32}
-              className="rounded-lg"
-            />
-            <div className="leading-tight">
-              <p className="text-[17px] font-semibold tracking-tight">Kora</p>
-              <p className="text-[11px] text-white/60">
-                Savings circles, without the custody risk
-              </p>
-            </div>
+        <AppHeader />
+        <div className="mx-auto flex w-full max-w-md flex-1 flex-col lg:max-w-5xl lg:flex-row lg:gap-8">
+          <AppNav />
+          <div className="order-1 flex min-w-0 flex-1 flex-col lg:order-2">
+            {children}
           </div>
-        </header>
-        <div className="mx-auto flex w-full max-w-md flex-1 flex-col">
-          {children}
         </div>
-        <BottomNav />
       </body>
     </html>
   );

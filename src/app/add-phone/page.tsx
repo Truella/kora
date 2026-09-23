@@ -4,9 +4,8 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { SmartPhone01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
+import AuthShell from "../AuthShell";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import {
   normalizeToE164,
@@ -64,35 +63,18 @@ function AddPhoneForm() {
   }
 
   return (
-    <main className="flex flex-1 flex-col px-4 py-6">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-      >
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10 dark:bg-white/10">
-          <HugeiconsIcon
-            icon={SmartPhone01Icon}
-            size={26}
-            className="text-indigo dark:text-gold"
-          />
-        </span>
-        <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight">
-          Add your number
-        </h1>
-        <p className="mt-1 text-sm leading-6 text-zinc-500">
-          USSD identifies you by phone — without a verified number, balance
-          checks and payment confirmations by USSD can&apos;t find you. The app
-          itself works fine without it.
-        </p>
-
-        <div className="mt-5 flex gap-2">
+    <AuthShell
+      kicker="USSD access"
+      title="Add your number"
+      intro="USSD identifies you by phone — without a verified number, balance checks and payment confirmations by USSD can't find you. The app itself works fine without it."
+    >
+      <div className="flex gap-2">
           <label className="flex w-24 shrink-0 flex-col gap-1.5">
             <span className="text-sm font-medium">Country</span>
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value as CountryKey)}
-              className="rounded-xl border border-black/10 bg-white px-3 py-3 text-[16px] outline-none focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
+              className="rounded-xl border border-black/10 bg-white px-3 py-3 text-[16px] outline-none focus:border-indigo"
             >
               {(Object.keys(COUNTRY_CODES) as CountryKey[]).map((key) => (
                 <option key={key} value={key}>
@@ -110,7 +92,7 @@ function AddPhoneForm() {
               placeholder="801 234 5678"
               autoComplete="tel"
               inputMode="tel"
-              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
+              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo"
             />
           </label>
         </div>
@@ -125,7 +107,7 @@ function AddPhoneForm() {
           whileTap={{ scale: 0.98 }}
           disabled={sending}
           onClick={submit}
-          className="mt-4 w-full rounded-full bg-indigo py-3.5 text-sm font-semibold text-white disabled:opacity-60"
+          className="mt-4 w-full rounded-full bg-gold py-3.5 text-sm font-semibold text-ink disabled:opacity-60"
         >
           {sending ? "Sending code…" : "Send code"}
         </motion.button>
@@ -136,8 +118,7 @@ function AddPhoneForm() {
         >
           Skip for now
         </Link>
-      </motion.div>
-    </main>
+    </AuthShell>
   );
 }
 

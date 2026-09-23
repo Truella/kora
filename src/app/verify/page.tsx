@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
+import AuthShell from "../AuthShell";
 import { friendlyAuthError } from "@/lib/auth-errors";
 
 type Flow = "phone" | "add-phone";
@@ -101,23 +102,17 @@ function VerifyForm() {
   }
 
   return (
-    <main className="flex flex-1 flex-col px-4 py-6">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-      >
-        <h1 className="font-display text-3xl font-semibold tracking-tight">
-          Check your texts
-        </h1>
-        <p className="mt-1 text-sm leading-6 text-zinc-500">
+    <AuthShell
+      kicker={flow === "add-phone" ? "Add a number" : "Check your texts"}
+      title="Enter your code"
+      intro={
+        <>
           6-digit code sent to{" "}
-          <span className="font-mono font-medium text-ink dark:text-white">
-            {to}
-          </span>
-        </p>
-
-        <label className="mt-5 flex flex-col gap-1.5">
+          <span className="font-mono font-medium text-ink">{to}</span>
+        </>
+      }
+    >
+      <label className="flex flex-col gap-1.5">
           <span className="text-sm font-medium">Code</span>
           <input
             value={code}
@@ -126,7 +121,7 @@ function VerifyForm() {
             inputMode="numeric"
             autoComplete="one-time-code"
             maxLength={6}
-            className="rounded-xl border border-black/10 bg-white px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] outline-none placeholder:text-zinc-300 focus:border-indigo dark:border-white/10 dark:bg-ink dark:text-white"
+            className="rounded-xl border border-black/10 bg-white px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] outline-none placeholder:text-zinc-300 focus:border-indigo"
           />
         </label>
 
@@ -145,7 +140,7 @@ function VerifyForm() {
           whileTap={{ scale: 0.98 }}
           disabled={verifying || code.length !== 6}
           onClick={() => verify(code)}
-          className="mt-4 w-full rounded-full bg-indigo py-3.5 text-sm font-semibold text-white disabled:opacity-60"
+          className="mt-4 w-full rounded-full bg-gold py-3.5 text-sm font-semibold text-ink disabled:opacity-60"
         >
           {verifying ? "Checking…" : "Verify"}
         </motion.button>
@@ -156,8 +151,7 @@ function VerifyForm() {
         >
           Resend code
         </button>
-      </motion.div>
-    </main>
+    </AuthShell>
   );
 }
 

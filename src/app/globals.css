@@ -1,13 +1,19 @@
 @import "tailwindcss";
 
+/* Light-only theme: `dark:` variants are disabled globally so the app
+   always renders the white/gold/indigo system (white is the main color,
+   gold primary, indigo secondary). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  /* Colors */
-  --color-ink: #14171F;
-  --color-indigo: #26306B;
-  --color-paper: #EEF0F2;
-  --color-gold: #C98A2C;
-  --color-jade: #2F6F5E;
-  --color-clay: #9C4A26;
+  /* Colors — no neutral black: text runs on deep indigo, surfaces on white */
+  --color-ink: #232b5c;
+  --color-indigo: #26306b;
+  --color-paper: #ffffff;
+  --color-mist: #eef0f2;
+  --color-gold: #c98a2c;
+  --color-jade: #2f6f5e;
+  --color-clay: #9c4a26;
 
   /* Fonts */
   --font-display: "Newsreader", serif;
@@ -23,5 +29,5 @@ body {
 input,
 select,
 textarea {
-  color-scheme: light dark;
+  color-scheme: light;
 }
