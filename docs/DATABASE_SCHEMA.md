@@ -414,6 +414,14 @@ with check (applicant_id = auth.uid());
 
 No update policy for regular users — status flips only via `tally_join_votes`.
 
+```sql
+create policy "applicants view own requests"
+on public.join_requests for select
+using (applicant_id = auth.uid());
+```
+
+Migration `20260923150000_applicant_view_own_requests.sql` (Day 5B): lets the join page read the caller's own rows (status only, never vote counts — applicant-blindness stays) so it can render "still voting" vs "not admitted" terminal copy. Members' views unchanged; re-application stays blocked by the `(group_id, applicant_id)` unique constraint — deliberate for MVP.
+
 ### join_votes
 
 ```sql
@@ -481,7 +489,7 @@ No client insert/update — written only by the payout-processing Edge Function.
 
 ## 5. What still needs an Edge Function (service role, bypasses RLS)
 
-1. **Payment webhook handler** — receives Paystack/Flutterwave confirmation, writes `contributions.status = 'paid'` + `payment_reference`.
+1. **Payment webhook handler** — receives Paystack/Flutterwave confirmation, writes `contributions.status = 'paid'` + `payment_reference` — or `'late'` when the money arrives after the cycle's `due_date` (Day 5B late rule; this is what moves trust scores off 100 via the existing `update_trust_score` trigger).
 2. **Payout processor** — on cycle due date, triggers split payment to recipient, writes `payouts` row.
 3. **Cycle generator** — on group activation (once membership is stable), creates one `cycles` row per member per rotation, in `payout_position` order.
 
