@@ -235,7 +235,7 @@ export default async function GroupDetailPage({
 
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
-      {confirming && <ConfirmingBanner />}
+      {confirming && <ConfirmingBanner groupId={group.id} />}
 
       {member && overdue.length > 0 && (
         <div className="rounded-2xl bg-clay/10 px-4 py-3 text-sm text-clay">
@@ -274,8 +274,7 @@ export default async function GroupDetailPage({
         {member && <InviteButton groupId={group.id} />}
       </div>
 
-      {!cycles || cycles.length === 0 ? (
-        member && isCreator ? (
+      {!cycles || cycles.length === 0 ? (        member && isCreator ? (
           <ScheduleGenerator
             groupId={group.id}
             frequency={group.frequency}
@@ -293,7 +292,13 @@ export default async function GroupDetailPage({
           </div>
         )
       ) : (
-        <ul className="flex flex-col gap-3">
+        <>
+          <p className="text-sm leading-6 text-zinc-500">
+            How it works: every member pays their own share each round — the
+            combined pot goes to the named receiver. You always pay your
+            share, even on another member&apos;s turn.
+          </p>
+          <ul className="flex flex-col gap-3">
           {cycles.map((cycle) => {            const contribution = byCycle.get(cycle.id);
             const status = contribution?.status ?? "pending";
             const isPaid = status === "paid";
@@ -309,28 +314,33 @@ export default async function GroupDetailPage({
                   <div>
                     <p className="font-display text-lg font-semibold text-ink dark:text-white">
                       Cycle {cycle.cycle_number}
-                      {recipient ? (
-                        <span className="font-sans text-sm font-normal text-zinc-500">
-                          {" "}
-                          → {recipient}
-                        </span>
-                      ) : (
-                        ""
-                      )}
                     </p>
                     <p className="font-mono text-xs text-zinc-500">
-                      {amountLabel} · due {cycle.due_date} · {cycle.status}
-                      {pot ? ` · pot ${pot}` : ""}
+                      {amountLabel} your share · due {cycle.due_date} ·{" "}
+                      {cycle.status}
                       {contribution?.paid_at
                         ? ` · paid ${new Date(contribution.paid_at).toLocaleDateString()}`
                         : ""}
                     </p>
+                    {(recipient || pot) && (
+                      <p className="font-mono text-xs text-zinc-500">
+                        {pot ? `Pot ${pot}` : "Pot"}
+                        {recipient
+                          ? ` → ${recipient}'s turn to receive`
+                          : ""}
+                      </p>
+                    )}
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold capitalize ${BADGE[status] ?? BADGE.pending}`}
-                  >
-                    {status}
-                  </span>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <span className="text-[11px] font-medium uppercase tracking-wide text-zinc-400">
+                      Your share
+                    </span>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${BADGE[status] ?? BADGE.pending}`}
+                    >
+                      {status}
+                    </span>
+                  </div>
                 </div>
                 {member && !isPaid && (
                   <PayButton
@@ -347,7 +357,8 @@ export default async function GroupDetailPage({
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </>
       )}
 
       {showSync && (

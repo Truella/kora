@@ -7,10 +7,13 @@ import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { SmartPhone01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyAuthError } from "@/lib/auth-errors";
 import {
   normalizeToE164,
   InvalidPhoneError,
+  MismatchedCountryError,
   COUNTRY_CODES,
+  COUNTRY_NAMES,
   type CountryKey,
 } from "@/lib/phone";
 
@@ -33,11 +36,17 @@ function AddPhoneForm() {
     try {
       e164 = normalizeToE164(phone, country);
     } catch (err) {
-      setError(
-        err instanceof InvalidPhoneError
-          ? "That number doesn't look right — check the country and try again."
-          : "That number doesn't look right.",
-      );
+      if (err instanceof MismatchedCountryError) {
+        setError(
+          `That looks like a ${COUNTRY_NAMES[err.detected]} number — switch the country selector to ${COUNTRY_NAMES[err.detected]} (+${COUNTRY_CODES[err.detected]}).`,
+        );
+      } else {
+        setError(
+          err instanceof InvalidPhoneError
+            ? "That number doesn't look right — check the country and try again."
+            : "That number doesn't look right.",
+        );
+      }
       return;
     }
     setSending(true);
@@ -46,7 +55,7 @@ function AddPhoneForm() {
     const { error } = await supabase.auth.updateUser({ phone: e164 });
     setSending(false);
     if (error) {
-      setError(error.message);
+      setError(friendlyAuthError(error.message, "send"));
       return;
     }
     router.push(
