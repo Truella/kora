@@ -33,7 +33,7 @@ function OnboardingForm() {
 
   function continueFromName() {
     if (name.trim().length < 2) {
-      setError("Tell us your name — your circle members will see it.");
+      setError("Tell us your name — circle members will see it.");
       return;
     }
     setError(null);
@@ -44,7 +44,7 @@ function OnboardingForm() {
     const trimmed = name.trim();
     if (trimmed.length < 2) {
       setStep(0);
-      setError("Tell us your name — your circle members will see it.");
+      setError("Tell us your name — circle members will see it.");
       return;
     }
     setSaving(true);
@@ -96,12 +96,12 @@ function OnboardingForm() {
           <div key={label} className="flex flex-1 flex-col gap-1.5">
             <span
               className={`h-1.5 rounded-full ${
-                i <= step ? "bg-gold" : "bg-black/10"
+                i <= step ? "bg-gold" : "bg-indigo/10"
               }`}
             />
             <span
               className={`text-[11px] font-semibold ${
-                i === step ? "text-ink" : "text-zinc-400"
+                i === step ? "text-indigo" : "text-indigo/50"
               }`}
             >
               {i + 1}. {label}
@@ -130,10 +130,10 @@ function OnboardingForm() {
                   placeholder="Adaeze Okafor"
                   autoComplete="name"
                   autoFocus
-                  className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo"
+                  className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-[16px] outline-none placeholder:text-indigo/50 focus:border-indigo"
                 />
               </label>
-              <p className="text-xs leading-5 text-zinc-500">
+              <p className="text-xs leading-5 text-indigo/60">
                 Shows on invites, votes, and the ledger.
               </p>
             </>
@@ -154,20 +154,20 @@ function OnboardingForm() {
                       className={`flex flex-col rounded-2xl border-2 px-4 py-3 text-left transition-colors ${
                         selected
                           ? "border-gold bg-gold/10"
-                          : "border-black/10 bg-white"
+                          : "border-indigo/10 bg-paper"
                       }`}
                     >
-                      <span className="text-sm font-semibold text-ink">
+                      <span className="text-sm font-semibold text-indigo">
                         {c.name}
                       </span>
-                      <span className="font-mono text-xs text-zinc-500">
+                      <span className="font-mono text-xs text-indigo/60">
                         +{COUNTRY_CODES[c.key]}
                       </span>
                     </button>
                   );
                 })}
               </div>
-              <p className="text-xs leading-5 text-zinc-500">
+              <p className="text-xs leading-5 text-indigo/60">
                 Sets your default dial code and currency.
               </p>
             </>
@@ -175,28 +175,28 @@ function OnboardingForm() {
 
           {step === 2 && (
             <>
-              <dl className="flex flex-col gap-2 rounded-2xl border border-black/10 bg-white p-4">
+              <dl className="flex flex-col gap-2 rounded-2xl border border-indigo/10 bg-paper p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-sm text-zinc-500">Name</dt>
-                  <dd className="text-sm font-semibold text-ink">
+                  <dt className="text-sm text-indigo/60">Name</dt>
+                  <dd className="text-sm font-semibold text-indigo">
                     {name.trim()}
                   </dd>
                 </div>
-                <div className="flex items-center justify-between gap-3 border-t border-black/5 pt-2">
-                  <dt className="text-sm text-zinc-500">Home country</dt>
-                  <dd className="text-sm font-semibold text-ink">
+                <div className="flex items-center justify-between gap-3 border-t border-indigo/5 pt-2">
+                  <dt className="text-sm text-indigo/60">Home country</dt>
+                  <dd className="text-sm font-semibold text-indigo">
                     {chosen?.name} (+{chosen && COUNTRY_CODES[chosen.key]})
                   </dd>
                 </div>
               </dl>
-              <p className="text-xs leading-5 text-zinc-500">
+              <p className="text-xs leading-5 text-indigo/60">
                 Looks right? Circle members will recognize you by this name.
               </p>
             </>
           )}
 
           {error && (
-            <p role="alert" className="text-sm font-medium text-clay">
+            <p role="alert" className="text-sm font-medium text-indigo">
               {error}
             </p>
           )}
@@ -209,7 +209,7 @@ function OnboardingForm() {
                   setError(null);
                   setStep(step - 1);
                 }}
-                className="rounded-full border border-black/10 px-6 py-3.5 text-sm font-semibold text-ink"
+                className="rounded-full border border-indigo/10 px-6 py-3.5 text-sm font-semibold text-indigo"
               >
                 Back
               </button>
@@ -219,7 +219,7 @@ function OnboardingForm() {
                 whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => (step === 0 ? continueFromName() : setStep(2))}
-                className="flex-1 rounded-full bg-gold py-3.5 text-sm font-semibold text-ink"
+                className="flex-1 rounded-full bg-indigo py-3.5 text-sm font-semibold text-paper hover:bg-indigo-hover"
               >
                 Continue
               </motion.button>
@@ -229,7 +229,7 @@ function OnboardingForm() {
                 type="button"
                 disabled={saving}
                 onClick={submit}
-                className="flex-1 rounded-full bg-gold py-3.5 text-sm font-semibold text-ink disabled:opacity-60"
+                className="flex-1 rounded-full bg-indigo py-3.5 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
               >
                 {saving ? "Saving…" : "Finish setup"}
               </motion.button>
