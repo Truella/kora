@@ -2,42 +2,125 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 
-// Banner + poll-confirm after Flutterwave redirects back with ?paid=1.
-// The ?paid=1 param is NEVER trusted as proof — it only triggers
-// server refetches until the webhook flips contributions.status.
-// If the window expires with no flip (cancelled/abandoned checkout),
-// it settles on a terminal "not confirmed" state instead of spinning.
-export default function ConfirmingBanner() {
+// Post-checkout banner with a real outcome. The ?paid=1 param only starts
+// the watch — success is a paid contributions row newer than our return
+// (server-verified via webhook), never the param itself.
+// Success shows briefly, then the param is cleaned so a refresh won't
+// re-poll. No-payment settles on a persistent terminal state with an
+// explicit dismiss (the param stays, so the message survives refresh).
+export default function ConfirmingBanner({ groupId }: { groupId: string }) {
   const router = useRouter();
-  const [expired, setExpired] = useState(false);
+  const [outcome, setOutcome] = useState<"waiting" | "confirmed" | "absent">(
+    "waiting",
+  );
 
   useEffect(() => {
-    let attempts = 0;
-    const timer = setInterval(() => {
-      attempts += 1;
-      router.refresh();
-      if (attempts >= 6) {
-        clearInterval(timer);
-        setExpired(true);
+    const supabase = createClient();
+    // Grace window for clock skew — anything paid after we left for
+    // Flutterwave counts, even if the webhook beat us back.
+    const since = new Date(Date.now() - 60_000).toISOString();
+    let ticks = 0;
+    let settled = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    let hideTimer: ReturnType<typeof setTimeout> | null = null;
+
+    async function paidSinceReturn(): Promise<boolean> {
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) return false;
+        const { data: membership } = await supabase
+          .from("group_members")
+          .select("id")
+          .eq("group_id", groupId)
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .maybeSingle();
+        const memberId = (membership as { id: string } | null)?.id;
+        if (!memberId) return false;
+        const { data: cycles } = await supabase
+          .from("cycles")
+          .select("id")
+          .eq("group_id", groupId);
+        const ids = ((cycles ?? []) as { id: string }[]).map((c) => c.id);
+        if (ids.length === 0) return false;
+        const { data: rows } = await supabase
+          .from("contributions")
+          .select("id")
+          .eq("member_id", memberId)
+          .in("cycle_id", ids)
+          .eq("status", "paid")
+          .gte("paid_at", since)
+          .limit(1);
+        return (rows ?? []).length > 0;
+      } catch {
+        return false;
       }
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [router]);
+    }
+
+    async function tick() {
+      if (settled) return;
+      ticks += 1;
+      router.refresh();
+      if (await paidSinceReturn()) {
+        settled = true;
+        if (timer) clearInterval(timer);
+        setOutcome("confirmed");
+        // Let the success land, then clean the param so refreshes
+        // show the paid badge without re-polling.
+        hideTimer = setTimeout(() => {
+          router.replace(`/groups/${groupId}`);
+        }, 6000);
+        return;
+      }
+      if (ticks >= 6) {
+        settled = true;
+        if (timer) clearInterval(timer);
+        setOutcome("absent");
+      }
+    }
+
+    timer = setInterval(() => void tick(), 4000);
+    void tick();
+    return () => {
+      if (timer) clearInterval(timer);
+      if (hideTimer) clearTimeout(hideTimer);
+    };
+  }, [groupId, router]);
+
+  if (outcome === "confirmed") {
+    return (
+      <div className="rounded-2xl bg-jade/15 px-4 py-3 text-sm font-medium text-ink dark:text-white">
+        Payment confirmed — receipt verified. Your share is marked paid below.
+      </div>
+    );
+  }
+
+  if (outcome === "absent") {
+    return (
+      <div className="flex items-center justify-between gap-3 rounded-2xl bg-gold/15 px-4 py-3 text-sm text-ink dark:text-white">
+        <p>
+          No payment went through — no money left your account. If you
+          cancelled on Flutterwave, hit Pay below to retry.
+        </p>
+        <button
+          type="button"
+          onClick={() => router.replace(`/groups/${groupId}`)}
+          className="shrink-0 rounded-full border border-black/10 px-3 py-1.5 text-xs font-semibold dark:border-white/20"
+        >
+          Dismiss
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl bg-gold/15 px-4 py-3 text-sm text-ink dark:text-white">
-      {expired ? (
-        <>
-          No payment confirmed yet — if you completed the checkout, wait a
-          moment and reload; otherwise try paying again below.
-        </>
-      ) : (
-        <>
-          Back from Flutterwave — confirming payment. Status flips to paid
-          once the webhook verifies the charge.
-        </>
-      )}
+      Back from Flutterwave — confirming your payment. Give it a few seconds;
+      this page updates on its own.
     </div>
   );
 }
