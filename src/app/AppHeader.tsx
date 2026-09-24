@@ -6,8 +6,9 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-// Slim brand bar for app + auth screens. Hidden on the guest landing page,
-// which ships its own external nav — otherwise visitors get double branding.
+// Slim brand bar for app + auth screens. Hidden on the landing page for every
+// session state, which ships its own external nav — otherwise visitors get
+// double branding.
 // Signed-in users get a header Sign out (the Profile page keeps its own
 // button as a fallback — header is the discoverable one).
 export default function AppHeader() {
@@ -22,8 +23,8 @@ export default function AppHeader() {
       .then(({ data }) => setUser(data.user));
   }, [pathname]);
 
+  if (pathname === "/") return null; // landing brings its own nav
   if (user === undefined) return null;
-  if (!user && pathname === "/") return null;
 
   async function signOut() {
     setSigningOut(true);
