@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 import Dropdown from "../../Dropdown";
+import { sanitizePhoneInput, MAX_PHONE_LEN } from "@/lib/inputs";
 import AuthShell from "../../AuthShell";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import {
@@ -190,10 +191,11 @@ function LoginForm() {
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => setPhone(sanitizePhoneInput(e.target.value))}
                   placeholder="801 234 5678"
                   autoComplete="tel"
                   inputMode="tel"
+                  maxLength={MAX_PHONE_LEN}
                   className="rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-[16px] text-text-primary outline-none placeholder:text-text-secondary/60 focus:border-primary"
                 />
               </label>

@@ -10,6 +10,11 @@ import {
 } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
 import Dropdown from "../../../Dropdown";
+import {
+  sanitizeAmountInput,
+  formatAmountDisplay,
+  parseAmount,
+} from "@/lib/inputs";
 import type { CountryKey } from "@/lib/phone";
 
 type Currency = "NGN" | "GHS" | "KES" | "UGX";
@@ -92,7 +97,7 @@ export default function NewGroupPage() {
       next.name = "Keep the name under 60 characters.";
     if (description.trim().length > 280)
       next.description = "Keep the description under 280 characters.";
-    if (!/^\d+(\.\d{1,2})?$/.test(amount.trim()) || Number(amount) <= 0)
+    if (!/^\d+(\.\d{1,2})?$/.test(amount.replace(/,/g, "")) || parseAmount(amount) <= 0)
       next.amount = "Enter an amount above zero (max 2 decimals).";
     if (threshold < 50 || threshold > 100)
       next.threshold = "Threshold must be between 50 and 100 percent.";
@@ -123,7 +128,7 @@ export default function NewGroupPage() {
       const { error } = await supabase.from("groups").insert({
         name: name.trim(),
         description: description.trim() || null,
-        contribution_amount: Number(amount),
+        contribution_amount: parseAmount(amount),
         currency,
         frequency,
         vote_threshold: threshold / 100,
@@ -169,7 +174,7 @@ export default function NewGroupPage() {
         </h1>
         <p className="mt-2 max-w-xs font-display text-sm font-semibold tabular-nums text-text-secondary">
           {symbol}
-          {Number(amount).toLocaleString()} {currency} · {frequency}
+          {parseAmount(amount).toLocaleString()} {currency} · {frequency}
         </p>
         <p className="mt-1 max-w-xs text-sm leading-6 text-text-secondary">
           {threshold}% vote to admit · you are member 1.
@@ -231,6 +236,7 @@ export default function NewGroupPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Lagos Market Women"
+            maxLength={60}
             className={inputClass}
           />
           {errors.name && <p className="text-sm font-medium text-danger">{errors.name}</p>}
@@ -246,6 +252,7 @@ export default function NewGroupPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}
+            maxLength={280}
             placeholder="What is this circle saving toward?"
             className={inputClass}
           />
@@ -265,8 +272,11 @@ export default function NewGroupPage() {
                 id="group-amount"
                 inputMode="decimal"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
+                onBlur={() => setAmount(formatAmountDisplay(amount))}
+                onFocus={() => setAmount(amount.replace(/,/g, ""))}
                 placeholder="5,000"
+                maxLength={16}
                 className="w-full rounded-[10px] bg-transparent px-2 py-3 font-display font-semibold tabular-nums text-text-primary outline-none"
               />
             </div>
