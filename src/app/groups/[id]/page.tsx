@@ -22,11 +22,11 @@ const SYMBOLS: Record<string, string> = {
 };
 
 const BADGE: Record<string, string> = {
-  pending: "bg-gold/15 text-indigo",
-  paid: "bg-indigo/15 text-indigo",
-  late: "bg-gold/15 text-indigo",
-  completed: "bg-indigo/15 text-indigo",
-  failed: "bg-gold/15 text-indigo",
+  pending: "bg-[#F8EDD9] text-[#8A5F14]",
+  paid: "bg-[#E0ECE9] text-[#1E5A4E]",
+  late: "bg-[#F3E1E0] text-[#8A2A21]",
+  completed: "bg-[#E0ECE9] text-[#1E5A4E]",
+  failed: "bg-[#F3E1E0] text-[#8A2A21]",
 };
 
 // Reminder windows, computed once per render outside the component body
@@ -67,15 +67,15 @@ export default async function GroupDetailPage({
   if (!group) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3 px-8 py-12 text-center">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-indigo">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
           Circle not found
         </h1>
-        <p className="max-w-xs text-sm leading-6 text-indigo/60">
+        <p className="max-w-xs text-sm leading-6 text-text-secondary">
           It may not exist, or you are not a member of it.
         </p>
         <Link
           href="/groups"
-          className="mt-2 rounded-full bg-indigo px-5 py-2.5 text-sm font-semibold text-paper hover:bg-indigo-hover"
+          className="mt-2 rounded-[10px] bg-primary px-5 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
         >
           Back to circles
         </Link>
@@ -312,14 +312,14 @@ export default async function GroupDetailPage({
       {confirming && <ConfirmingBanner groupId={group.id} />}
 
       {member && overdue.length > 0 && (
-        <div className="rounded-2xl bg-gold/15 px-4 py-3 text-sm text-indigo">
+        <div className="rounded-[10px] bg-[#F3E1E0] px-4 py-3 text-sm text-[#8A2A21]">
           {overdue.length} contribution{overdue.length === 1 ? "" : "s"}{""}
           overdue — Cycle {overdue[0].cycle_number} was due{""}
           {overdue[0].due_date}. Pay now to protect your trust score.
         </div>
       )}
       {member && dueSoon.length > 0 && (
-        <div className="rounded-2xl bg-gold/15 px-4 py-3 text-sm text-indigo">
+        <div className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm text-[#8A5F14]">
           {amountLabel} {group.currency} due {dueSoon[0].due_date} (Cycle{""}
           {dueSoon[0].cycle_number})
           {dueSoon.length > 1
@@ -330,18 +330,18 @@ export default async function GroupDetailPage({
       )}
 
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo/10">
+        <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/10">
           <HugeiconsIcon
             icon={UserGroupIcon}
             size={20}
-            className="text-indigo"
+            className="text-primary"
           />
         </span>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-indigo">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
             {group.name}
           </h1>
-          <p className="font-mono text-xs text-indigo/60">
+          <p className="font-display text-xs font-semibold tabular-nums text-text-secondary">
             {amountLabel} {group.currency} · {group.frequency} · {group.status}
           </p>
         </div>
@@ -355,11 +355,11 @@ export default async function GroupDetailPage({
             memberCount={activeCount ?? 1}
           />
         ) : (
-          <div className="rounded-2xl border border-indigo/10 bg-paper p-5 text-center">
-            <p className="font-display text-lg font-semibold text-indigo">
+          <div className="rounded-[14px] border-[0.5px] border-border bg-surface p-5 text-center">
+            <p className="font-display text-lg font-semibold text-text-primary">
               Waiting for schedule
             </p>
-            <p className="mt-1 text-sm leading-6 text-indigo/60">
+            <p className="mt-1 text-sm leading-6 text-text-secondary">
               The payout rotation has not been generated yet — the organizer
               starts it once membership settles.
             </p>
@@ -367,7 +367,7 @@ export default async function GroupDetailPage({
         )
       ) : (
         <>
-          <p className="text-sm leading-6 text-indigo/60">
+          <p className="text-sm leading-6 text-text-secondary">
             How it works: every member pays their own share each round — the
             combined pot goes to the named receiver. You always pay your
             share, even on another member&apos;s turn.
@@ -390,14 +390,14 @@ export default async function GroupDetailPage({
               <RevealLi
                 key={cycle.id}
                 delay={Math.min(i * 0.05, 0.25)}
-                className="flex flex-col gap-3 rounded-2xl border border-indigo/10 bg-paper p-4"
+                className="flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="font-display text-lg font-semibold text-indigo">
+                    <p className="font-display text-lg font-semibold text-text-primary">
                       Cycle {cycle.cycle_number}
                     </p>
-                    <p className="font-mono text-xs text-indigo/60">
+                    <p className="font-display text-xs font-semibold tabular-nums text-text-secondary">
                       {amountLabel} your share · due {cycle.due_date} ·{""}
                       {cycle.status}
                       {contribution?.paid_at
@@ -405,7 +405,7 @@ export default async function GroupDetailPage({
                         : ""}
                     </p>
                     {(recipient || pot) && (
-                      <p className="font-mono text-xs text-indigo/60">
+                      <p className="font-display text-xs font-semibold tabular-nums text-text-secondary">
                         {pot ? `Pot ${pot}` : "Pot"}
                         {recipient
                           ? ` → ${recipient}'s turn to receive`
@@ -414,7 +414,7 @@ export default async function GroupDetailPage({
                     )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    <span className="text-[11px] font-medium uppercase tracking-wide text-indigo/50">
+                    <span className="font-mono text-[11px] font-medium uppercase tracking-wide text-text-secondary">
                       Your share
                     </span>
                     <span
@@ -432,19 +432,19 @@ export default async function GroupDetailPage({
                   />
                 )}
                 {isPaid && (
-                  <p className="text-xs text-indigo/50">
+                  <p className="text-xs text-text-secondary">
                     Paid — receipt confirmed by webhook.
                   </p>
                 )}
                 {status === "late" && (
-                  <p className="text-xs text-indigo">
+                  <p className="text-xs font-medium text-danger">
                     Paid late — the money arrived after the due date, so
                     trust took a hit.
                   </p>
                 )}
                 {member && (
-                  <div className="flex flex-col gap-2 border-t border-indigo/5 pt-3">
-                    <p className="font-mono text-xs text-indigo/60">
+                  <div className="flex flex-col gap-2 border-t border-border pt-3">
+                    <p className="font-mono text-xs text-text-secondary">
                       Payout ·{""}
                       <span
                         className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${BADGE[payoutStatus] ?? BADGE.pending}`}
@@ -477,7 +477,7 @@ export default async function GroupDetailPage({
 
       {member && circleRows.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="font-display text-lg font-semibold text-indigo">
+          <h2 className="font-display text-lg font-semibold text-text-primary">
             Members
           </h2>
           <ul className="flex flex-col gap-2">
@@ -506,13 +506,13 @@ export default async function GroupDetailPage({
                 <RevealLi
                   key={m.id}
                   delay={Math.min(i * 0.05, 0.2)}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-indigo/10 bg-paper p-4"
+                  className="flex items-center justify-between gap-3 rounded-[10px] border-[0.5px] border-border bg-surface p-4"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-indigo">
+                    <p className="truncate text-sm font-semibold text-text-primary">
                       {name}
                       {isYou ? (
-                        <span className="font-normal text-indigo/50">
+                        <span className="font-normal text-text-secondary">
                           {""}
                           · You
                         </span>
@@ -520,19 +520,19 @@ export default async function GroupDetailPage({
                         ""
                       )}
                     </p>
-                    <p className="font-mono text-xs text-indigo/60">{sub}</p>
-                    <p className="font-mono text-xs text-indigo/50">
+                    <p className="font-mono text-xs text-text-secondary">{sub}</p>
+                    <p className="font-mono text-xs text-text-secondary">
                       {recordDetail}
                     </p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-indigo/15 px-3 py-1 text-xs font-semibold text-indigo">
+                  <span className="shrink-0 rounded-full bg-[#F3EDDF] px-3 py-1 text-xs font-semibold text-[#7A6028]">
                     Trust {Number.isFinite(score) ? score : 100}
                   </span>
                 </RevealLi>
               );
             })}
           </ul>
-          <p className="text-xs leading-5 text-indigo/60">
+          <p className="text-xs leading-5 text-text-secondary">
             Scores start at 100 for everyone and move with on-time payments —
             the counts underneath show what each score is built from.
           </p>
@@ -541,7 +541,7 @@ export default async function GroupDetailPage({
 
       {member && (
         <section className="flex flex-col gap-3">
-          <h2 className="font-display text-lg font-semibold text-indigo">
+          <h2 className="font-display text-lg font-semibold text-text-primary">
             Recent activity
           </h2>
           <LedgerFeed
@@ -555,7 +555,7 @@ export default async function GroupDetailPage({
 
       {member && requests && requests.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="font-display text-lg font-semibold text-indigo">
+          <h2 className="font-display text-lg font-semibold text-text-primary">
             Pending requests
           </h2>
           <ul className="flex flex-col gap-3">
@@ -564,16 +564,16 @@ export default async function GroupDetailPage({
               return (
                 <li
                   key={request.id}
-                  className="flex flex-col gap-3 rounded-2xl border border-indigo/10 bg-paper p-4"
+                  className="flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm text-indigo">
+                    <p className="text-sm text-text-primary">
                       Applicant{""}
-                      <span className="font-mono text-xs text-indigo/60">
+                      <span className="font-mono text-xs text-text-secondary">
                         ····{request.applicant_id.slice(-4)}
                       </span>
                     </p>
-                    <p className="font-mono text-xs text-indigo/60">
+                    <p className="font-mono text-xs tabular-nums text-text-secondary">
                       {t.approve} yes · {t.reject} no
                     </p>
                   </div>

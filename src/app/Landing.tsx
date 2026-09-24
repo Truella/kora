@@ -397,7 +397,7 @@ export default function Landing() {
               className="mt-6 inline-flex"
             >
               <Link
-                href={CREATE_HREF}
+                href={createHref}
                 className="inline-flex items-center gap-2 rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
               >
                 Create a circle
