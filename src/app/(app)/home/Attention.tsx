@@ -9,8 +9,8 @@ import {
 import type { HomeSnapshot } from "@/lib/home";
 
 // The work queue. Every row here is something the member can actually act on —
-// a stalled payout is deliberately not in this list (you cannot unblock
-// someone else's late payment), it lives on the circle card instead.
+// a stalled payout is deliberately not in this list (you cannot unblock someone
+// else's late payment), it lives on the circle row instead.
 //
 // Order is fixed by the data layer: overdue money, then money due within the
 // window, then pending votes. Money has a deadline; a join request does not.
@@ -19,66 +19,48 @@ export default function Attention({ snapshot }: { snapshot: HomeSnapshot }) {
 
   // Nothing owed, and no rotation started anywhere — there is no queue to show
   // and "you're all caught up" would read as a contradiction next to a circle
-  // card that says "waiting for schedule".
+  // that says "waiting for schedule".
   if (attentionState === "none") return null;
 
+  // Having nothing to do is not a section. A bordered "all caught up" card gave
+  // an empty state the same visual weight as a real overdue payment, which is
+  // exactly backwards. It is now one muted line, and the section only exists
+  // once there is something in it.
   if (attentionState === "complete") {
     return (
-      <section id="attention" className="flex flex-col gap-3">
-        <h2 className="font-display text-lg font-semibold text-text-primary">
-          Needs your attention
-        </h2>
-        {/* A finished rotation is the best possible state, so it gets words
-            rather than vanishing into an empty shell. */}
-        <div className="flex items-center gap-3 rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3">
-          <HugeiconsIcon
-            icon={CheckmarkCircle01Icon}
-            size={18}
-            className="shrink-0 text-success"
-          />
-          <p className="text-sm text-text-primary">
-            You&apos;re all caught up. This rotation is complete.
-          </p>
-        </div>
-      </section>
+      <AllClear>
+        You&apos;re all caught up — this rotation is complete.
+      </AllClear>
     );
   }
 
   if (attention.length === 0) {
     return (
-      <section id="attention" className="flex flex-col gap-3">
-        <h2 className="font-display text-lg font-semibold text-text-primary">
-          Needs your attention
-        </h2>
-        {/* The forward-looking date survives here, and only here — the summary
-            deliberately does not repeat it. */}
-        <div className="flex items-center gap-3 rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3">
-          <HugeiconsIcon
-            icon={CheckmarkCircle01Icon}
-            size={18}
-            className="shrink-0 text-success"
-          />
-          <p className="text-sm text-text-primary">
-            You&apos;re all caught up
-            {nextDueLabel ? ` — next contribution ${nextDueLabel}` : "."}
-          </p>
-        </div>
-      </section>
+      <AllClear>
+        You&apos;re all caught up
+        {nextDueLabel ? ` — next contribution ${nextDueLabel}` : "."}
+      </AllClear>
     );
   }
 
   return (
-    <section id="attention" className="flex flex-col gap-3">
-      <h2 className="font-display text-lg font-semibold text-text-primary">
+    <section
+      id="attention"
+      className="flex scroll-mt-[calc(var(--app-header-h)+1rem)] flex-col gap-2 border-t border-border pt-4"
+    >
+      <h2 className="font-display text-base font-semibold text-text-primary">
         Needs your attention
       </h2>
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-1.5">
         {attention.map((item) =>
           item.kind === "money" ? (
             <li key={`${item.groupId}:${item.cycleId}`}>
+              {/* The one place a filled background earns its keep. Everything
+                  else on this page is type on the page background, so when a
+                  clay or gold block appears it means money, not decoration. */}
               <Link
                 href={item.href}
-                className={`flex items-start gap-3 rounded-[10px] px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+                className={`flex items-start gap-3 rounded-[10px] px-4 py-3 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
                   item.tone === "overdue"
                     ? "bg-[#F3E1E0] hover:bg-[#EBD3D1]"
                     : "bg-[#F8EDD9] hover:bg-[#F3E5CB]"
@@ -106,11 +88,12 @@ export default function Attention({ snapshot }: { snapshot: HomeSnapshot }) {
             </li>
           ) : (
             <li key={`vote:${item.groupId}`}>
-              {/* Votes are not money and get no warning tint — a neutral row
-                  keeps the tints above meaning "your money". */}
+              {/* Votes are not money, so they get no warning tint — keeping the
+                  gold and clay meaning "your money" is worth more than matching
+                  the queue's row styling. */}
               <Link
                 href={item.href}
-                className="flex items-start gap-3 rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 hover:bg-black/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+                className="flex items-start gap-3 rounded-[10px] bg-black/[0.02] px-4 py-3 transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
               >
                 <HugeiconsIcon
                   icon={UserMultipleIcon}
@@ -132,5 +115,21 @@ export default function Attention({ snapshot }: { snapshot: HomeSnapshot }) {
         )}
       </ul>
     </section>
+  );
+}
+
+// The quiet state. Deliberately not a heading, not a card, not a checkmark in a
+// circle of its own competing for the eye — the forward-looking date survives
+// here, and only here, because the summary no longer carries it.
+function AllClear({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-2 text-sm text-text-secondary">
+      <HugeiconsIcon
+        icon={CheckmarkCircle01Icon}
+        size={16}
+        className="shrink-0 text-success"
+      />
+      <span>{children}</span>
+    </p>
   );
 }

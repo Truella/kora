@@ -3,10 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, ArrowRight01Icon, Link01Icon } from "@hugeicons/core-free-icons";
-import type { HomeSnapshot } from "@/lib/home";
+import { Add01Icon, Link01Icon } from "@hugeicons/core-free-icons";
 
 const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
@@ -25,11 +23,16 @@ function extractGroupId(raw: string): string | null {
   return bare ? bare[1].toLowerCase() : null;
 }
 
-export default function QuickActions({ snapshot }: { snapshot: HomeSnapshot }) {
+// A footer, not a panel. There is deliberately no "Make contribution" button
+// here: every unpaid contribution inside the due window is already a row in the
+// attention queue linking to the exact cycle, and a second petrol button
+// saying the same thing is the duplicate-weight problem this page just shed.
+// PayButton → create-charge → Flutterwave remains the only path that moves
+// money, and it is reached from the queue or the circle page.
+export default function QuickActions() {
   const router = useRouter();
   const [invite, setInvite] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const { makeContributionHref } = snapshot;
 
   function handleJoin(event: React.FormEvent) {
     event.preventDefault();
@@ -42,48 +45,26 @@ export default function QuickActions({ snapshot }: { snapshot: HomeSnapshot }) {
   }
 
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="font-display text-lg font-semibold text-text-primary">
-        Quick actions
-      </h2>
+    <section className="flex flex-col gap-3 border-t border-border pt-5">
+      <Link
+        href="/groups/new"
+        className="flex w-fit items-center gap-2 rounded-[6px] text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
+      >
+        <HugeiconsIcon icon={Add01Icon} size={16} />
+        Start a new circle
+      </Link>
 
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
-          <Link
-            href="/groups/new"
-            className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-5 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
-          >
-            <HugeiconsIcon icon={Add01Icon} size={18} />
-            Create circle
-          </Link>
-        </motion.div>
-
-        {/* One owed cycle goes straight to it; several go to the queue already
-            on screen; nothing owed means the action is hidden rather than
-            shown dead. This never starts a payment — PayButton →
-            create-charge → Flutterwave stays the only path that moves money. */}
-        {makeContributionHref && (
-          <motion.div whileTap={{ scale: 0.97 }} className="flex-1">
-            <Link
-              href={makeContributionHref}
-              className="flex w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-5 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
-            >
-              Make contribution
-              <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
-            </Link>
-          </motion.div>
-        )}
-      </div>
-
-      <form onSubmit={handleJoin} className="flex flex-col gap-2">
+      {/* The only route into a circle that exists, so it cannot be hidden — but
+          an underline rather than a box keeps it at footer weight. */}
+      <form onSubmit={handleJoin} className="flex flex-col gap-1.5">
         <label
           htmlFor="invite-link"
-          className="flex items-center gap-1.5 text-sm font-medium text-text-primary"
+          className="flex items-center gap-1.5 text-xs text-text-secondary"
         >
-          <HugeiconsIcon icon={Link01Icon} size={16} className="text-text-secondary" />
-          Join a circle
+          <HugeiconsIcon icon={Link01Icon} size={14} />
+          Got an invite link?
         </label>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-3">
           <input
             id="invite-link"
             value={invite}
@@ -91,18 +72,17 @@ export default function QuickActions({ snapshot }: { snapshot: HomeSnapshot }) {
               setInvite(e.target.value);
               if (error) setError(null);
             }}
-            placeholder="Paste an invite link"
+            placeholder="Paste it here"
             autoComplete="off"
             spellCheck={false}
-            className="min-w-0 flex-1 rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-sm text-text-primary outline-none placeholder:text-text-secondary/70 focus:border-primary"
+            className="min-w-0 flex-1 border-0 border-b border-border bg-transparent px-0 py-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-secondary/60 focus:border-primary"
           />
-          <motion.button
+          <button
             type="submit"
-            whileTap={{ scale: 0.97 }}
-            className="shrink-0 rounded-[10px] border-[0.5px] border-border bg-surface px-5 py-[13px] text-sm font-semibold text-primary hover:bg-black/[0.03]"
+            className="shrink-0 rounded-[6px] py-1 text-sm font-semibold text-primary transition-transform duration-150 ease-out active:scale-[0.97]"
           >
             Join
-          </motion.button>
+          </button>
         </div>
         {error && <p className="text-xs text-danger">{error}</p>}
       </form>

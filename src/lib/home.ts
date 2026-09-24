@@ -81,6 +81,10 @@ export type HomeCircle = {
   nextDueLabel: string | null;
   payoutNote: string | null;
   urgent: boolean;
+  // A row that reads as a circle rather than a progress bar needs to say who is
+  // in it and how often it runs — otherwise it is just a bar with a name on it.
+  memberCount: number;
+  frequency: string;
   href: string;
 };
 
@@ -115,6 +119,7 @@ type GroupRow = {
   name: string;
   currency: string;
   contribution_amount: number | string;
+  frequency: string;
   status: string;
   created_at: string | null;
 };
@@ -158,7 +163,11 @@ type JoinRequestRow = {
   created_at: string | null;
 };
 
-const SETTLED = new Set(["paid", "late"]);
+// Settled is defined once and pushed into the query as a filter, so the
+// in-memory code never has to re-test the same condition the database already
+// applied. A JS-side `SETTLED` set would only be a second place for the rule to
+// drift out of sync with the SQL.
+const SETTLED_STATUSES: string[] = ["paid", "late"];
 
 export async function getHomeSnapshot(
   supabase: SupabaseClient,
@@ -185,16 +194,22 @@ export async function getHomeSnapshot(
     supabase
       .from("groups")
       .select(
-        "id, name, currency, contribution_amount, status, created_at",
+        "id, name, currency, contribution_amount, frequency, status, created_at",
       )
       .order("created_at", { ascending: false }),
   ]);
 
-  const groups = (groupsRes.data ?? []) as GroupRow[];
   if (groupsRes.error) {
     throw new Error(`home groups: ${groupsRes.error.message}`);
   }
+  // Checked before the data is read, like every other query below. An unchecked
+  // profiles error silently degraded to "no name" — the one field in this
+  // module whose absence is meant to be a decision, not a failure.
+  if (profileRes.error) {
+    throw new Error(`home profile: ${profileRes.error.message}`);
+  }
 
+  const groups = (groupsRes.data ?? []) as GroupRow[];
   const fullName = (profileRes.data?.full_name as string | null) ?? null;
   const firstName = fullName?.trim().split(/\s+/)[0] || null;
 
@@ -238,16 +253,67 @@ export async function getHomeSnapshot(
     throw new Error(`home join requests: ${requestsRes.error.message}`);
   }
 
-  const memberIds = members.map((m) => m.id);
   const cycleIds = cycles.map((c) => c.id);
 
+  // Membership facts are cheap and are needed to *scope* wave 3, so they are
+  // derived before it rather than after. One pass, three outputs.
+  const myMemberIds = new Set<string>();
+  const myJoinedByGroup = new Map<string, string>();
+  const activeCountByGroup = new Map<string, number>();
+  for (const m of members) {
+    activeCountByGroup.set(
+      m.group_id,
+      (activeCountByGroup.get(m.group_id) ?? 0) + 1,
+    );
+    if (m.user_id !== user.id) continue;
+    myMemberIds.add(m.id);
+    myJoinedByGroup.set(m.group_id, m.joined_at);
+  }
+  const myMemberIdList = [...myMemberIds];
+  const pendingRequestIds = requests.map((r) => r.id);
+
+  // The only reader of settledCountByCycle is the payout note, and it only ever
+  // looks at a cycle whose status is not "completed". Scoping the count query to
+  // the open cycles is therefore exact rather than approximate, and it is the
+  // difference between walking a circle's whole history and walking the one or
+  // two rounds currently in flight.
+  const openCycleIds: string[] = [];
+  for (const c of cycles) {
+    if (c.status !== "completed") openCycleIds.push(c.id);
+  }
+
   // Wave 3 — the rows that hang off cycles and members.
-  const [contribRes, payoutRes, votesRes] = await Promise.all([
-    cycleIds.length
+  //
+  // contributions is the table that actually grows: one row per member per
+  // cycle, forever. It is also the one table here where *every* downstream use
+  // filters to settled, so it is never fetched whole. It is split by what each
+  // consumer needs instead:
+  //
+  //   mine    — the caller's own rows, with the columns the lifetime total, the
+  //             month bucket, each circle's saved figure and the activity feed
+  //             all read from. One row set, four answers.
+  //   counts  — settled contributions for the open cycles only, one column,
+  //             purely to answer "how many of this cycle's shares have landed"
+  //             for the payout note.
+  //
+  // join_votes used to fetch every vote the member has ever cast, on requests
+  // in any state, to decide which *pending* requests they have not voted on.
+  // Scoping it to the pending request ids is the same answer over a fraction of
+  // the rows, and votes accumulate without bound where pending requests do not.
+  const [myContribRes, settledCountRes, payoutRes, votesRes] = await Promise.all([
+    myMemberIdList.length
       ? supabase
           .from("contributions")
           .select("id, cycle_id, member_id, amount, status, paid_at")
-          .in("cycle_id", cycleIds)
+          .in("member_id", myMemberIdList)
+          .in("status", SETTLED_STATUSES)
+      : Promise.resolve({ data: [], error: null }),
+    openCycleIds.length
+      ? supabase
+          .from("contributions")
+          .select("cycle_id")
+          .in("cycle_id", openCycleIds)
+          .in("status", SETTLED_STATUSES)
       : Promise.resolve({ data: [], error: null }),
     cycleIds.length
       ? supabase
@@ -255,35 +321,44 @@ export async function getHomeSnapshot(
           .select("id, cycle_id, recipient_member_id, amount, status, paid_at")
           .in("cycle_id", cycleIds)
       : Promise.resolve({ data: [], error: null }),
-    memberIds.length
+    pendingRequestIds.length
       ? supabase
           .from("join_votes")
           .select("join_request_id")
-          .in("voter_id", memberIds)
+          .in("join_request_id", pendingRequestIds)
       : Promise.resolve({ data: [], error: null }),
   ]);
 
-  const contributions = (contribRes.data ?? []) as ContributionRow[];
+  const myContributions = (myContribRes.data ?? []) as ContributionRow[];
   const payouts = (payoutRes.data ?? []) as PayoutRow[];
-  if (contribRes.error) {
-    throw new Error(`home contributions: ${contribRes.error.message}`);
+  if (myContribRes.error) {
+    throw new Error(`home contributions: ${myContribRes.error.message}`);
+  }
+  if (settledCountRes.error) {
+    throw new Error(
+      `home settled contribution counts: ${settledCountRes.error.message}`,
+    );
   }
   if (payoutRes.error) throw new Error(`home payouts: ${payoutRes.error.message}`);
-
-  const myMemberIds = new Set(
-    members.filter((m) => m.user_id === user.id).map((m) => m.id),
-  );
-  const myJoinedByGroup = new Map<string, string>();
-  for (const m of members) {
-    if (m.user_id === user.id) myJoinedByGroup.set(m.group_id, m.joined_at);
+  if (votesRes.error) {
+    throw new Error(`home join votes: ${votesRes.error.message}`);
   }
 
   const groupById = new Map(groups.map((g) => [g.id, g]));
   const cycleById = new Map(cycles.map((c) => [c.id, c]));
-  const contributionByCycleMember = new Map<string, ContributionRow>();
-  for (const c of contributions) {
-    contributionByCycleMember.set(`${c.cycle_id}:${c.member_id}`, c);
+
+  // Built once, read once per group below. Filtering the whole cycle list for
+  // every group was O(groups × cycles); the payout note's group scan was the
+  // same shape again.
+  const cyclesByGroup = new Map<string, CycleRow[]>();
+  const scheduledGroupIds = new Set<string>();
+  for (const c of cycles) {
+    const list = cyclesByGroup.get(c.group_id);
+    if (list) list.push(c);
+    else cyclesByGroup.set(c.group_id, [c]);
+    scheduledGroupIds.add(c.group_id);
   }
+
   const payoutByCycle = new Map<string, PayoutRow>();
   for (const p of payouts) payoutByCycle.set(p.cycle_id, p);
 
@@ -302,24 +377,23 @@ export async function getHomeSnapshot(
     joinedDateByGroup.set(groupId, utcDateOnly(joinedAt));
   }
 
-  const activeCountByGroup = new Map<string, number>();
-  for (const m of members) {
-    activeCountByGroup.set(m.group_id, (activeCountByGroup.get(m.group_id) ?? 0) + 1);
-  }
-
+  // Both queries above already filtered to settled, so neither map re-checks
+  // status. This is the one place that distinction is load-bearing: the payout
+  // note compares this against *all* active members, not just the caller's
+  // rows, which is why it needs its own query rather than myContributions.
   const settledCountByCycle = new Map<string, number>();
-  for (const c of contributions) {
-    if (SETTLED.has(c.status)) {
-      settledCountByCycle.set(
-        c.cycle_id,
-        (settledCountByCycle.get(c.cycle_id) ?? 0) + 1,
-      );
-    }
+  for (const row of settledCountRes.data ?? []) {
+    settledCountByCycle.set(
+      row.cycle_id,
+      (settledCountByCycle.get(row.cycle_id) ?? 0) + 1,
+    );
   }
 
-  const myContributionByCycle = new Map<string, ContributionRow>();
-  for (const c of contributions) {
-    if (myMemberIds.has(c.member_id)) myContributionByCycle.set(c.cycle_id, c);
+  // Keyed by cycle: one member has at most one contribution per cycle, and
+  // every reader only ever asks "did mine settle?".
+  const mySettledByCycle = new Map<string, ContributionRow>();
+  for (const c of myContributions) {
+    mySettledByCycle.set(c.cycle_id, c);
   }
 
   type Owed = {
@@ -344,8 +418,9 @@ export async function getHomeSnapshot(
     if (!joinedDate) continue;
     if (cycle.due_date < joinedDate) continue; // R1: predates their membership
 
-    const mine = myContributionByCycle.get(cycle.id);
-    if (mine && SETTLED.has(mine.status)) continue;
+    // The query already returned settled rows only, so membership in this map
+    // *is* the settled test.
+    if (mySettledByCycle.has(cycle.id)) continue;
 
     const group = groupById.get(cycle.group_id);
     if (!group) continue;
@@ -412,9 +487,9 @@ export async function getHomeSnapshot(
   // shell. And a member with no rotation started anywhere is not "caught up" —
   // there is nothing to be caught up on, so the section is suppressed rather
   // than contradicting the circle card that says "waiting for schedule".
-  const scheduledGroups = groups.filter(
-    (g) => cycles.some((c) => c.group_id === g.id),
-  );
+  // scheduledGroupIds was built in the single pass over cycles, so this is a
+  // set lookup per group rather than a scan of every cycle.
+  const scheduledGroups = groups.filter((g) => scheduledGroupIds.has(g.id));
   const attentionState: HomeSnapshot["attentionState"] =
     attention.length > 0
       ? "items"
@@ -433,26 +508,35 @@ export async function getHomeSnapshot(
   // --------------------------------------------------------------- totals
   const contributed = new Map<string, number>();
   const received = new Map<string, number>();
+  // Each circle's saved figure used to be its own filter over the entire
+  // contributions table. It falls out of the same pass as the lifetime total —
+  // same rows, same group lookup, one scan instead of one scan per group.
+  const savedByGroup = new Map<string, number>();
+  // Rows that resolved to a real cycle and group, carried through to the
+  // activity feed so it does not repeat the lookups.
+  const mySettled: { contribution: ContributionRow; group: GroupRow }[] = [];
   let monthAmount = 0;
   let monthCount = 0;
 
-  for (const c of contributions) {
-    if (!myMemberIds.has(c.member_id)) continue;
+  // Settled money is history: it counts whatever the dates say. The R1 rule is
+  // about what you are billed for, never about erasing a payment — and the
+  // query already restricted this set to paid|late.
+  for (const c of myContributions) {
     const cycle = cycleById.get(c.cycle_id);
     if (!cycle) continue;
     const group = groupById.get(cycle.group_id);
     if (!group) continue;
-    // Settled money is history: it counts whatever the dates say. The R1 rule
-    // is about what you are billed for, never about erasing a payment.
-    if (!SETTLED.has(c.status)) continue;
+    const amount = Number(c.amount);
     contributed.set(
       group.currency,
-      (contributed.get(group.currency) ?? 0) + Number(c.amount),
+      (contributed.get(group.currency) ?? 0) + amount,
     );
+    savedByGroup.set(group.id, (savedByGroup.get(group.id) ?? 0) + amount);
+    mySettled.push({ contribution: c, group });
     if (c.paid_at) {
       const at = localParts(c.paid_at, offset);
       if (at.y === today.y && at.m === today.m) {
-        monthAmount += Number(c.amount);
+        monthAmount += amount;
         monthCount += 1;
       }
     }
@@ -531,26 +615,22 @@ export async function getHomeSnapshot(
 
   // -------------------------------------------------------------- circles
   const circles: HomeCircle[] = groups.map((group) => {
-    const groupCycles = cycles.filter((c) => c.group_id === group.id);
+    const groupCycles = cyclesByGroup.get(group.id) ?? [];
     const joinedDate = joinedDateByGroup.get(group.id);
     // Enrolled = the cycles this member was actually present for. A member who
     // joined after the rotation ran has none, and owes none.
     const allEnrolled = groupCycles.filter(
       (c) => joinedDate && c.due_date >= joinedDate,
     );
-    const settledCount = allEnrolled.filter((c) => {
-      const mine = myContributionByCycle.get(c.id);
-      return !!mine && SETTLED.has(mine.status);
-    }).length;
+    // Scoped to this group's own slice, and a map lookup rather than a status
+    // test per cycle.
+    const settledCount = allEnrolled.reduce(
+      (n, c) => n + (mySettledByCycle.has(c.id) ? 1 : 0),
+      0,
+    );
 
     const share = Number(group.contribution_amount);
-    const saved = contributions
-      .filter((c) => {
-        if (!myMemberIds.has(c.member_id) || !SETTLED.has(c.status)) return false;
-        const cycle = cycleById.get(c.cycle_id);
-        return cycle?.group_id === group.id;
-      })
-      .reduce((sum, c) => sum + Number(c.amount), 0);
+    const saved = savedByGroup.get(group.id) ?? 0;
     const target = share * allEnrolled.length;
 
     const nextOwed = (owedByGroup.get(group.id) ?? [])[0] ?? null;
@@ -591,6 +671,8 @@ export async function getHomeSnapshot(
       nextDueLabel: nextOwed ? formatCycleDate(nextOwed.dueDate) : null,
       payoutNote,
       urgent: (owedByGroup.get(group.id) ?? []).some((o) => o.days <= 0),
+      memberCount: activeCountByGroup.get(group.id) ?? 0,
+      frequency: group.frequency,
       href: `/groups/${group.id}`,
     };
   });
@@ -617,13 +699,8 @@ export async function getHomeSnapshot(
   // Settled only. Everything still upcoming already lives in the attention
   // queue, and repeating it here would undo that separation.
   const activity: RankedActivity[] = [];
-  for (const c of contributions) {
-    if (!myMemberIds.has(c.member_id) || !SETTLED.has(c.status) || !c.paid_at) {
-      continue;
-    }
-    const cycle = cycleById.get(c.cycle_id);
-    const group = cycle ? groupById.get(cycle.group_id) : undefined;
-    if (!group) continue;
+  for (const { contribution: c, group } of mySettled) {
+    if (!c.paid_at) continue;
     activity.push({
       id: `c:${c.id}`,
       tone: "paid",
