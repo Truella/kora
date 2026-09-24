@@ -68,7 +68,7 @@ export default function HomeLive({ initial }: { initial: HomeSnapshot }) {
       <main className="flex flex-1 flex-col px-4 py-6">
         <EmptyHome snapshot={snapshot} />
         <div className="mt-6">
-          <QuickActions snapshot={snapshot} />
+          <QuickActions />
         </div>
       </main>
     );
@@ -79,8 +79,10 @@ export default function HomeLive({ initial }: { initial: HomeSnapshot }) {
       <Summary snapshot={snapshot} />
       <Attention snapshot={snapshot} />
       <CircleList snapshot={snapshot} />
-      <QuickActions snapshot={snapshot} />
       <ActivityStrip snapshot={snapshot} />
+      {/* Last, because it is a footer rather than a section — the hairline above
+          it closes the page instead of introducing another block. */}
+      <QuickActions />
     </main>
   );
 }
