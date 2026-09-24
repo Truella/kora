@@ -1,12 +1,8 @@
 import Link from "next/link";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Alert02Icon,
-  Clock01Icon,
-} from "@hugeicons/core-free-icons";
 import type { HomeCircle, HomeSnapshot } from "@/lib/home";
 import ProgressBar from "./ProgressBar";
 import SectionHead from "./SectionHead";
+import CircleAttentionTooltip from "./CircleAttentionTooltip";
 
 // Circles are the product, so they get the page's largest repeated surface.
 // The list is capped and ranked by the data layer: anything with money due
@@ -56,14 +52,11 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
           </p>
         </div>
         {attention && (
-          <span
-            role="img"
-            aria-label={attention.label}
-            title={attention.label}
+          <CircleAttentionTooltip
+            kind={attention.kind}
+            label={attention.label}
             className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${attention.className}`}
-          >
-            <HugeiconsIcon icon={attention.icon} size={16} strokeWidth={2} />
-          </span>
+          />
         )}
       </div>
 
@@ -132,27 +125,27 @@ function cadenceLabel(frequency: string): string {
 function circleAttention(circle: HomeCircle): {
   label: string;
   className: string;
-  icon: typeof Alert02Icon;
+  kind: "alert" | "clock";
 } | null {
   if (circle.urgent) {
     return {
       label: "Contribution needs attention",
       className: "bg-[#F3E1E0] text-[#8A2A21]",
-      icon: Alert02Icon,
+      kind: "alert",
     };
   }
   if (circle.payoutNote) {
     return {
       label: circle.payoutNote,
       className: "bg-[#F3E1E0] text-[#8A2A21]",
-      icon: Alert02Icon,
+      kind: "alert",
     };
   }
   if (circle.awaitingSchedule) {
     return {
       label: "Schedule pending",
       className: "bg-[#F8EDD9] text-[#8A5F14]",
-      icon: Clock01Icon,
+      kind: "clock",
     };
   }
   return null;

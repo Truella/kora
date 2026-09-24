@@ -53,7 +53,7 @@ export default function AppNav() {
     <>
       <aside
         aria-label="Sections"
-        className="order-1 hidden w-[224px] shrink-0 self-start py-5 md:sticky md:top-[var(--app-header-h)] md:flex md:h-[calc(100dvh-var(--app-header-h))]"
+        className="order-1 hidden w-[224px] shrink-0 self-start px-6 py-5 md:sticky md:top-[var(--app-header-h)] md:flex md:h-[calc(100dvh-var(--app-header-h))]"
       >
         {/* w-full is load-bearing: the aside is a flex ROW (flex-col was
             dropped with the tagline), so without an explicit width this ul
