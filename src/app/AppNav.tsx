@@ -30,6 +30,7 @@ const BARE_PREFIXES = [
   "/add-phone",
   "/offline",
   "/auth/",
+  "/design", // TEMP design-system preview — DELETE before submission
 ];
 
 function isActive(pathname: string, href: string) {

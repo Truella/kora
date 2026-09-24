@@ -20,6 +20,8 @@ export default function AppHeader() {
 
   if (user === undefined) return null;
   if (!user && pathname === "/") return null;
+  // TEMP design-system preview ships its own chrome — DELETE before submission.
+  if (pathname === "/design" || pathname.startsWith("/design/")) return null;
 
   return (
     <header className="sticky top-0 z-10 border-b border-indigo/5 bg-paper/95 pt-[env(safe-area-inset-top)] backdrop-blur">
