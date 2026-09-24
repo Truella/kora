@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "motion/react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
 import Dropdown from "../../../Dropdown";
 import { sanitizePhoneInput, MAX_PHONE_LEN } from "@/lib/inputs";
@@ -125,10 +127,23 @@ export default function InviteByPhone({
       </div>
 
       {state === "sent" ? (
-        <p className="rounded-[10px] bg-[#E0ECE9] px-4 py-3 text-sm leading-6 text-[#1E5A4E]">
-          Invite sent — it&apos;ll appear on their home as soon as they sign in
-          with that number.
-        </p>
+        <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
+          <motion.span
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-success"
+          >
+            <HugeiconsIcon
+              icon={Tick01Icon}
+              size={26}
+              className="text-white"
+            />
+          </motion.span>
+          <p className="text-sm font-semibold text-text-primary">
+            Invite sent
+          </p>
+        </div>
       ) : state === "duplicate" ? (
         <p className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm leading-6 text-[#8A5F14]">
           That number already has a pending invite to this circle.
