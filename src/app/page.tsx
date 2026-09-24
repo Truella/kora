@@ -1,19 +1,14 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
 import Landing from "./Landing";
 
 export const metadata = {
   title: "Kora — Save together. Keep everyone in the loop.",
 };
 
-export default async function RootPage() {
-  // / is the public landing page only. Signed-in members live on /home
-  // (the proxy sends logged-in /login visitors there, and logged-in /
-  // visitors get redirected below).
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user) redirect("/home");
+// / is the public landing page for everyone — guests and signed-in members
+// alike. The member dashboard lives at /home (AppNav's Home tab links there),
+// so a logged-in visitor can still read what Kora is before jumping into the
+// app. Landing is chrome-free for every session state and does its own
+// session-aware nav, so no server auth lookup is needed here.
+export default function RootPage() {
   return <Landing />;
 }
