@@ -12,9 +12,9 @@ lane — no overlap between "confirm/approve" and "warning/overdue."
 | `primary-hover` | `#0E3B39` | Hover/active/pressed state of primary buttons only |
 | `accent` | `#BF9A4E` | Small warm accents only — trust-score badges, labels on dark cards, streak/value icons. Never a large fill or CTA |
 | `hero-bg` | `#0B2624` | Single highest-attention card per screen (payout amount, balance summary). Keep it rare |
-| `bg` | `#F7F6F1` | Page/app background only |
+| `bg` | `#F2F4F2` | Cool neutral page/app background; keeps white product surfaces distinct without returning to a cream cast |
 | `surface` | `#FFFFFF` | Any card or list row sitting on the page background |
-| `border` | `#E5E1D6` | 0.5px hairline borders on surface cards |
+| `border` | `#DDE3DF` | 0.5px hairline borders on surface cards |
 | `text-primary` | `#16201D` | Headings, primary body text |
 | `text-secondary` | `#5B645E` | Meta text: timestamps, subtext (or `text-primary` at 50–60% opacity) |
 | `success` | `#2E7D6E` | Confirmed contributions, positive ledger amounts, "voted approve". Status/text only — never a button fill |
@@ -100,9 +100,9 @@ const robotoMono = Roboto_Mono({
   --color-primary-hover: #0e3b39;
   --color-accent: #bf9a4e;
   --color-hero-bg: #0b2624;
-  --color-bg: #f7f6f1;
+  --color-bg: #f2f4f2;
   --color-surface: #ffffff;
-  --color-border: #e5e1d6;
+  --color-border: #dde3df;
   --color-text-primary: #16201d;
   --color-text-secondary: #5b645e;
   --color-success: #2e7d6e;

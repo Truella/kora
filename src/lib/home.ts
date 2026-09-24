@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
-  formatAmount,
   formatCycleDate,
   formatMoney,
   greetingFor,
@@ -43,6 +42,13 @@ export type HomeTotals = {
   hasAny: boolean;
 };
 
+export type HomePaymentProgress = {
+  settledCount: number;
+  onTimeCount: number;
+  lateCount: number;
+  percent: number;
+};
+
 export type HomeAttention =
   | {
       kind: "money";
@@ -81,10 +87,15 @@ export type HomeCircle = {
   nextDueLabel: string | null;
   payoutNote: string | null;
   urgent: boolean;
-  // A row that reads as a circle rather than a progress bar needs to say who is
-  // in it and how often it runs — otherwise it is just a bar with a name on it.
-  memberCount: number;
+  // Cadence remains useful beside the circle name; membership and round-count
+  // tiles were removed from the card because they repeated information already
+  // available on the circle detail page.
   frequency: string;
+  // Null once the round has been paid out — at that point it belongs in
+  // activity as "You received", and repeating it here would be a second,
+  // staler copy of the same fact.
+  myPayoutLabel: string | null;
+  myPayoutDateLabel: string | null;
   href: string;
 };
 
@@ -95,6 +106,9 @@ export type HomeActivity = {
   amountLabel: string;
   groupName: string;
   dayLabel: string;
+  // "Round 3" — turns a ledger line into an event in the rotation. Free: the
+  // cycle is already resolved for every activity row.
+  contextLabel: string | null;
 };
 
 // Directed phone invite awaiting this user. Resolved server-side by the
@@ -115,13 +129,19 @@ export type HomeSnapshot = {
   greeting: "morning" | "afternoon" | "evening";
   firstName: string | null;
   totals: HomeTotals;
+  activeCircleCount: number;
+  paymentProgress: HomePaymentProgress;
   attention: HomeAttention[];
+  // Retained alongside the new Next Up surface so invite-aware callers can
+  // distinguish an empty queue from a completed rotation.
   attentionState: "items" | "caught-up" | "complete" | "none";
   nextDueLabel: string | null;
   invites: HomeInvite[];
   circles: HomeCircle[];
   circlesTotal: number;
   activity: HomeActivity[];
+  // Remote invite/action-grid compatibility: the first unpaid money item is a
+  // direct payment route; multiple items point back to the attention section.
   makeContributionHref: string | null;
   memberCount: number;
 };
@@ -147,6 +167,12 @@ type CycleRow = {
   id: string;
   group_id: string;
   cycle_number: number;
+  // Which member this round pays out to. One extra column on a row we already
+  // fetch, and it carries the entire rotation model: "your round" is simply the
+  // cycle that names you. Nullable in the sense that a member who joins after
+  // the rotation was generated is named by no cycle until a sync appends one —
+  // hence the null-tolerant reads below rather than an assumption.
+  recipient_member_id: string;
   due_date: string;
   status: string;
 };
@@ -206,11 +232,10 @@ export async function getHomeSnapshot(
   const today = todayIn(offset);
   const month = monthName(today);
 
-  // Wave 1 — the reads that need nothing but the session. Invites ride
-  // along separately: the RPC is best-effort (a DB without the migration
-  // answers with an error, never with someone else's invites) and an
-  // invitee often has zero circles, so invites must survive the
-  // groups.length === 0 early return below.
+  // Wave 1 — the reads that need nothing but the session. Invites ride along
+  // separately: the RPC is best-effort (a DB without the migration answers
+  // with an error, never with someone else's invites) and an invitee often
+  // has zero circles, so invites must survive the early return below.
   const [profileRes, groupsRes, inviteRows] = await Promise.all([
     supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
     // RLS ("view groups you belong to") scopes this to the caller's circles,
@@ -271,7 +296,7 @@ export async function getHomeSnapshot(
       .eq("status", "active"),
     supabase
       .from("cycles")
-      .select("id, group_id, cycle_number, due_date, status")
+      .select("id, group_id, cycle_number, recipient_member_id, due_date, status")
       .in("group_id", groupIds)
       .order("cycle_number", { ascending: true }),
     supabase
@@ -297,6 +322,10 @@ export async function getHomeSnapshot(
   // derived before it rather than after. One pass, three outputs.
   const myMemberIds = new Set<string>();
   const myJoinedByGroup = new Map<string, string>();
+  // group_id -> the caller's own membership row id. The rotation lookup needs
+  // the membership id (that is what `cycles.recipient_member_id` points at),
+  // not the user id, and only one membership per group can be the caller's.
+  const myMemberIdByGroup = new Map<string, string>();
   const activeCountByGroup = new Map<string, number>();
   for (const m of members) {
     activeCountByGroup.set(
@@ -305,6 +334,7 @@ export async function getHomeSnapshot(
     );
     if (m.user_id !== user.id) continue;
     myMemberIds.add(m.id);
+    myMemberIdByGroup.set(m.group_id, m.id);
     myJoinedByGroup.set(m.group_id, m.joined_at);
   }
   const myMemberIdList = [...myMemberIds];
@@ -521,12 +551,9 @@ export async function getHomeSnapshot(
 
   const attention = [...moneyItems, ...voteItems];
 
-  // A rotation that is finished everywhere is a success state, not an empty
-  // shell. And a member with no rotation started anywhere is not "caught up" —
-  // there is nothing to be caught up on, so the section is suppressed rather
-  // than contradicting the circle card that says "waiting for schedule".
-  // scheduledGroupIds was built in the single pass over cycles, so this is a
-  // set lookup per group rather than a scan of every cycle.
+  // A finished rotation is a success state, while a member with no rotation
+  // started anywhere has no queue at all. Pending phone invites also keep the
+  // queue alive even when there are no money or vote rows.
   const scheduledGroups = groups.filter((g) => scheduledGroupIds.has(g.id));
   const attentionState: HomeSnapshot["attentionState"] =
     attention.length > 0 || invites.length > 0
@@ -552,7 +579,11 @@ export async function getHomeSnapshot(
   const savedByGroup = new Map<string, number>();
   // Rows that resolved to a real cycle and group, carried through to the
   // activity feed so it does not repeat the lookups.
-  const mySettled: { contribution: ContributionRow; group: GroupRow }[] = [];
+  const mySettled: {
+    contribution: ContributionRow;
+    cycle: CycleRow;
+    group: GroupRow;
+  }[] = [];
   let monthAmount = 0;
   let monthCount = 0;
 
@@ -570,7 +601,7 @@ export async function getHomeSnapshot(
       (contributed.get(group.currency) ?? 0) + amount,
     );
     savedByGroup.set(group.id, (savedByGroup.get(group.id) ?? 0) + amount);
-    mySettled.push({ contribution: c, group });
+    mySettled.push({ contribution: c, cycle, group });
     if (c.paid_at) {
       const at = localParts(c.paid_at, offset);
       if (at.y === today.y && at.m === today.m) {
@@ -579,6 +610,21 @@ export async function getHomeSnapshot(
       }
     }
   }
+
+  // The same settled rows that feed the money totals also answer the member's
+  // reliability question. No extra query: `late` is settled history too, so the
+  // denominator is every payment they have made and the numerator is the subset
+  // that landed on time.
+  const settledCount = myContributions.length;
+  const onTimeCount = myContributions.filter((c) => c.status === "paid").length;
+  const lateCount = settledCount - onTimeCount;
+  const paymentProgress: HomePaymentProgress = {
+    settledCount,
+    onTimeCount,
+    lateCount,
+    percent:
+      settledCount > 0 ? Math.round((onTimeCount / settledCount) * 100) : 0,
+  };
 
   for (const p of payouts) {
     if (p.status !== "completed" || !myMemberIds.has(p.recipient_member_id)) {
@@ -671,6 +717,22 @@ export async function getHomeSnapshot(
     const saved = savedByGroup.get(group.id) ?? 0;
     const target = share * allEnrolled.length;
 
+    // The next payout is read from the member's first unfinished recipient
+    // cycle. A circle may rotate longer than its membership, so this must not
+    // be the first cycle that merely names them; that would keep showing a
+    // payout they already received.
+    const myMemberId = myMemberIdByGroup.get(group.id) ?? null;
+    const myCycle = myMemberId
+      ? (groupCycles.find(
+          (c) => c.recipient_member_id === myMemberId && c.status !== "completed",
+        ) ?? null)
+      : null;
+    const myPayout = myCycle ? (payoutByCycle.get(myCycle.id) ?? null) : null;
+    // A non-completed cycle with a paid-out payout should not exist — the Edge
+    // Function flips both together — but the figure is money, so the row only
+    // shows it when the row itself says pending.
+    const payoutPending = myPayout !== null && myPayout.status !== "completed";
+
     const nextOwed = (owedByGroup.get(group.id) ?? [])[0] ?? null;
     const inPlay =
       groupCycles.find(
@@ -681,10 +743,15 @@ export async function getHomeSnapshot(
       const active = activeCountByGroup.get(group.id) ?? 0;
       const settled = settledCountByCycle.get(inPlay.id) ?? 0;
       const outstanding = Math.max(0, active - settled);
+      // Whether the stalled round pays the caller decides who the note is
+      // about — "your payout is waiting on someone" is actionable in a way
+      // "a payout is waiting" is not.
+      const mine = inPlay.recipient_member_id === myMemberId;
+      const subject = mine ? "Your payout" : "Payout";
       payoutNote =
         outstanding > 0
-          ? `Payout pending · ${outstanding} member${outstanding === 1 ? "" : "s"} outstanding`
-          : "Payout pending · ready to disburse";
+          ? `${subject} waiting on ${outstanding} member${outstanding === 1 ? "" : "s"}`
+          : `${subject} ready to disburse`;
     }
 
     return {
@@ -693,8 +760,12 @@ export async function getHomeSnapshot(
       status: group.status,
       currency: group.currency,
       amountLabel: formatMoney(share, group.currency),
-      savedLabel: formatAmount(saved),
-      targetLabel: formatAmount(target),
+      // Symbol included here rather than prepended in the component: this module
+      // pre-formats every string so the server render and the /api/home refetch
+      // cannot disagree, and a component-side symbol would be one more place
+      // for them to.
+      savedLabel: formatMoney(saved, group.currency),
+      targetLabel: formatMoney(target, group.currency),
       cyclesEnrolled: allEnrolled.length,
       cyclesSettled: settledCount,
       percent:
@@ -708,9 +779,15 @@ export async function getHomeSnapshot(
       awaitingSchedule: groupCycles.length === 0,
       nextDueLabel: nextOwed ? formatCycleDate(nextOwed.dueDate) : null,
       payoutNote,
-      urgent: (owedByGroup.get(group.id) ?? []).some((o) => o.days <= 0),
+      urgent: (owedByGroup.get(group.id) ?? []).some(
+        (o) => o.days <= DUE_SOON_DAYS,
+      ),
       memberCount: activeCountByGroup.get(group.id) ?? 0,
       frequency: group.frequency,
+      myPayoutLabel: payoutPending
+        ? formatMoney(myPayout.amount, group.currency)
+        : null,
+      myPayoutDateLabel: myCycle ? formatCycleDate(myCycle.due_date) : null,
       href: `/groups/${group.id}`,
     };
   });
@@ -737,7 +814,7 @@ export async function getHomeSnapshot(
   // Settled only. Everything still upcoming already lives in the attention
   // queue, and repeating it here would undo that separation.
   const activity: RankedActivity[] = [];
-  for (const { contribution: c, group } of mySettled) {
+  for (const { contribution: c, cycle, group } of mySettled) {
     if (!c.paid_at) continue;
     activity.push({
       id: `c:${c.id}`,
@@ -746,13 +823,15 @@ export async function getHomeSnapshot(
       amountLabel: formatMoney(c.amount, group.currency),
       groupName: group.name,
       dayLabel: settledDayLabel(c.paid_at, offset, today),
+      contextLabel: `Round ${cycle.cycle_number}`,
       sortKey: new Date(c.paid_at).getTime(),
     });
   }
   for (const p of payouts) {
     if (p.status !== "completed" || !p.paid_at) continue;
     const cycle = cycleById.get(p.cycle_id);
-    const group = cycle ? groupById.get(cycle.group_id) : undefined;
+    if (!cycle) continue;
+    const group = groupById.get(cycle.group_id);
     if (!group) continue;
     const mine = myMemberIds.has(p.recipient_member_id);
     activity.push({
@@ -764,6 +843,7 @@ export async function getHomeSnapshot(
       amountLabel: formatMoney(p.amount, group.currency),
       groupName: group.name,
       dayLabel: settledDayLabel(p.paid_at, offset, today),
+      contextLabel: `Round ${cycle.cycle_number}`,
       sortKey: new Date(p.paid_at).getTime(),
     });
   }
@@ -775,11 +855,13 @@ export async function getHomeSnapshot(
     amountLabel: item.amountLabel,
     groupName: item.groupName,
     dayLabel: item.dayLabel,
+    contextLabel: item.contextLabel,
   }));
 
-  // "Make contribution" routes into the payment flow rather than being one of
-  // its own — one owed cycle goes straight to it, several go to the queue that
-  // is already on screen, none means the action is hidden.
+  const activeCircleCount = groups.filter((g) => g.status === "active").length;
+
+  // Action-grid compatibility: one owed cycle can route directly to payment;
+  // several route to the attention section; no unpaid money hides the tile.
   const makeContributionHref =
     moneyItems.length === 1
       ? moneyItems[0].href
@@ -791,11 +873,13 @@ export async function getHomeSnapshot(
     greeting: greetingFor(offset),
     firstName,
     totals,
+    activeCircleCount,
+    paymentProgress,
     attention,
     attentionState,
     nextDueLabel,
     invites,
-    circles: circles.slice(0, 3),
+    circles: circles.slice(0, 4),
     circlesTotal: groups.length,
     activity: recent,
     makeContributionHref,
@@ -815,6 +899,13 @@ function emptySnapshot(): HomeSnapshot {
       monthName: "",
       others: [],
       hasAny: false,
+    },
+    activeCircleCount: 0,
+    paymentProgress: {
+      settledCount: 0,
+      onTimeCount: 0,
+      lateCount: 0,
+      percent: 0,
     },
     attention: [],
     attentionState: "caught-up",

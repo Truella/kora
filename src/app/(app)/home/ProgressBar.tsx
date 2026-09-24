@@ -2,9 +2,9 @@
 
 import { motion, useReducedMotion } from "motion/react";
 
-// The ratio is already legible from the ₦45,000 / ₦60,000 pair beside it, so
-// no "75%" numeral is printed — but the value still has to reach assistive
-// tech, hence the explicit progressbar role rather than a decorative div.
+// The ratio is already legible from the amount pair beside it, so no duplicate
+// percentage is printed. The explicit progressbar role keeps the same value
+// available to assistive technology.
 export default function ProgressBar({
   percent,
   label,
@@ -13,21 +13,22 @@ export default function ProgressBar({
   label: string;
 }) {
   const reduce = useReducedMotion();
+
   return (
     <div
       role="progressbar"
       aria-valuenow={percent}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-label={label}
-      className="h-1.5 w-full overflow-hidden rounded-full bg-border"
+      aria-valuetext={`${percent}% — ${label}`}
+      className="h-2 w-full overflow-hidden rounded-full bg-black/[0.07]"
     >
       <motion.div
-        className="h-full rounded-full bg-primary"
-        initial={{ width: 0 }}
+        className={`h-full rounded-full ${percent === 100 ? "bg-success" : "bg-primary"}`}
+        initial={false}
         animate={{ width: `${percent}%` }}
         transition={
-          reduce ? { duration: 0 } : { duration: 0.5, ease: "easeOut" }
+          reduce ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }
         }
       />
     </div>
