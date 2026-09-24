@@ -23,7 +23,7 @@ const COUNTRIES: { key: CountryKey; label: string }[] = [
 ];
 
 function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/home";
 }
 
 function LoginForm() {
@@ -107,7 +107,7 @@ function LoginForm() {
         intro={
           <>
             We sent a sign-in link to{""}
-            <span className="font-mono font-medium text-indigo">
+            <span className="font-display font-semibold text-text-primary">
               {linkSentTo}
             </span>
             . Tap it on this device and you&apos;re in — no code to type.
@@ -116,7 +116,7 @@ function LoginForm() {
       >
         <button
           onClick={() => setLinkSentTo(null)}
-          className="mt-4 w-full py-2 text-sm font-semibold text-indigo"
+          className="mt-4 w-full py-2 text-sm font-semibold text-text-primary"
         >
           Use a different email
         </button>
@@ -138,7 +138,7 @@ function LoginForm() {
         <div
           role="tablist"
           aria-label="Sign-in method"
-          className="grid grid-cols-2 rounded-full bg-paper p-1"
+          className="grid grid-cols-2 rounded-[10px] border-[0.5px] border-border bg-surface p-1"
         >
           {(["phone", "email"] as const).map((t) => (
             <button
@@ -149,14 +149,14 @@ function LoginForm() {
                 setTab(t);
                 setError(null);
               }}
-              className={`relative rounded-full py-2 text-sm font-semibold transition-colors ${
-                tab === t ? "text-paper" : "text-indigo/60"
+              className={`relative rounded-[10px] py-2 text-sm font-semibold transition-colors ${
+                tab === t ? "text-white" : "text-text-secondary"
               }`}
             >
               {tab === t && (
                 <motion.span
                   layoutId="login-tab"
-                  className="absolute inset-0 rounded-full bg-indigo"
+                  className="absolute inset-0 rounded-[10px] bg-primary"
                   transition={{ type: "spring", stiffness: 500, damping: 40 }}
                 />
               )}
@@ -175,7 +175,7 @@ function LoginForm() {
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value as CountryKey)}
-                  className="rounded-xl border border-indigo/10 bg-paper px-3 py-3 text-[16px] outline-none focus:border-indigo"
+                  className="rounded-[10px] border-[0.5px] border-border bg-surface px-3 py-3 text-[16px] text-text-primary outline-none focus:border-primary"
                 >
                   {COUNTRIES.map((c) => (
                     <option key={c.key} value={c.key}>
@@ -195,7 +195,7 @@ function LoginForm() {
                   placeholder="801 234 5678"
                   autoComplete="tel"
                   inputMode="tel"
-                  className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-[16px] outline-none placeholder:text-indigo/50 focus:border-indigo"
+                  className="rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-[16px] text-text-primary outline-none placeholder:text-text-secondary/60 focus:border-primary"
                 />
               </label>
             </div>
@@ -209,13 +209,13 @@ function LoginForm() {
                 placeholder="you@example.com"
                 autoComplete="email"
                 inputMode="email"
-                className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-[16px] outline-none placeholder:text-indigo/50 focus:border-indigo"
+                className="rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-[16px] text-text-primary outline-none placeholder:text-text-secondary/60 focus:border-primary"
               />
             </label>
           )}
 
           {error && (
-            <p role="alert" className="text-sm font-medium text-indigo">
+            <p role="alert" className="text-sm font-medium text-danger">
               {error}
             </p>
           )}
@@ -224,7 +224,7 @@ function LoginForm() {
             whileTap={{ scale: 0.98 }}
             disabled={sending}
             onClick={tab === "phone" ? sendPhoneOtp : sendEmailLink}
-            className="mt-1 rounded-full bg-indigo py-3.5 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
+            className="mt-1 rounded-[10px] bg-primary py-[13px] text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
           >
             {sending
               ? tab === "phone"
