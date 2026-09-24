@@ -78,13 +78,13 @@ export default function PayButton({
         onClick={handlePay}
         disabled={starting}
         whileTap={{ scale: 0.97 }}
-        className="flex items-center justify-center gap-2 rounded-full bg-indigo px-6 py-3 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
+        className="flex items-center justify-center gap-2 rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
       >
         {starting ? "Starting payment…" : `Pay your ${amountLabel} share`}
         {!starting && <HugeiconsIcon icon={ArrowRight01Icon} size={18} />}
       </motion.button>
       {error && (
-        <p className="rounded-xl bg-gold/15 px-4 py-2.5 text-sm text-indigo">
+        <p className="rounded-[10px] bg-[#F3E1E0] px-4 py-2.5 text-sm text-[#8A2A21]">
           {error}
         </p>
       )}

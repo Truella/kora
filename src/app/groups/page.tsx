@@ -24,23 +24,23 @@ export default async function GroupsPage() {
   if (!groups || groups.length === 0) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3 px-8 py-12 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10">
+        <span className="flex h-14 w-14 items-center justify-center rounded-[14px] bg-primary/10">
           <HugeiconsIcon
             icon={UserGroupIcon}
             size={26}
-            className="text-indigo"
+            className="text-primary"
           />
         </span>
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-indigo">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
           No circles yet
         </h1>
-        <p className="max-w-xs text-sm leading-6 text-indigo/60">
+        <p className="max-w-xs text-sm leading-6 text-text-secondary">
           Create one to get started — once you join a circle, it will show up
           here.
         </p>
         <Link
           href="/groups/new"
-          className="mt-2 inline-flex items-center gap-2 rounded-full bg-indigo px-5 py-2.5 text-sm font-semibold text-paper hover:bg-indigo-hover"
+          className="mt-2 inline-flex items-center gap-2 rounded-[10px] bg-primary px-5 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
         >
           <HugeiconsIcon icon={Add01Icon} size={18} />
           Create a circle
@@ -52,13 +52,13 @@ export default async function GroupsPage() {
   return (
     <main className="flex flex-1 flex-col gap-3 px-4 py-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-semibold tracking-tight text-indigo">
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
           Your circles
         </h1>
         <Link
           href="/groups/new"
           aria-label="Create a circle"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-gold/20 text-gold-deep"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-hover"
         >
           <HugeiconsIcon icon={Add01Icon} size={20} />
         </Link>
@@ -68,24 +68,24 @@ export default async function GroupsPage() {
           <RevealLi
             key={group.id}
             delay={Math.min(i * 0.05, 0.25)}
-            className="rounded-2xl border border-indigo/10 bg-paper"
+            className="rounded-[10px] border-[0.5px] border-border bg-surface"
           >
             <Link
               href={`/groups/${group.id}`}
               className="flex items-center gap-3 p-4"
             >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo/10">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-primary/10">
               <HugeiconsIcon
                 icon={UserGroupIcon}
                 size={22}
-                className="text-indigo"
+                className="text-primary"
               />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate font-display text-lg font-semibold text-indigo">
+              <p className="truncate font-display text-lg font-semibold text-text-primary">
                 {group.name}
               </p>
-              <p className="font-mono text-xs text-indigo/60">
+              <p className="font-display text-xs font-semibold tabular-nums text-text-secondary">
                 {SYMBOLS[group.currency] ?? group.currency}
                 {Number(group.contribution_amount).toLocaleString()} ·{""}
                 {group.frequency} · {group.status}

@@ -52,7 +52,7 @@ export default function VoteButtons({
 
   if (voted) {
     return (
-      <p className="text-xs text-indigo/50">
+      <p className="text-xs text-text-secondary">
         {voted === "already"
           ? "You already voted on this request."
           : `You voted ${voted}.`}
@@ -62,7 +62,7 @@ export default function VoteButtons({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex gap-2">
+      <div className="flex gap-3">
         {(["approve", "reject"] as const).map((choice) => (
           <motion.button
             key={choice}
@@ -70,17 +70,17 @@ export default function VoteButtons({
             onClick={() => vote(choice)}
             disabled={voting !== null}
             whileTap={{ scale: 0.97 }}
-            className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold capitalize disabled:opacity-60 ${
+            className={`flex-1 rounded-[10px] px-4 py-[13px] text-sm font-semibold capitalize disabled:opacity-60 ${
               choice === "approve"
-                ? "bg-indigo/15 text-indigo"
-                : "bg-gold/15 text-indigo"
+                ? "bg-primary text-white hover:bg-primary-hover"
+                : "border-[0.5px] border-border bg-white text-text-primary"
             }`}
           >
             {voting === choice ? "Voting…" : choice}
           </motion.button>
         ))}
       </div>
-      {error && <p className="text-sm text-indigo">{error}</p>}
+      {error && <p className="text-sm font-medium text-danger">{error}</p>}
     </div>
   );
 }
