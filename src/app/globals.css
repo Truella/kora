@@ -24,6 +24,13 @@
   --font-display: "Sora", system-ui, sans-serif;
   --font-sans: "Hind", system-ui, sans-serif;
   --font-mono: "Roboto Mono", ui-monospace, monospace;
+
+  /* Chrome metrics — the sticky app header's height at lg (34px of content
+     + 12px padding, top and bottom). The desktop rail offsets its sticky
+     top and height by this so its top strip is never painted over by the
+     header once the page scrolls. Only meaningful at lg: below that the
+     rail is hidden and the header carries a safe-area inset. */
+  --app-header-h: 58px;
 }
 
 body {
