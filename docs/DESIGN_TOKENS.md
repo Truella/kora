@@ -1,97 +1,133 @@
-# Design Tokens — Digital Ajo/Chama App
+# Design Tokens — Kora
 
-## Palette rationale
+Petrol teal + brass gold, light mode. Built for a trust-based digital
+savings circle app (Ajo/Chama). Every status color occupies its own hue
+lane — no overlap between "confirm/approve" and "warning/overdue."
 
-Grounded in the *adire* indigo-dye tradition (West African hand-craft, historically tied to trade and community) rather than a generic fintech blue/green. Three colors only: paper surfaces, indigo text and structure, gold emphasis. Muted text is indigo at opacity; settled states render indigo, attention states (pending, late, errors) render gold — wording and icons carry the meaning red used to.
+## Palette
 
 | Token | Hex | Role |
 |---|---|---|
-| `indigo` | `#21164F` | Default — text, nav, structure, settled states, ALL actions |
-| `indigo-hover` | `#30205F` | Hover lift on indigo surfaces — actions lighten on hover, never darken |
-| `paper` | `#FAF9F6` | Background — main surface (warm paper, dominant, never large purple areas in-app) |
-| `gold` | `#C9A84E` | Value/status/identity only — amounts, badges, trust, logo details. Antique, never bright yellow. Never a button. |
-| `gold-deep` | `#9D7B2F` | Amount figures and hover depth on gold-tinted surfaces |
+| `primary` | `#14524F` | All money-moving CTAs: confirm contribution, approve vote, primary buttons |
+| `primary-hover` | `#0E3B39` | Hover/active/pressed state of primary buttons only |
+| `accent` | `#BF9A4E` | Small warm accents only — trust-score badges, labels on dark cards, streak/value icons. Never a large fill or CTA |
+| `hero-bg` | `#0B2624` | Single highest-attention card per screen (payout amount, balance summary). Keep it rare |
+| `bg` | `#F7F6F1` | Page/app background only |
+| `surface` | `#FFFFFF` | Any card or list row sitting on the page background |
+| `border` | `#E5E1D6` | 0.5px hairline borders on surface cards |
+| `text-primary` | `#16201D` | Headings, primary body text |
+| `text-secondary` | `#5B645E` | Meta text: timestamps, subtext (or `text-primary` at 50–60% opacity) |
+| `success` | `#2E7D6E` | Confirmed contributions, positive ledger amounts, "voted approve". Status/text only — never a button fill |
+| `warning` | `#D9992E` | "Due soon" states, upcoming deadlines |
+| `danger` | `#B23A2E` | Overdue, declined votes, failed payments. The *only* warm-red hue in the system |
 
-Light-only theme: no `dark:` variants ship — every screen renders this system regardless of OS setting.
+Badge tints (pill backgrounds, ~15–20% tint + darker same-hue text):
 
-## Type rationale
+| Badge | Background | Text |
+|---|---|---|
+| Trust (gold) | `#F3EDDF` | `#7A6028` |
+| Paid / approve (success) | `#E0ECE9` | `#1E5A4E` |
+| Due soon (warning) | `#F8EDD9` | `#8A5F14` |
+| Overdue / declined (danger) | `#F3E1E0` | `#8A2A21` |
+
+## Type
 
 | Role | Typeface | Used for |
 |---|---|---|
-| Headline / editorial voice | **Newsreader** (serif) | Group names, empty states, trust-score narrative copy — used sparingly, not on every label |
-| UI / body | **IBM Plex Sans** | Forms, nav, buttons, general body text |
-| Ledger figures | **IBM Plex Mono** | Every amount in the ledger, contribution screen, payout view — tabular numerals so figures align and don't jitter on update |
+| Headings + money | **Sora** | Screen titles, group names, and every money figure (semibold) — never mono for amounts |
+| Body / UI | **Hind** | Forms, nav, buttons, general body text |
+| Micro-labels | **Roboto Mono** | Technical metadata only — eyebrows, hex codes, vote tallies. Never amounts |
 
----
+## Shape
 
-## Tailwind v4 theme (`src/app/globals.css`)
+- **Radius:** 20px page-level sheets/containers (incl. the hero card), 14px
+  cards, 10px buttons and list rows, pill badges.
+- **Buttons:** full-width primary buttons use `primary` fill, white text,
+  ~13px vertical padding, 10px radius. Secondary/decline buttons: white fill,
+  `text-primary` text, 0.5px `border` outline — no fill color, so they never
+  compete visually with a destructive action.
+- **Badges** (e.g. trust score): pill shape, tinted background + darker
+  same-hue text (table above) — never flat `accent` fills.
+- **List rows:** `surface` background, `border` hairline, sit directly on `bg`.
 
-```css
-@import "tailwindcss";
+## Hard rules — do not
 
-/* Light-only: paper/indigo/gold always. */
-@theme {
-  /* Colors — heritage palette: deep community-indigo, antique gold */
-  --color-indigo: #21164f;
-  --color-indigo-hover: #30205f;
-  --color-paper: #faf9f6;
-  --color-gold: #c9a84e;
-  --color-gold-deep: #9d7b2f;
-
-  /* Fonts */
-  --font-display: "Newsreader", serif;
-  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
-}
-
-body {
-  background-color: var(--color-paper);
-  color: var(--color-indigo);
-}
-```
-
-This gives you utilities immediately: `bg-indigo`, `text-paper`, `border-gold`, `font-display`, `font-mono`, etc.
+- Do not use `accent` (gold) as a CTA/button background. Accent only.
+- Do not introduce a second red/orange hue. `danger` must remain the only
+  warning-coded hue in the system.
+- Do not reuse `hero-bg` on more than one card per screen.
+- Do not use `success` as a button fill — it stays distinct from the primary
+  CTA color by living only in ledger/status text.
 
 ## Loading fonts (`src/app/layout.tsx`)
 
-Use `next/font/google` rather than a runtime `<link>` tag — self-hosts the fonts at build time (faster, no external request, works offline in the PWA shell).
+Use `next/font/google` rather than a runtime `<link>` tag — self-hosts the
+fonts at build time (faster, no external request, works offline in the PWA
+shell).
 
 ```tsx
-import { Newsreader, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Sora, Hind, Roboto_Mono } from "next/font/google";
 
-const newsreader = Newsreader({
+const sora = Sora({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-display",
   display: "swap",
 });
 
-const plexSans = IBM_Plex_Sans({
+const hind = Hind({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
 
-const plexMono = IBM_Plex_Mono({
+const robotoMono = Roboto_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-mono",
   display: "swap",
 });
+```
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en" className={`${newsreader.variable} ${plexSans.variable} ${plexMono.variable}`}>
-      <body className="font-sans">{children}</body>
-    </html>
-  );
+## Tailwind v4 theme (`src/app/globals.css`)
+
+```css
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #14524f;
+  --color-primary-hover: #0e3b39;
+  --color-accent: #bf9a4e;
+  --color-hero-bg: #0b2624;
+  --color-bg: #f7f6f1;
+  --color-surface: #ffffff;
+  --color-border: #e5e1d6;
+  --color-text-primary: #16201d;
+  --color-text-secondary: #5b645e;
+  --color-success: #2e7d6e;
+  --color-warning: #d9992e;
+  --color-danger: #b23a2e;
+
+  --font-display: "Sora", system-ui, sans-serif;
+  --font-sans: "Hind", system-ui, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, monospace;
 }
 ```
 
-## Usage guide
+This gives you utilities immediately: `bg-primary`, `text-text-secondary`,
+`border-border`, `bg-hero-bg`, `font-display`, `font-mono`, etc.
 
-- **Ledger/contribution amounts:** always `font-mono` with tabular figures — this is what makes the ledger screen feel like a real passbook rather than a generic list.
-- **Gold:** value/status/identity only — amounts, badges, trust pills, logo details. Antique, never bright yellow, never a button. Attention states (pending, late, errors) use gold-tinted panels paired with explicit copy and icons, since red is gone.
-- **Settled states:** paid and success render indigo — the brand color carries confirmation.
-- **The rule: indigo = action, gold = value.** Create, pay, join, approve → indigo. ₦10,000, "your share", trust, status → gold. Gold must never compete as a second primary.
-- **Newsreader:** group names, empty-state copy, trust-score narrative lines — not nav, not buttons, not form labels (those stay Plex Sans).
+## Status mapping (applied app-wide 9/24)
+
+- `pending` contributions → warning tint (`#F8EDD9` / `#8A5F14`).
+- `paid` / `completed` / `approve` → success tint (`#E0ECE9` / `#1E5A4E`).
+- `late` / overdue / `failed` / declined / rejected → danger tint
+  (`#F3E1E0` / `#8A2A21`). Late is settled money with a trust hit, so it
+  reads danger, not warning.
+- Trust pills → gold tint (`#F3EDDF` / `#7A6028`) everywhere (circle
+  members, profile per-circle list).
+- Inline status text: `text-success` (confirmed), `text-warning` (due
+  soon), `text-danger` (overdue/failed/late-copy).
+- Errors (validation, failed sends) → `text-danger` or danger-tint panels —
+  never body-color text.
