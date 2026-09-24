@@ -1,13 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Activity01Icon,
-  ArrowRight01Icon,
-} from "@hugeicons/core-free-icons";
 import { useLedgerLive } from "@/lib/use-ledger-live";
 import type { HomeSnapshot } from "@/lib/home";
 import Summary from "./Summary";
@@ -17,6 +11,7 @@ import CircleList from "./CircleList";
 import QuickActions from "./QuickActions";
 import ActivityStrip from "./ActivityStrip";
 import ProgressPanel from "./ProgressPanel";
+import JoinWithLink from "./JoinWithLink";
 import HomeEmptyState from "./HomeEmptyState";
 
 const GREETING = {
@@ -85,14 +80,7 @@ export default function HomeLive({ initial }: { initial: HomeSnapshot }) {
             {snapshot.firstName ? `, ${snapshot.firstName}` : ""}
           </h1>
         </div>
-        <Link
-          href="/activity"
-          className="mb-0.5 hidden items-center gap-2 rounded-[10px] bg-surface px-3.5 py-2 text-xs font-semibold text-text-secondary shadow-[0_8px_20px_rgba(11,38,36,0.05)] transition-[color,transform] duration-150 ease-out hover:text-primary active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:flex"
-        >
-          <HugeiconsIcon icon={Activity01Icon} size={15} />
-          View activity
-          <HugeiconsIcon icon={ArrowRight01Icon} size={13} />
-        </Link>
+        <JoinWithLink variant="compact" />
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(270px,0.8fr)]">

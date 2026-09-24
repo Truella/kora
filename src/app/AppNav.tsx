@@ -53,7 +53,7 @@ export default function AppNav() {
     <>
       <aside
         aria-label="Sections"
-        className="order-1 hidden w-[224px] shrink-0 self-start py-5 lg:sticky lg:top-[var(--app-header-h)] lg:flex lg:h-[calc(100dvh-var(--app-header-h))]"
+        className="order-1 hidden w-[224px] shrink-0 self-start py-5 md:sticky md:top-[var(--app-header-h)] md:flex md:h-[calc(100dvh-var(--app-header-h))]"
       >
         {/* w-full is load-bearing: the aside is a flex ROW (flex-col was
             dropped with the tagline), so without an explicit width this ul
@@ -122,10 +122,10 @@ export default function AppNav() {
       {/* Fixed, not sticky: sticky bottom-0 only holds on screen-tall
           pages and leaves the bar floating mid-screen under short content.
           Fixed pins it to the viewport in both cases; the (app) layout
-          pads page content clear of it. Hidden on desktop (sidebar rail). */}
+          pads page content clear of it. Hidden from tablet up (sidebar rail). */}
       <nav
         aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-10 order-2 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-10 order-2 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-4">
           {TABS.map(({ href, label, icon }) => {

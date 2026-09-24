@@ -13,11 +13,11 @@ export default function AppLayout({
   return (
     <>
       <AppHeader />
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col lg:max-w-5xl lg:flex-row lg:gap-8">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col md:max-w-5xl md:flex-row md:gap-8">
         <AppNav />
         {/* Bottom clearance for the fixed mobile tab bar (bar height +
-            safe-area); none on desktop where the bar is hidden. */}
-        <div className="order-1 flex min-w-0 flex-1 flex-col pb-[calc(76px+env(safe-area-inset-bottom))] lg:order-2 lg:pb-0">
+            safe-area); none from tablet up where the sidebar rail is shown. */}
+        <div className="order-1 flex min-w-0 flex-1 flex-col pb-[calc(76px+env(safe-area-inset-bottom))] md:order-2 md:pb-0">
           {children}
         </div>
       </div>
