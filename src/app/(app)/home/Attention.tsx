@@ -8,13 +8,12 @@ import {
 import type { HomeSnapshot } from "@/lib/home";
 import InviteList from "./InviteList";
 
-// The Next Up surface owns the first, most urgent action so the dashboard opens
-// with one clear decision. This queue only exists when more work remains behind
-// it; when the list is empty, the entire section disappears.
+// Next Up owns the next financial event; this surface owns decisions. Nothing
+// is promoted out of the queue, so every actionable item remains visible in the
+// product's priority order: money due, directed invites, then pending votes.
 export default function Attention({ snapshot }: { snapshot: HomeSnapshot }) {
   const { attention, invites } = snapshot;
-  const items = attention.slice(1);
-  if (items.length === 0 && invites.length === 0) return null;
+  if (attention.length === 0 && invites.length === 0) return null;
 
   return (
     <section
@@ -23,15 +22,15 @@ export default function Attention({ snapshot }: { snapshot: HomeSnapshot }) {
     >
       <div className="px-1 pb-3">
         <h2 className="font-display text-lg font-semibold tracking-tight text-text-primary">
-          More to handle
+          Needs your attention
         </h2>
         <p className="mt-1 text-xs text-text-secondary">
-          Other contributions and decisions waiting for you
+          Payments, invites, and decisions waiting for you
         </p>
       </div>
 
       <ul className="grid gap-2 lg:grid-cols-2">
-        {items.map((item) =>
+        {attention.map((item) =>
           item.kind === "money" ? (
             <li key={`${item.groupId}:${item.cycleId}`}>
               <Link
@@ -63,7 +62,13 @@ export default function Attention({ snapshot }: { snapshot: HomeSnapshot }) {
                 </span>
               </Link>
             </li>
-          ) : (
+          ) : null,
+        )}
+
+        {invites.length > 0 && <InviteList invites={invites} />}
+
+        {attention.map((item) =>
+          item.kind === "vote" ? (
             <li key={`vote:${item.groupId}`}>
               <Link
                 href={item.href}
@@ -83,9 +88,8 @@ export default function Attention({ snapshot }: { snapshot: HomeSnapshot }) {
                 </span>
               </Link>
             </li>
-          ),
+          ) : null,
         )}
-        {invites.length > 0 && <InviteList invites={invites} />}
       </ul>
     </section>
   );

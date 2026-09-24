@@ -17,9 +17,7 @@ import CircleList from "./CircleList";
 import QuickActions from "./QuickActions";
 import ActivityStrip from "./ActivityStrip";
 import ProgressPanel from "./ProgressPanel";
-import EmptyHome from "./EmptyHome";
-import InviteList from "./InviteList";
-import ActionGrid from "./ActionGrid";
+import HomeEmptyState from "./HomeEmptyState";
 
 const GREETING = {
   morning: "Good morning",
@@ -72,36 +70,14 @@ export default function HomeLive({ initial }: { initial: HomeSnapshot }) {
   );
 
   if (snapshot.circlesTotal === 0) {
-    return (
-      <main className="flex w-full flex-1 flex-col px-4 pb-28 pt-6 sm:px-6 lg:px-0 lg:pb-10 lg:pt-8">
-        <EmptyHome snapshot={snapshot} />
-        {snapshot.invites.length > 0 && (
-          <section className="mt-6 flex flex-col gap-3 rounded-[20px] border-[0.5px] border-border bg-surface p-4 shadow-[0_12px_30px_rgba(11,38,36,0.05)] sm:p-5">
-            <div>
-              <h2 className="font-display text-lg font-semibold tracking-tight text-text-primary">
-                Circle invites
-              </h2>
-              <p className="mt-1 text-xs text-text-secondary">
-                You have been invited to join these savings circles
-              </p>
-            </div>
-            <ul className="grid gap-2">
-              <InviteList invites={snapshot.invites} />
-            </ul>
-          </section>
-        )}
-        <div className="mt-6">
-          <ActionGrid snapshot={snapshot} />
-        </div>
-      </main>
-    );
+    return <HomeEmptyState snapshot={snapshot} />;
   }
 
   const hasBottomPanel =
     snapshot.activity.length > 0 || snapshot.paymentProgress.settledCount > 0;
 
   return (
-    <main className="flex w-full flex-1 flex-col gap-8 px-4 pb-28 pt-6 sm:px-6 lg:px-0 lg:pb-10 lg:pt-8 xl:gap-10">
+    <main className="flex w-full flex-1 flex-col gap-8 px-4 pt-6 sm:px-6 lg:px-0 lg:pb-10 lg:pt-8 xl:gap-10">
       <header className="flex items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary lg:text-3xl">
