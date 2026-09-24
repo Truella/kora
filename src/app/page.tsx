@@ -1,5 +1,5 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import DashboardHome from "./DashboardHome";
 import Landing from "./Landing";
 
 export const metadata = {
@@ -7,13 +7,13 @@ export const metadata = {
 };
 
 export default async function RootPage() {
-  // One route, two audiences: guests get the public landing page,
-  // signed-in members get their dashboard. (The proxy leaves "/" public
-  // exactly so guests can meet the product before signing in.)
+  // / is the public landing page only. Signed-in members live on /home
+  // (the proxy sends logged-in /login visitors there, and logged-in /
+  // visitors get redirected below).
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (user) return <DashboardHome />;
+  if (user) redirect("/home");
   return <Landing />;
 }

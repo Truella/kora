@@ -17,7 +17,7 @@ import {
 } from "@/lib/phone";
 
 function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/home";
 }
 
 function AddPhoneForm() {
@@ -87,7 +87,7 @@ function AddPhoneForm() {
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value as CountryKey)}
-              className="rounded-xl border border-indigo/10 bg-paper px-3 py-3 text-[16px] outline-none focus:border-indigo"
+              className="rounded-[10px] border-[0.5px] border-border bg-surface px-3 py-3 text-[16px] text-text-primary outline-none focus:border-primary"
             >
               {(Object.keys(COUNTRY_CODES) as CountryKey[]).map((key) => (
                 <option key={key} value={key}>
@@ -105,13 +105,13 @@ function AddPhoneForm() {
               placeholder="801 234 5678"
               autoComplete="tel"
               inputMode="tel"
-              className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-[16px] outline-none placeholder:text-indigo/50 focus:border-indigo"
+              className="rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-[16px] text-text-primary outline-none placeholder:text-text-secondary/60 focus:border-primary"
             />
           </label>
         </div>
 
         {error && (
-          <p role="alert" className="mt-3 text-sm font-medium text-indigo">
+          <p role="alert" className="mt-3 text-sm font-medium text-danger">
             {error}
           </p>
         )}
@@ -120,14 +120,14 @@ function AddPhoneForm() {
           whileTap={{ scale: 0.98 }}
           disabled={sending}
           onClick={submit}
-          className="mt-4 w-full rounded-full bg-indigo py-3.5 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
+          className="mt-4 w-full rounded-[10px] bg-primary py-[13px] text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
         >
           {sending ? "Sending code…" : "Send code"}
         </motion.button>
 
         <Link
           href={next}
-          className="mt-1 block w-full py-2 text-center text-sm font-semibold text-indigo/60"
+          className="mt-1 block w-full py-2 text-center text-sm font-semibold text-text-secondary"
         >
           Skip for now
         </Link>
