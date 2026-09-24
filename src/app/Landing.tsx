@@ -36,7 +36,11 @@ function Nav({ signedIn }: { signedIn: boolean }) {
   return (
     <nav className="sticky top-0 z-20 border-b border-border bg-bg/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2" aria-label="Kora home">
+        <Link
+          href="/"
+          className="flex items-center gap-2"
+          aria-label="Kora home"
+        >
           <Image
             src="/brand/kora-logo-primary-mono.svg"
             alt="Kora logo"
@@ -94,9 +98,24 @@ function Nav({ signedIn }: { signedIn: boolean }) {
 // A pocket-size mock of the shared record — the product shot is the UI.
 function LedgerMock() {
   const rows = [
-    { who: "Adaeze", what: "Cycle 1 share", state: "Paid", cls: "bg-[#E0ECE9] text-[#1E5A4E]" },
-    { who: "Chidi", what: "Cycle 1 share", state: "Paid late", cls: "bg-[#F3E1E0] text-[#8A2A21]" },
-    { who: "Funke", what: "Cycle 2 share", state: "Due Fri", cls: "bg-[#F8EDD9] text-[#8A5F14]" },
+    {
+      who: "Adaeze",
+      what: "Cycle 1 share",
+      state: "Paid",
+      cls: "bg-[#E0ECE9] text-[#1E5A4E]",
+    },
+    {
+      who: "Chidi",
+      what: "Cycle 1 share",
+      state: "Paid late",
+      cls: "bg-[#F3E1E0] text-[#8A2A21]",
+    },
+    {
+      who: "Funke",
+      what: "Cycle 2 share",
+      state: "Due Fri",
+      cls: "bg-[#F8EDD9] text-[#8A5F14]",
+    },
   ] as const;
   return (
     <div className="rounded-[14px] border-[0.5px] border-border bg-surface p-4 shadow-[0_16px_40px_-24px_rgba(11,38,36,0.35)]">
@@ -115,7 +134,9 @@ function LedgerMock() {
             className="flex items-center justify-between gap-3 rounded-[10px] border-[0.5px] border-border bg-surface px-3 py-2.5"
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-text-primary">{r.who}</p>
+              <p className="truncate text-sm font-semibold text-text-primary">
+                {r.who}
+              </p>
               <p className="font-mono text-xs text-text-secondary">{r.what}</p>
             </div>
             <span
@@ -157,11 +178,31 @@ const VALUE = [
 ];
 
 const STEPS = [
-  { n: "01", title: "Create your circle", body: "Set the contribution amount, schedule, and payout order." },
-  { n: "02", title: "Invite your people", body: "Share an invite with the people you already trust." },
-  { n: "03", title: "Let the group vote", body: "Every new member request goes to the circle for approval." },
-  { n: "04", title: "Contribute on schedule", body: "Members know what they owe and when it is due. Reminders keep everyone on track." },
-  { n: "05", title: "Track every payout", body: "See contributions, payouts, and the next turn from one shared record." },
+  {
+    n: "01",
+    title: "Create your circle",
+    body: "Set the contribution amount, schedule, and payout order.",
+  },
+  {
+    n: "02",
+    title: "Invite your people",
+    body: "Share an invite with the people you already trust.",
+  },
+  {
+    n: "03",
+    title: "Let the group vote",
+    body: "Every new member request goes to the circle for approval.",
+  },
+  {
+    n: "04",
+    title: "Contribute on schedule",
+    body: "Members know what they owe and when it is due. Reminders keep everyone on track.",
+  },
+  {
+    n: "05",
+    title: "Track every payout",
+    body: "See contributions, payouts, and the next turn from one shared record.",
+  },
 ];
 
 export default function Landing() {
@@ -219,7 +260,8 @@ export default function Landing() {
               Ajo works because people trust each other.
             </h2>
             <p className="mt-2 font-display text-xl text-text-secondary">
-              The hard part is keeping that trust intact when money starts moving.
+              The hard part is keeping that trust intact when money starts
+              moving.
             </p>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-text-secondary">
               Who has paid? Who is next? Did everyone get their turn? Who keeps
@@ -228,8 +270,8 @@ export default function Landing() {
               circle one shared place to keep track.
             </p>
             <p className="mt-4 max-w-2xl font-display text-lg font-semibold text-text-primary">
-              Every payment. Every payout. Every member. One record everyone
-              can see.
+              Every payment. Every payout. Every member. One record everyone can
+              see.
             </p>
           </Reveal>
         </div>
@@ -256,7 +298,9 @@ export default function Landing() {
                 <p className="mt-3 font-display text-xl font-semibold text-text-primary">
                   {v.title}
                 </p>
-                <p className="mt-1 text-sm leading-6 text-text-secondary">{v.body}</p>
+                <p className="mt-1 text-sm leading-6 text-text-secondary">
+                  {v.body}
+                </p>
               </div>
             </Reveal>
           ))}
@@ -285,7 +329,10 @@ export default function Landing() {
                 "Every join request goes to a member vote",
                 "The organizer sets the schedule, never holds money",
               ].map((t) => (
-                <li key={t} className="flex items-center gap-3 text-sm text-white">
+                <li
+                  key={t}
+                  className="flex items-center gap-3 text-sm text-white"
+                >
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 font-mono text-xs font-bold text-[#E8CF8E]">
                     ✓
                   </span>

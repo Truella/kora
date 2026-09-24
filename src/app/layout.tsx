@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Sora, Hind, Roboto_Mono } from "next/font/google";
 import ServiceWorkerRegister from "./sw-register";
-import AppHeader from "./AppHeader";
-import AppNav from "./AppNav";
 import "./globals.css";
 
 const sora = Sora({
@@ -60,6 +58,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+// Document-level shell only — fonts, metadata, service worker. App chrome
+// (AppHeader + AppNav) is deliberately NOT mounted here: it lives in the
+// (app) and (auth) route-group layouts, so the landing page, the auth
+// screens and the root-level not-found/error/global-error pages render
+// without the sidebar. Adding chrome back to this file would undo that.
 export default function RootLayout({
   children,
 }: {
@@ -72,13 +75,7 @@ export default function RootLayout({
     >
       <body className="min-h-dvh bg-bg font-sans text-text-primary">
         <ServiceWorkerRegister />
-        <AppHeader />
-        <div className="mx-auto flex w-full max-w-md flex-1 flex-col lg:max-w-5xl lg:flex-row lg:gap-8">
-          <AppNav />
-          <div className="order-1 flex min-w-0 flex-1 flex-col lg:order-2">
-            {children}
-          </div>
-        </div>
+        {children}
       </body>
     </html>
   );

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
-import AuthShell from "../AuthShell";
+import AuthShell from "../../AuthShell";
 import { COUNTRY_CODES, type CountryKey } from "@/lib/phone";
 import { uploadAvatar, validateAvatarFile } from "@/lib/avatar";
 
