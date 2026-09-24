@@ -38,7 +38,8 @@ function isActive(pathname: string, href: string) {
 
 // Session-aware app chrome. Mobile gets the bottom tab bar (the current
 // design, kept); large screens get a left sidebar. Hidden on auth routes
-// and on the guest landing page (which ships its own external nav).
+// and on the landing page (which ships its own external nav for guests
+// AND signed-in members).
 export default function AppNav() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -52,8 +53,8 @@ export default function AppNav() {
   if (BARE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return null;
   }
+  if (pathname === "/") return null; // landing brings its own nav
   if (user === undefined) return null; // session resolving — no flash
-  if (!user && pathname === "/") return null; // guest landing
 
   return (
     <>

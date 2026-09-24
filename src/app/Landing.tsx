@@ -12,10 +12,27 @@ import {
   ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
 import Reveal from "./Reveal";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 
 const CREATE_HREF = "/login?next=/groups/new";
 
-function Nav() {
+// Landing serves guests and signed-in members, so its nav + CTAs adapt:
+// guests get "Sign in", members get a direct jump into the app.
+function useSessionUser() {
+  const [user, setUser] = useState<User | null | undefined>(undefined);
+
+  useEffect(() => {
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => setUser(data.user));
+  }, []);
+
+  return user;
+}
+
+function Nav({ signedIn, ready }: { signedIn: boolean; ready: boolean }) {
   return (
     <nav className="sticky top-0 z-20 border-b border-border bg-bg/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3">
@@ -41,20 +58,33 @@ function Nav() {
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            href="/login"
-            className="rounded-[10px] px-4 py-2 text-sm font-semibold text-text-primary"
-          >
-            Sign in
-          </Link>
-          <motion.span whileTap={{ scale: 0.97 }} className="inline-flex">
-            <Link
-              href={CREATE_HREF}
-              className="rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
-            >
-              Create a circle
-            </Link>
-          </motion.span>
+          {!ready ? null : signedIn ? (
+            <motion.span whileTap={{ scale: 0.97 }} className="inline-flex">
+              <Link
+                href="/home"
+                className="rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
+              >
+                Open app
+              </Link>
+            </motion.span>
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="rounded-[10px] px-4 py-2 text-sm font-semibold text-text-primary"
+              >
+                Sign in
+              </Link>
+              <motion.span whileTap={{ scale: 0.97 }} className="inline-flex">
+                <Link
+                  href={CREATE_HREF}
+                  className="rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover"
+                >
+                  Create a circle
+                </Link>
+              </motion.span>
+            </>
+          )}
         </div>
       </div>
     </nav>
@@ -135,9 +165,14 @@ const STEPS = [
 ];
 
 export default function Landing() {
+  const user = useSessionUser();
+  const signedIn = Boolean(user);
+  // Authed members skip the login hop and go straight to the form.
+  const createHref = signedIn ? "/groups/new" : CREATE_HREF;
+
   return (
     <div className="flex flex-1 flex-col bg-bg">
-      <Nav />
+      <Nav signedIn={signedIn} ready={user !== undefined} />
 
       {/* Hero */}
       <header className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 pb-14 pt-10 lg:flex-row lg:items-center lg:pt-16">
@@ -156,7 +191,7 @@ export default function Landing() {
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <motion.span whileTap={{ scale: 0.97 }} className="inline-flex">
               <Link
-                href={CREATE_HREF}
+                href={createHref}
                 className="inline-flex items-center gap-2 rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
               >
                 Create a circle
