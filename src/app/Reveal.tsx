@@ -37,13 +37,17 @@ export function RevealLi({
   children,
   delay = 0,
   className,
+  id,
 }: {
   children: ReactNode;
   delay?: number;
   className?: string;
+  // Anchor targets (the /home attention queue deep-links to these), so the
+  // card can be scrolled to by id without the wrapper having to know about it.
+  id?: string;
 }) {
   return (
-    <motion.li {...useEntrance(delay)} className={className}>
+    <motion.li {...useEntrance(delay)} className={className} id={id}>
       {children}
     </motion.li>
   );
