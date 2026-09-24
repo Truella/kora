@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
 const TABS = [
-  { href: "/", label: "Home", icon: Home01Icon },
+  { href: "/home", label: "Home", icon: Home01Icon },
   { href: "/groups", label: "Circles", icon: UserGroupIcon },
   { href: "/activity", label: "Activity", icon: Activity01Icon },
   { href: "/profile", label: "Profile", icon: UserIcon },
@@ -30,11 +30,10 @@ const BARE_PREFIXES = [
   "/add-phone",
   "/offline",
   "/auth/",
-  "/design", // TEMP design-system preview — DELETE before submission
 ];
 
 function isActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+  return href === "/home" ? pathname === "/home" : pathname.startsWith(href);
 }
 
 // Session-aware app chrome. Mobile gets the bottom tab bar (the current
@@ -59,7 +58,7 @@ export default function AppNav() {
   return (
     <>
       <aside className="order-1 hidden w-64 shrink-0 flex-col gap-1 self-start py-6 lg:sticky lg:top-0 lg:flex lg:h-dvh">
-        <p className="px-3 pb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo/50">
+        <p className="px-3 pb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-text-secondary">
           Menu
         </p>
         {TABS.map(({ href, label, icon }) => {
@@ -69,10 +68,10 @@ export default function AppNav() {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
+              className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-semibold transition-colors ${
                 active
-                  ? "bg-indigo text-paper"
-                  : "text-indigo/60 hover:bg-indigo/5 hover:text-indigo"
+                  ? "bg-primary text-white"
+                  : "text-text-secondary hover:bg-primary/5 hover:text-text-primary"
               }`}
             >
               <HugeiconsIcon icon={icon} size={20} />
@@ -83,20 +82,20 @@ export default function AppNav() {
         <motion.span whileTap={{ scale: 0.97 }} className="mt-3 inline-flex">
           <Link
             href="/groups/new"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-indigo px-4 py-2.5 text-sm font-semibold text-paper hover:bg-indigo-hover"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-4 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
           >
             <HugeiconsIcon icon={Add01Icon} size={18} />
             Create a circle
           </Link>
         </motion.span>
-        <p className="mt-auto px-3 pt-6 text-xs leading-5 text-indigo/50">
+        <p className="mt-auto px-3 pt-6 text-xs leading-5 text-text-secondary">
           The organizer sets the schedule — never holds the money.
         </p>
       </aside>
 
       <nav
         aria-label="Primary"
-        className="sticky bottom-0 z-10 order-2 border-t border-indigo/10 bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        className="sticky bottom-0 z-10 order-2 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-4">
           {TABS.map(({ href, label, icon }) => {
@@ -107,13 +106,13 @@ export default function AppNav() {
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={`relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
-                    active ? "text-indigo" : "text-indigo/60"
+                    active ? "text-text-primary" : "text-text-secondary"
                   }`}
                 >
                   {active && (
                     <motion.span
                       layoutId="nav-active-pill"
-                      className="absolute -top-px h-0.5 w-10 rounded-full bg-gold"
+                      className="absolute -top-px h-0.5 w-10 rounded-full bg-primary"
                       transition={{ type: "spring", stiffness: 500, damping: 40 }}
                     />
                   )}

@@ -19,8 +19,8 @@ const DEFAULT_POINTS = [
 ];
 
 // Shared split layout for the auth family (login / verify / add-phone /
-// onboarding): form column on all screens, indigo story panel on desktop.
-// Primary actions inside should be gold; secondary links indigo.
+// onboarding): form column on all screens, hero story panel on desktop.
+// Primary actions inside are petrol; secondary links are text-primary.
 export default function AuthShell({
   kicker,
   title,
@@ -42,32 +42,35 @@ export default function AuthShell({
         transition={{ duration: 0.35 }}
         className="flex w-full max-w-md flex-1 flex-col"
       >
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-gold">
+        <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary">
           {kicker}
         </p>
-        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-indigo">
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-text-primary">
           {title}
         </h1>
         {intro && (
-          <p className="mt-1 text-sm leading-6 text-indigo/60">{intro}</p>
+          <p className="mt-1 text-sm leading-6 text-text-secondary">{intro}</p>
         )}
         <div className="mt-5 flex flex-col">{children}</div>
       </motion.div>
 
-      <aside className="hidden flex-1 flex-col justify-between rounded-3xl bg-indigo p-8 text-paper lg:flex">
+      <aside className="hidden flex-1 flex-col justify-between rounded-[20px] bg-hero-bg p-8 text-white lg:flex">
         <div>
-          <p className="font-display text-3xl font-semibold leading-tight tracking-tight">
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent">
+            Kora · savings circles
+          </p>
+          <p className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight">
             The circle&apos;s money, minus the custody risk.
           </p>
           <ul className="mt-8 flex flex-col gap-5">
             {points.map((p, i) => (
               <li key={p.title} className="flex gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gold/20 font-mono text-xs font-bold text-gold-deep">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent/20 font-mono text-xs font-bold text-[#E8CF8E]">
                   {i + 1}
                 </span>
                 <div>
                   <p className="text-sm font-semibold">{p.title}</p>
-                  <p className="mt-0.5 text-sm leading-6 text-paper/70">
+                  <p className="mt-0.5 text-sm leading-6 text-white/80">
                     {p.body}
                   </p>
                 </div>
@@ -75,7 +78,7 @@ export default function AuthShell({
             ))}
           </ul>
         </div>
-        <p className="font-mono text-xs text-paper/50">
+        <p className="font-mono text-xs text-white/60">
           Nigeria · Kenya · Uganda · Ghana
         </p>
       </aside>
