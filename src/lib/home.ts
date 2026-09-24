@@ -132,18 +132,10 @@ export type HomeSnapshot = {
   activeCircleCount: number;
   paymentProgress: HomePaymentProgress;
   attention: HomeAttention[];
-  // Retained alongside the new Next Up surface so invite-aware callers can
-  // distinguish an empty queue from a completed rotation.
-  attentionState: "items" | "caught-up" | "complete" | "none";
-  nextDueLabel: string | null;
   invites: HomeInvite[];
   circles: HomeCircle[];
   circlesTotal: number;
   activity: HomeActivity[];
-  // Remote invite/action-grid compatibility: the first unpaid money item is a
-  // direct payment route; multiple items point back to the attention section.
-  makeContributionHref: string | null;
-  memberCount: number;
 };
 
 type GroupRow = {
@@ -280,8 +272,6 @@ export async function getHomeSnapshot(
       greeting: greetingFor(offset),
       firstName,
       invites,
-      attentionState: invites.length > 0 ? "items" : "caught-up",
-      memberCount: 0,
     };
   }
 
@@ -419,12 +409,10 @@ export async function getHomeSnapshot(
   // every group was O(groups × cycles); the payout note's group scan was the
   // same shape again.
   const cyclesByGroup = new Map<string, CycleRow[]>();
-  const scheduledGroupIds = new Set<string>();
   for (const c of cycles) {
     const list = cyclesByGroup.get(c.group_id);
     if (list) list.push(c);
     else cyclesByGroup.set(c.group_id, [c]);
-    scheduledGroupIds.add(c.group_id);
   }
 
   const payoutByCycle = new Map<string, PayoutRow>();
@@ -549,26 +537,10 @@ export async function getHomeSnapshot(
     }))
     .sort((a, b) => b.pendingCount - a.pendingCount);
 
+  // Directed invites stay as their own snapshot collection: the Attention
+  // surface inserts them between money and votes, while their Accept/Decline
+  // controls need RPC-specific fields that money/vote rows do not share.
   const attention = [...moneyItems, ...voteItems];
-
-  // A finished rotation is a success state, while a member with no rotation
-  // started anywhere has no queue at all. Pending phone invites also keep the
-  // queue alive even when there are no money or vote rows.
-  const scheduledGroups = groups.filter((g) => scheduledGroupIds.has(g.id));
-  const attentionState: HomeSnapshot["attentionState"] =
-    attention.length > 0 || invites.length > 0
-      ? "items"
-      : allOwed.length > 0
-        ? "caught-up"
-        : scheduledGroups.length === 0
-          ? "none"
-          : scheduledGroups.every((g) => g.status === "completed")
-            ? "complete"
-            : "caught-up";
-  const nextDueLabel =
-    attentionState === "caught-up" && allOwed.length > 0
-      ? formatCycleDate(allOwed[0].dueDate)
-      : null;
 
   // --------------------------------------------------------------- totals
   const contributed = new Map<string, number>();
@@ -782,7 +754,6 @@ export async function getHomeSnapshot(
       urgent: (owedByGroup.get(group.id) ?? []).some(
         (o) => o.days <= DUE_SOON_DAYS,
       ),
-      memberCount: activeCountByGroup.get(group.id) ?? 0,
       frequency: group.frequency,
       myPayoutLabel: payoutPending
         ? formatMoney(myPayout.amount, group.currency)
@@ -860,15 +831,6 @@ export async function getHomeSnapshot(
 
   const activeCircleCount = groups.filter((g) => g.status === "active").length;
 
-  // Action-grid compatibility: one owed cycle can route directly to payment;
-  // several route to the attention section; no unpaid money hides the tile.
-  const makeContributionHref =
-    moneyItems.length === 1
-      ? moneyItems[0].href
-      : moneyItems.length > 1
-        ? "#attention"
-        : null;
-
   return {
     greeting: greetingFor(offset),
     firstName,
@@ -876,14 +838,10 @@ export async function getHomeSnapshot(
     activeCircleCount,
     paymentProgress,
     attention,
-    attentionState,
-    nextDueLabel,
     invites,
     circles: circles.slice(0, 4),
     circlesTotal: groups.length,
     activity: recent,
-    makeContributionHref,
-    memberCount: myMemberIds.size,
   };
 }
 
@@ -908,13 +866,9 @@ function emptySnapshot(): HomeSnapshot {
       percent: 0,
     },
     attention: [],
-    attentionState: "caught-up",
-    nextDueLabel: null,
     invites: [],
     circles: [],
     circlesTotal: 0,
     activity: [],
-    makeContributionHref: null,
-    memberCount: 0,
   };
 }

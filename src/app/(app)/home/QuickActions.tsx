@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, Link01Icon } from "@hugeicons/core-free-icons";
-
-const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+import { resolveInviteLink } from "@/lib/invite-link";
 
 // Circles are invite-only by design — SCOPE.md puts public/stranger pools out
 // of scope, so there is no directory to browse and no discovery surface here.

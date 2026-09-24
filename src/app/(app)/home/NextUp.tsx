@@ -1,10 +1,8 @@
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Alert02Icon,
   ArrowRight01Icon,
   Clock01Icon,
-  UserMultipleIcon,
   Wallet01Icon,
 } from "@hugeicons/core-free-icons";
 import type { HomeSnapshot } from "@/lib/home";
@@ -16,10 +14,13 @@ type NextUpContent = {
   meta: string;
   href: string;
   cta: string;
-  icon: typeof Alert02Icon;
-  tone: "danger" | "warning" | "primary" | "payout" | "neutral";
+  icon: typeof Clock01Icon;
+  tone: "payout" | "warning" | "neutral";
 };
 
+// Next Up is temporal, not another action queue: it answers what happens next
+// in the member's money schedule. Actions that need a decision belong in the
+// Attention surface below, so a vote can never hide an available payout.
 export default function NextUp({ snapshot }: { snapshot: HomeSnapshot }) {
   const content = nextUpContent(snapshot);
   if (!content) return null;
@@ -68,32 +69,17 @@ export default function NextUp({ snapshot }: { snapshot: HomeSnapshot }) {
 }
 
 function nextUpContent(snapshot: HomeSnapshot): NextUpContent | null {
-  const action = snapshot.attention[0];
-  if (action?.kind === "money") {
+  const nextPayout = snapshot.circles.find((circle) => circle.myPayoutLabel);
+  if (nextPayout) {
     return {
-      eyebrow: action.tone === "overdue" ? "OVERDUE" : "DUE SOON",
-      value: action.amountLabel,
-      title: action.groupName,
-      meta:
-        action.tone === "overdue"
-          ? `Overdue by ${action.daysLate} day${action.daysLate === 1 ? "" : "s"}`
-          : `Due ${action.dueLabel}`,
-      href: action.href,
-      cta: "Contribute",
-      icon: action.tone === "overdue" ? Alert02Icon : Clock01Icon,
-      tone: action.tone === "overdue" ? "danger" : "warning",
-    };
-  }
-  if (action?.kind === "vote") {
-    return {
-      eyebrow: "JOIN REQUEST",
-      value: `${action.pendingCount} pending join${action.pendingCount === 1 ? "" : "s"}`,
-      title: action.groupName,
-      meta: "Your vote is needed",
-      href: action.href,
-      cta: "Review request",
-      icon: UserMultipleIcon,
-      tone: "primary",
+      eyebrow: "YOUR NEXT PAYOUT",
+      value: nextPayout.myPayoutLabel!,
+      title: nextPayout.name,
+      meta: nextPayout.myPayoutDateLabel ?? "Scheduled in this rotation",
+      href: nextPayout.href,
+      cta: "View payout",
+      icon: Clock01Icon,
+      tone: "payout",
     };
   }
 
@@ -110,20 +96,6 @@ function nextUpContent(snapshot: HomeSnapshot): NextUpContent | null {
       cta: "View circle",
       icon: Clock01Icon,
       tone: "neutral",
-    };
-  }
-
-  const nextPayout = snapshot.circles.find((circle) => circle.myPayoutLabel);
-  if (nextPayout) {
-    return {
-      eyebrow: "YOUR NEXT PAYOUT",
-      value: nextPayout.myPayoutLabel!,
-      title: nextPayout.name,
-      meta: nextPayout.myPayoutDateLabel ?? "Scheduled in this rotation",
-      href: nextPayout.href,
-      cta: "View payout",
-      icon: Clock01Icon,
-      tone: "payout",
     };
   }
 
@@ -163,25 +135,15 @@ function nextUpContent(snapshot: HomeSnapshot): NextUpContent | null {
 }
 
 const TONES = {
-  danger: {
-    surface: "border-[#E9C9C5] bg-[#FFF9F8]",
-    icon: "bg-[#F3E1E0] text-danger",
-    eyebrow: "text-danger",
+  payout: {
+    surface: "border-border bg-surface",
+    icon: "bg-[#F3EDDF] text-[#7A6028]",
+    eyebrow: "text-text-secondary",
   },
   warning: {
     surface: "border-[#E7D8B8] bg-[#FFFCF6]",
     icon: "bg-[#F8EDD9] text-[#8A5F14]",
     eyebrow: "text-[#8A5F14]",
-  },
-  primary: {
-    surface: "border-[#CFE0DC] bg-[#F8FBFA]",
-    icon: "bg-[#E0ECE9] text-primary",
-    eyebrow: "text-primary",
-  },
-  payout: {
-    surface: "border-border bg-surface",
-    icon: "bg-[#F3EDDF] text-[#7A6028]",
-    eyebrow: "text-text-secondary",
   },
   neutral: {
     surface: "border-border bg-surface",
