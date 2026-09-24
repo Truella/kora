@@ -30,7 +30,7 @@ function VerifyForm() {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3 px-8 py-12 text-center">
         <h1 className="font-display text-2xl font-semibold">No code to check</h1>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-indigo/60">
           Start from the sign-in screen so we know where to send the code.
         </p>
         <Link href="/login" className="font-semibold text-indigo">
@@ -64,7 +64,7 @@ function VerifyForm() {
     if (profileError) {
       setVerifying(false);
       setError(
-        "Signed in, but we couldn't mark your number verified. Try again from your profile.",
+        "Signed in, but we couldn't mark your number verified. Try again from profile.",
       );
       return;
     }
@@ -107,8 +107,8 @@ function VerifyForm() {
       title="Enter your code"
       intro={
         <>
-          6-digit code sent to{" "}
-          <span className="font-mono font-medium text-ink">{to}</span>
+          6-digit code sent to{""}
+          <span className="font-mono font-medium text-indigo">{to}</span>
         </>
       }
     >
@@ -121,17 +121,17 @@ function VerifyForm() {
             inputMode="numeric"
             autoComplete="one-time-code"
             maxLength={6}
-            className="rounded-xl border border-black/10 bg-white px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] outline-none placeholder:text-zinc-300 focus:border-indigo"
+            className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] outline-none placeholder:text-indigo/40 focus:border-indigo"
           />
         </label>
 
         {error && (
-          <p role="alert" className="mt-3 text-sm font-medium text-clay">
+          <p role="alert" className="mt-3 text-sm font-medium text-indigo">
             {error}
           </p>
         )}
         {resent && (
-          <p className="mt-3 text-sm font-medium text-jade">
+          <p className="mt-3 text-sm font-medium text-indigo">
             New code sent — give it a minute to arrive.
           </p>
         )}
@@ -140,7 +140,7 @@ function VerifyForm() {
           whileTap={{ scale: 0.98 }}
           disabled={verifying || code.length !== 6}
           onClick={() => verify(code)}
-          className="mt-4 w-full rounded-full bg-gold py-3.5 text-sm font-semibold text-ink disabled:opacity-60"
+          className="mt-4 w-full rounded-full bg-indigo py-3.5 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
         >
           {verifying ? "Checking…" : "Verify"}
         </motion.button>

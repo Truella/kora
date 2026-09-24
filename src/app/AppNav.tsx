@@ -58,7 +58,7 @@ export default function AppNav() {
   return (
     <>
       <aside className="order-1 hidden w-64 shrink-0 flex-col gap-1 self-start py-6 lg:sticky lg:top-0 lg:flex lg:h-dvh">
-        <p className="px-3 pb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-400">
+        <p className="px-3 pb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-indigo/50">
           Menu
         </p>
         {TABS.map(({ href, label, icon }) => {
@@ -70,8 +70,8 @@ export default function AppNav() {
               aria-current={active ? "page" : undefined}
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors ${
                 active
-                  ? "bg-indigo text-white"
-                  : "text-zinc-500 hover:bg-black/5 hover:text-ink"
+                  ? "bg-indigo text-paper"
+                  : "text-indigo/60 hover:bg-indigo/5 hover:text-indigo"
               }`}
             >
               <HugeiconsIcon icon={icon} size={20} />
@@ -82,20 +82,20 @@ export default function AppNav() {
         <motion.span whileTap={{ scale: 0.97 }} className="mt-3 inline-flex">
           <Link
             href="/groups/new"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gold px-4 py-2.5 text-sm font-semibold text-ink"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-indigo px-4 py-2.5 text-sm font-semibold text-paper hover:bg-indigo-hover"
           >
             <HugeiconsIcon icon={Add01Icon} size={18} />
             Create a circle
           </Link>
         </motion.span>
-        <p className="mt-auto px-3 pt-6 text-xs leading-5 text-zinc-400">
+        <p className="mt-auto px-3 pt-6 text-xs leading-5 text-indigo/50">
           The organizer sets the schedule — never holds the money.
         </p>
       </aside>
 
       <nav
         aria-label="Primary"
-        className="sticky bottom-0 z-10 order-2 border-t border-black/10 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        className="sticky bottom-0 z-10 order-2 border-t border-indigo/10 bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-4">
           {TABS.map(({ href, label, icon }) => {
@@ -106,7 +106,7 @@ export default function AppNav() {
                   href={href}
                   aria-current={active ? "page" : undefined}
                   className={`relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors ${
-                    active ? "text-indigo" : "text-zinc-500"
+                    active ? "text-indigo" : "text-indigo/60"
                   }`}
                 >
                   {active && (

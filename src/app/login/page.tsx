@@ -106,8 +106,8 @@ function LoginForm() {
         title="Check your inbox"
         intro={
           <>
-            We sent a sign-in link to{" "}
-            <span className="font-mono font-medium text-ink">
+            We sent a sign-in link to{""}
+            <span className="font-mono font-medium text-indigo">
               {linkSentTo}
             </span>
             . Tap it on this device and you&apos;re in — no code to type.
@@ -131,14 +131,14 @@ function LoginForm() {
       intro={
         tab === "phone"
           ? "Enter your number — we'll text you a 6-digit code."
-          : "Enter your email and we'll send a sign-in link. You'll add a phone number after — USSD needs one, the PWA doesn't."
+          : "Enter your email and we'll send a sign-in link. You'll add phone number after — USSD needs one, the PWA doesn't."
       }
     >
 
         <div
           role="tablist"
           aria-label="Sign-in method"
-          className="grid grid-cols-2 rounded-full bg-mist p-1"
+          className="grid grid-cols-2 rounded-full bg-paper p-1"
         >
           {(["phone", "email"] as const).map((t) => (
             <button
@@ -150,7 +150,7 @@ function LoginForm() {
                 setError(null);
               }}
               className={`relative rounded-full py-2 text-sm font-semibold transition-colors ${
-                tab === t ? "text-white" : "text-zinc-500"
+                tab === t ? "text-paper" : "text-indigo/60"
               }`}
             >
               {tab === t && (
@@ -175,7 +175,7 @@ function LoginForm() {
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value as CountryKey)}
-                  className="rounded-xl border border-black/10 bg-white px-3 py-3 text-[16px] outline-none focus:border-indigo"
+                  className="rounded-xl border border-indigo/10 bg-paper px-3 py-3 text-[16px] outline-none focus:border-indigo"
                 >
                   {COUNTRIES.map((c) => (
                     <option key={c.key} value={c.key}>
@@ -195,7 +195,7 @@ function LoginForm() {
                   placeholder="801 234 5678"
                   autoComplete="tel"
                   inputMode="tel"
-                  className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo"
+                  className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-[16px] outline-none placeholder:text-indigo/50 focus:border-indigo"
                 />
               </label>
             </div>
@@ -209,13 +209,13 @@ function LoginForm() {
                 placeholder="you@example.com"
                 autoComplete="email"
                 inputMode="email"
-                className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo"
+                className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-[16px] outline-none placeholder:text-indigo/50 focus:border-indigo"
               />
             </label>
           )}
 
           {error && (
-            <p role="alert" className="text-sm font-medium text-clay">
+            <p role="alert" className="text-sm font-medium text-indigo">
               {error}
             </p>
           )}
@@ -224,7 +224,7 @@ function LoginForm() {
             whileTap={{ scale: 0.98 }}
             disabled={sending}
             onClick={tab === "phone" ? sendPhoneOtp : sendEmailLink}
-            className="mt-1 rounded-full bg-gold py-3.5 text-sm font-semibold text-ink disabled:opacity-60"
+            className="mt-1 rounded-full bg-indigo py-3.5 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
           >
             {sending
               ? tab === "phone"

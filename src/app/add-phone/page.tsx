@@ -79,7 +79,7 @@ function AddPhoneForm() {
     <AuthShell
       kicker="USSD access"
       title="Add your number"
-      intro="USSD identifies you by phone — without a verified number, balance checks and payment confirmations by USSD can't find you. The app itself works fine without it."
+      intro="USSD identifies you by phone — without a verified number, balance checks and payment confirmations can't find you. The app itself works fine it."
     >
       <div className="flex gap-2">
           <label className="flex w-24 shrink-0 flex-col gap-1.5">
@@ -87,7 +87,7 @@ function AddPhoneForm() {
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value as CountryKey)}
-              className="rounded-xl border border-black/10 bg-white px-3 py-3 text-[16px] outline-none focus:border-indigo"
+              className="rounded-xl border border-indigo/10 bg-paper px-3 py-3 text-[16px] outline-none focus:border-indigo"
             >
               {(Object.keys(COUNTRY_CODES) as CountryKey[]).map((key) => (
                 <option key={key} value={key}>
@@ -105,13 +105,13 @@ function AddPhoneForm() {
               placeholder="801 234 5678"
               autoComplete="tel"
               inputMode="tel"
-              className="rounded-xl border border-black/10 bg-white px-4 py-3 text-[16px] outline-none placeholder:text-zinc-400 focus:border-indigo"
+              className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-[16px] outline-none placeholder:text-indigo/50 focus:border-indigo"
             />
           </label>
         </div>
 
         {error && (
-          <p role="alert" className="mt-3 text-sm font-medium text-clay">
+          <p role="alert" className="mt-3 text-sm font-medium text-indigo">
             {error}
           </p>
         )}
@@ -120,14 +120,14 @@ function AddPhoneForm() {
           whileTap={{ scale: 0.98 }}
           disabled={sending}
           onClick={submit}
-          className="mt-4 w-full rounded-full bg-gold py-3.5 text-sm font-semibold text-ink disabled:opacity-60"
+          className="mt-4 w-full rounded-full bg-indigo py-3.5 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
         >
           {sending ? "Sending code…" : "Send code"}
         </motion.button>
 
         <Link
           href={next}
-          className="mt-1 block w-full py-2 text-center text-sm font-semibold text-zinc-500"
+          className="mt-1 block w-full py-2 text-center text-sm font-semibold text-indigo/60"
         >
           Skip for now
         </Link>

@@ -51,7 +51,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#26306B",
+  themeColor: "#21164F",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -67,7 +67,7 @@ export default function RootLayout({
       lang="en"
       className={`${newsreader.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-dvh bg-white font-sans text-ink">
+      <body className="min-h-dvh bg-paper font-sans text-indigo">
         <ServiceWorkerRegister />
         <AppHeader />
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col lg:max-w-5xl lg:flex-row lg:gap-8">

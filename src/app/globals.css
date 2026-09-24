@@ -1,19 +1,17 @@
 @import "tailwindcss";
 
-/* Light-only theme: `dark:` variants are disabled globally so the app
-   always renders the white/gold/indigo system (white is the main color,
-   gold primary, indigo secondary). */
-@custom-variant dark (&:where(.dark, .dark *));
+/* Light-only theme: three colors only — paper surfaces, indigo text
+   and structure, gold emphasis. Muted text uses indigo at opacity;
+   status states use indigo (settled) and gold (attention). Deep
+   variants exist for hover/pressed depth only. */
 
 @theme {
-  /* Colors — no neutral black: text runs on deep indigo, surfaces on white */
-  --color-ink: #232b5c;
-  --color-indigo: #26306b;
-  --color-paper: #ffffff;
-  --color-mist: #eef0f2;
-  --color-gold: #c98a2c;
-  --color-jade: #2f6f5e;
-  --color-clay: #9c4a26;
+  /* Colors — heritage palette: deep community-indigo, antique gold */
+  --color-indigo: #21164f;
+  --color-indigo-hover: #30205f;
+  --color-paper: #faf9f6;
+  --color-gold: #c9a84e;
+  --color-gold-deep: #9d7b2f;
 
   /* Fonts */
   --font-display: "Newsreader", serif;
@@ -23,7 +21,7 @@
 
 body {
   background-color: var(--color-paper);
-  color: var(--color-ink);
+  color: var(--color-indigo);
 }
 
 input,

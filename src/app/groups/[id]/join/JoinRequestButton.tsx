@@ -79,7 +79,7 @@ export default function JoinRequestButton({
 
   if (state === "sent") {
     return (
-      <p className="rounded-2xl bg-jade/10 px-4 py-3 text-sm leading-6 text-ink dark:text-white">
+      <p className="rounded-2xl bg-indigo/10 px-4 py-3 text-sm leading-6 text-indigo">
         Request sent. The circle votes on new members — someone from the
         group will tell you the outcome.
       </p>
@@ -88,7 +88,7 @@ export default function JoinRequestButton({
 
   if (state === "duplicate") {
     return (
-      <p className="rounded-2xl bg-gold/15 px-4 py-3 text-sm leading-6 text-ink dark:text-white">
+      <p className="rounded-2xl bg-gold/15 px-4 py-3 text-sm leading-6 text-indigo">
         You already have a request in for this circle — the vote is still
         going. Ask a member for the outcome.
       </p>
@@ -97,7 +97,7 @@ export default function JoinRequestButton({
 
   if (state === "invalid") {
     return (
-      <p className="rounded-2xl bg-clay/10 px-4 py-3 text-sm leading-6 text-clay">
+      <p className="rounded-2xl bg-gold/15 px-4 py-3 text-sm leading-6 text-indigo">
         This invite link looks invalid — ask the sender for a fresh one.
       </p>
     );
@@ -110,7 +110,7 @@ export default function JoinRequestButton({
         onClick={handleApply}
         disabled={state === "sending"}
         whileTap={{ scale: 0.97 }}
-        className="flex items-center justify-center gap-2 rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink disabled:opacity-60"
+        className="flex items-center justify-center gap-2 rounded-full bg-indigo px-6 py-3 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
       >
         {state === "sending" ? "Sending…" : "Request to join"}
         {state !== "sending" && (
@@ -118,7 +118,7 @@ export default function JoinRequestButton({
         )}
       </motion.button>
       {state === "error" && (
-        <p className="rounded-xl bg-clay/10 px-4 py-2.5 text-sm text-clay">
+        <p className="rounded-xl bg-gold/15 px-4 py-2.5 text-sm text-indigo">
           Could not send the request. Check your connection and try again.
         </p>
       )}

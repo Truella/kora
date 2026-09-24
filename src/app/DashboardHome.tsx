@@ -20,20 +20,20 @@ export default function DashboardHome() {
       <motion.section
         {...fadeUp}
         transition={{ duration: 0.35 }}
-        className="rounded-2xl bg-indigo p-5 text-white"
+        className="rounded-2xl bg-indigo p-5 text-paper"
       >
-        <p className="text-sm text-white/60">Welcome to Kora</p>
+        <p className="text-sm text-paper/60">Welcome to Kora</p>
         <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">
           Save together, without handing anyone the pot.
         </h1>
-        <p className="mt-2 text-sm leading-6 text-white/70">
+        <p className="mt-2 text-sm leading-6 text-paper/70">
           Invite-only circles. Members vote who joins. Money moves
           member&nbsp;→&nbsp;recipient directly — the organizer never holds it.
         </p>
         <motion.div whileTap={{ scale: 0.97 }}>
           <Link
             href="/groups"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-gold px-5 py-2.5 text-sm font-semibold text-ink"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigo px-5 py-2.5 text-sm font-semibold text-paper hover:bg-indigo-hover"
           >
             <HugeiconsIcon icon={UserGroupIcon} size={18} strokeWidth={2} />
             View your circles
@@ -46,25 +46,25 @@ export default function DashboardHome() {
         transition={{ duration: 0.35, delay: 0.08 }}
         className="grid grid-cols-2 gap-3"
       >
-        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white">
+        <div className="rounded-2xl border border-indigo/10 bg-paper p-4">
           <HugeiconsIcon
             icon={Wallet01Icon}
             size={22}
-            className="text-indigo dark:text-gold"
+            className="text-indigo"
           />
           <p className="mt-2 text-sm font-semibold">Direct payouts</p>
-          <p className="mt-1 text-xs leading-5 text-zinc-500">
+          <p className="mt-1 text-xs leading-5 text-indigo/60">
             Split payments route contributions straight to the recipient.
           </p>
         </div>
-        <div className="rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white">
+        <div className="rounded-2xl border border-indigo/10 bg-paper p-4">
           <HugeiconsIcon
             icon={ShieldCheckIcon}
             size={22}
-            className="text-indigo dark:text-gold"
+            className="text-indigo"
           />
           <p className="mt-2 text-sm font-semibold">Trust score</p>
-          <p className="mt-1 text-xs leading-5 text-zinc-500">
+          <p className="mt-1 text-xs leading-5 text-indigo/60">
             On-time payments build a visible record in every circle.
           </p>
         </div>
