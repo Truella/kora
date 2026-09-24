@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserIcon, ShieldCheckIcon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
@@ -84,9 +85,11 @@ export default async function ProfilePage() {
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
       <div className="flex items-center gap-3">
         {profile?.avatar_url ? (
-          <img
+          <Image
             src={profile.avatar_url}
             alt="Your profile photo"
+            width={56}
+            height={56}
             className="h-14 w-14 rounded-2xl object-cover"
           />
         ) : (

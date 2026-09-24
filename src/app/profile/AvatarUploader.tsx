@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 import { uploadAvatar } from "@/lib/avatar";
 
@@ -45,10 +46,13 @@ export default function AvatarUploader({
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white">
       {preview ? (
-        // Plain img: Supabase public URLs are remote — avoids next/image config.
-        <img
+        <Image
           src={preview}
           alt="Your profile photo"
+          width={56}
+          height={56}
+          // Local-pick previews are blob: URLs — skip optimization for those.
+          unoptimized={preview.startsWith("blob:")}
           className="h-14 w-14 shrink-0 rounded-2xl object-cover"
         />
       ) : (

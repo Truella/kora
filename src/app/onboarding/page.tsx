@@ -2,6 +2,7 @@
 
 import { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 import AuthShell from "../AuthShell";
@@ -183,9 +184,12 @@ function OnboardingForm() {
               </p>
               <div className="flex items-center gap-3">
                 {avatarPreview ? (
-                  <img
+                  <Image
                     src={avatarPreview}
                     alt="Your profile photo preview"
+                    width={48}
+                    height={48}
+                    unoptimized
                     className="h-12 w-12 shrink-0 rounded-2xl object-cover"
                   />
                 ) : (
@@ -274,9 +278,12 @@ function OnboardingForm() {
                   <div className="flex items-center justify-between gap-3">
                     <dt className="text-sm text-zinc-500">Photo</dt>
                     <dd>
-                      <img
+                      <Image
                         src={avatarPreview}
                         alt="Your profile photo preview"
+                        width={40}
+                        height={40}
+                        unoptimized
                         className="h-10 w-10 rounded-xl object-cover"
                       />
                     </dd>
