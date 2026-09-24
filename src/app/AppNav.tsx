@@ -10,7 +10,6 @@ import {
   UserGroupIcon,
   Activity01Icon,
   UserIcon,
-  Add01Icon,
 } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -22,24 +21,15 @@ const TABS = [
   { href: "/profile", label: "Profile", icon: UserIcon },
 ];
 
-// Chrome-free routes: auth/landing/offline bring their own layout.
-const BARE_PREFIXES = [
-  "/login",
-  "/verify",
-  "/onboarding",
-  "/add-phone",
-  "/offline",
-  "/auth/",
-];
-
 function isActive(pathname: string, href: string) {
   return href === "/home" ? pathname === "/home" : pathname.startsWith(href);
 }
 
-// Session-aware app chrome. Mobile gets the bottom tab bar (the current
-// design, kept); large screens get a left sidebar. Hidden on auth routes
-// and on the landing page (which ships its own external nav for guests
-// AND signed-in members).
+// Session-aware app chrome, mounted only by the (app) route group — the
+// landing, auth and error routes are outside it, so no route guard is
+// needed here any more. Mobile gets the bottom tab bar; large screens get a
+// left rail. The rail follows a flat reference: no row backgrounds and no CTA
+// — every glyph sits in its own disc, neutral when idle, petrol when active.
 export default function AppNav() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null | undefined>(undefined);
@@ -50,48 +40,54 @@ export default function AppNav() {
       .then(({ data }) => setUser(data.user));
   }, [pathname]);
 
-  if (BARE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return null;
-  }
-  if (pathname === "/") return null; // landing brings its own nav
   if (user === undefined) return null; // session resolving — no flash
 
   return (
     <>
-      <aside className="order-1 hidden w-64 shrink-0 flex-col gap-1 self-start py-6 lg:sticky lg:top-0 lg:flex lg:h-dvh">
-        <p className="px-3 pb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-text-secondary">
-          Menu
-        </p>
-        {TABS.map(({ href, label, icon }) => {
-          const active = isActive(pathname, href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-semibold transition-colors ${
-                active
-                  ? "bg-primary text-white"
-                  : "text-text-secondary hover:bg-primary/5 hover:text-text-primary"
-              }`}
-            >
-              <HugeiconsIcon icon={icon} size={20} />
-              {label}
-            </Link>
-          );
-        })}
-        <motion.span whileTap={{ scale: 0.97 }} className="mt-3 inline-flex">
-          <Link
-            href="/groups/new"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-4 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
-          >
-            <HugeiconsIcon icon={Add01Icon} size={18} />
-            Create a circle
-          </Link>
-        </motion.span>
-        <p className="mt-auto px-3 pt-6 text-xs leading-5 text-text-secondary">
-          The organizer sets the schedule — never holds the money.
-        </p>
+      <aside
+        aria-label="Sections"
+        className="order-1 hidden w-[224px] shrink-0 self-start py-5 lg:sticky lg:top-[var(--app-header-h)] lg:flex lg:h-[calc(100dvh-var(--app-header-h))]"
+      >
+        {/* w-full is load-bearing: the aside is a flex ROW (flex-col was
+            dropped with the tagline), so without an explicit width this ul
+            sizes to its content and the hover pill collapses to text width
+            instead of spanning the rail. */}
+        <ul className="flex w-full flex-col gap-0">
+          {TABS.map(({ href, label, icon }) => {
+            const active = isActive(pathname, href);
+            return (
+              <li key={href}>
+                <Link
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex items-center gap-2 rounded-[20px] px-3 py-2 text-[14px] transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+                    active
+                      ? "font-semibold text-text-primary"
+                      : "font-medium text-text-secondary hover:text-text-primary"
+                  }`}
+                >
+                  {/* Every glyph sits in the same 40px disc so labels align
+                      and each row has room to breathe. Idle discs carry a
+                      neutral wash; only the active disc brings in colour. */}
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                      active
+                        ? "bg-primary text-white"
+                        : "bg-black/[0.04] text-text-secondary"
+                    }`}
+                  >
+                    <HugeiconsIcon
+                      icon={icon}
+                      size={18}
+                      strokeWidth={active ? 2.2 : 1.8}
+                    />
+                  </span>
+                  {label}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </aside>
 
       <nav
