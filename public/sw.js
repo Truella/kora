@@ -7,7 +7,7 @@
  */
 const VERSION = "kora-shell-v2";
 const APP_SHELL = ["/", "/offline", "/manifest.webmanifest"];
-const STATIC_CACHE = "kora-static-v2";
+const STATIC_CACHE = "kora-static-v11";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
