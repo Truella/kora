@@ -1,4 +1,4 @@
-import DashboardHome from "../DashboardHome";
+import DashboardHome from "../../DashboardHome";
 
 export const metadata = {
   title: "Home | Kora",
