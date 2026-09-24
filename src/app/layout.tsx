@@ -1,26 +1,27 @@
 import type { Metadata, Viewport } from "next";
-import { Newsreader, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Sora, Hind, Roboto_Mono } from "next/font/google";
 import ServiceWorkerRegister from "./sw-register";
 import AppHeader from "./AppHeader";
 import AppNav from "./AppNav";
 import "./globals.css";
 
-const newsreader = Newsreader({
+const newsreader = Sora({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-display",
   display: "swap",
 });
 
-const plexSans = IBM_Plex_Sans({
+const plexSans = Hind({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
 
-const plexMono = IBM_Plex_Mono({
+const plexMono = Roboto_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-mono",
   display: "swap",
 });

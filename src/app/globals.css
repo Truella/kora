@@ -5,18 +5,39 @@
    status states use indigo (settled) and gold (attention). Deep
    variants exist for hover/pressed depth only. */
 
+/* Kora design system — petrol teal + brass gold, light mode.
+   NEW TOKENS (petrol/brass) are the current system — all new work uses these.
+   LEGACY TOKENS (heritage indigo/paper/gold) are retained only so existing
+   screens keep rendering until the repaint lands — do not use them in new
+   work. TEMP: delete the legacy block, the /design route, and its chrome +
+   proxy exemptions when the repaint is done. */
+
 @theme {
-  /* Colors — heritage palette: deep community-indigo, antique gold */
+  /* Current system — petrol teal + brass gold */
+  --color-primary: #14524f;
+  --color-primary-hover: #0e3b39;
+  --color-accent: #bf9a4e;
+  --color-hero-bg: #0b2624;
+  --color-bg: #f7f6f1;
+  --color-surface: #ffffff;
+  --color-border: #e5e1d6;
+  --color-text-primary: #16201d;
+  --color-text-secondary: #5b645e;
+  --color-success: #2e7d6e;
+  --color-warning: #d9992e;
+  --color-danger: #b23a2e;
+
+  /* Legacy — heritage palette, repaint pending (see note above) */
   --color-indigo: #21164f;
   --color-indigo-hover: #30205f;
   --color-paper: #faf9f6;
   --color-gold: #c9a84e;
   --color-gold-deep: #9d7b2f;
 
-  /* Fonts */
-  --font-display: "Newsreader", serif;
-  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* Fonts — Sora headings, Hind body, Roboto Mono amounts */
+  --font-display: "Sora", system-ui, sans-serif;
+  --font-sans: "Hind", system-ui, sans-serif;
+  --font-mono: "Roboto Mono", ui-monospace, monospace;
 }
 
 body {

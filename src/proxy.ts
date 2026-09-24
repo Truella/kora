@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   "/offline",
   "/auth/callback",
   "/api/ussd",
+  "/design", // TEMP design-system preview — DELETE before submission
 ];
 
 export async function proxy(request: NextRequest) {
