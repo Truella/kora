@@ -20,20 +20,20 @@ export default function DashboardHome() {
       <motion.section
         {...fadeUp}
         transition={{ duration: 0.35 }}
-        className="rounded-2xl bg-indigo p-5 text-paper"
+        className="rounded-[20px] bg-hero-bg p-6 text-white"
       >
-        <p className="text-sm text-paper/60">Welcome to Kora</p>
-        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">
+        <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent">Welcome to Kora</p>
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">
           Save together, without handing anyone the pot.
         </h1>
-        <p className="mt-2 text-sm leading-6 text-paper/70">
+        <p className="mt-2 text-sm leading-6 text-white/80">
           Invite-only circles. Members vote who joins. Money moves
           member&nbsp;→&nbsp;recipient directly — the organizer never holds it.
         </p>
         <motion.div whileTap={{ scale: 0.97 }}>
           <Link
             href="/groups"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-indigo px-5 py-2.5 text-sm font-semibold text-paper hover:bg-indigo-hover"
+            className="mt-4 inline-flex items-center gap-2 rounded-[10px] bg-primary px-5 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
           >
             <HugeiconsIcon icon={UserGroupIcon} size={18} strokeWidth={2} />
             View your circles
@@ -46,25 +46,25 @@ export default function DashboardHome() {
         transition={{ duration: 0.35, delay: 0.08 }}
         className="grid grid-cols-2 gap-3"
       >
-        <div className="rounded-2xl border border-indigo/10 bg-paper p-4">
+        <div className="rounded-[14px] border-[0.5px] border-border bg-surface p-4">
           <HugeiconsIcon
             icon={Wallet01Icon}
             size={22}
-            className="text-indigo"
+            className="text-primary"
           />
-          <p className="mt-2 text-sm font-semibold">Direct payouts</p>
-          <p className="mt-1 text-xs leading-5 text-indigo/60">
+          <p className="mt-2 font-display text-[15px] font-semibold text-text-primary">Direct payouts</p>
+          <p className="mt-1 text-xs leading-5 text-text-secondary">
             Split payments route contributions straight to the recipient.
           </p>
         </div>
-        <div className="rounded-2xl border border-indigo/10 bg-paper p-4">
+        <div className="rounded-[14px] border-[0.5px] border-border bg-surface p-4">
           <HugeiconsIcon
             icon={ShieldCheckIcon}
             size={22}
-            className="text-indigo"
+            className="text-primary"
           />
-          <p className="mt-2 text-sm font-semibold">Trust score</p>
-          <p className="mt-1 text-xs leading-5 text-indigo/60">
+          <p className="mt-2 font-display text-[15px] font-semibold text-text-primary">Trust score</p>
+          <p className="mt-1 text-xs leading-5 text-text-secondary">
             On-time payments build a visible record in every circle.
           </p>
         </div>
