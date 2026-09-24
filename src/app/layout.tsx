@@ -5,21 +5,21 @@ import AppHeader from "./AppHeader";
 import AppNav from "./AppNav";
 import "./globals.css";
 
-const newsreader = Sora({
+const sora = Sora({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-display",
   display: "swap",
 });
 
-const plexSans = Hind({
+const hind = Hind({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
 
-const plexMono = Roboto_Mono({
+const robotoMono = Roboto_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-mono",
@@ -42,17 +42,19 @@ export const metadata: Metadata = {
   },
   formatDetection: { telephone: false },
   icons: {
-    icon: [
-      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
-      { url: "/icons/icon.svg", type: "image/svg+xml" },
-    ],
+    // Adaptive SVG only. Raster/ICO fallbacks are deliberately NOT linked:
+    // when both are declared Chrome may silently pick a raster (favicon-16/32
+    // are fixed light-mode art), which defeats the light/dark switch.
+    // /favicon.ico still exists at the site root for the HTML-spec root
+    // fallback (Safari/legacy) and crawler/SERP use — it carries the
+    // keyline mark, which reads on both light and dark.
+    icon: [{ url: "/icons/favicon.svg?v=3", type: "image/svg+xml" }],
     apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#21164F",
+  themeColor: "#14524F",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -66,9 +68,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${newsreader.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${sora.variable} ${hind.variable} ${robotoMono.variable} h-full antialiased`}
     >
-      <body className="min-h-dvh bg-paper font-sans text-indigo">
+      <body className="min-h-dvh bg-bg font-sans text-text-primary">
         <ServiceWorkerRegister />
         <AppHeader />
         <div className="mx-auto flex w-full max-w-md flex-1 flex-col lg:max-w-5xl lg:flex-row lg:gap-8">

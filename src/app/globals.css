@@ -1,19 +1,12 @@
 @import "tailwindcss";
 
-/* Light-only theme: three colors only — paper surfaces, indigo text
-   and structure, gold emphasis. Muted text uses indigo at opacity;
-   status states use indigo (settled) and gold (attention). Deep
-   variants exist for hover/pressed depth only. */
-
 /* Kora design system — petrol teal + brass gold, light mode.
-   NEW TOKENS (petrol/brass) are the current system — all new work uses these.
-   LEGACY TOKENS (heritage indigo/paper/gold) are retained only so existing
-   screens keep rendering until the repaint lands — do not use them in new
-   work. TEMP: delete the legacy block, the /design route, and its chrome +
-   proxy exemptions when the repaint is done. */
+   Petrol (#14524F) = all money-moving CTAs. Brass (#BF9A4E) = small
+   accents only — trust badges, eyebrow labels, value icons. Hero
+   (#0B2624) = single highest-attention card per screen. Success green
+   and danger red live only in status text/badges — never button fills. */
 
 @theme {
-  /* Current system — petrol teal + brass gold */
   --color-primary: #14524f;
   --color-primary-hover: #0e3b39;
   --color-accent: #bf9a4e;
@@ -27,22 +20,15 @@
   --color-warning: #d9992e;
   --color-danger: #b23a2e;
 
-  /* Legacy — heritage palette, repaint pending (see note above) */
-  --color-indigo: #21164f;
-  --color-indigo-hover: #30205f;
-  --color-paper: #faf9f6;
-  --color-gold: #c9a84e;
-  --color-gold-deep: #9d7b2f;
-
-  /* Fonts — Sora headings, Hind body, Roboto Mono amounts */
+  /* Fonts — Sora headings + money, Hind body, Roboto Mono micro-labels */
   --font-display: "Sora", system-ui, sans-serif;
   --font-sans: "Hind", system-ui, sans-serif;
   --font-mono: "Roboto Mono", ui-monospace, monospace;
 }
 
 body {
-  background-color: var(--color-paper);
-  color: var(--color-indigo);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
 }
 
 input,

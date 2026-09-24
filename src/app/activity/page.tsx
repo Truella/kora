@@ -18,7 +18,7 @@ export default async function ActivityPage() {
 
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
-      <h1 className="font-display text-2xl font-semibold tracking-tight text-indigo">
+      <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
         Activity
       </h1>
       <LedgerFeed initialDue={due} initialHistory={history} />
