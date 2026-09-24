@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-// Slim brand bar for app + auth screens. Hidden on the landing page for every
-// session state, which ships its own external nav — otherwise visitors get
-// double branding.
+// Slim brand bar for app + auth screens. Mounted by the (app) and (auth)
+// route-group layouts, never by the root layout — so the landing page and
+// the error pages get neither this bar nor the sidebar.
 // Signed-in users get a header Sign out (the Profile page keeps its own
 // button as a fallback — header is the discoverable one).
 export default function AppHeader() {
@@ -23,8 +23,7 @@ export default function AppHeader() {
       .then(({ data }) => setUser(data.user));
   }, [pathname]);
 
-  if (pathname === "/") return null; // landing brings its own nav
-  if (user === undefined) return null;
+  if (user === undefined) return null; // session resolving — no flash
 
   async function signOut() {
     setSigningOut(true);
@@ -34,8 +33,8 @@ export default function AppHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-10 border-b border-border bg-bg/95 pt-[env(safe-area-inset-top)] backdrop-blur">
-      <div className="mx-auto flex w-full max-w-md items-center gap-2.5 px-4 py-3 lg:max-w-5xl">
+    <header className="sticky top-0 z-10 border-b border-border bg-bg/95 pt-[env(safe-area-inset-top)] backdrop-blur lg:h-[var(--app-header-h)]">
+      <div className="mx-auto flex w-full max-w-md items-center gap-2.5 px-4 py-3 lg:h-full lg:max-w-5xl lg:py-0">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-hero-bg">
           <Image
             src="/brand/kora-mark-white.svg"
