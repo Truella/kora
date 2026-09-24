@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
@@ -28,6 +29,7 @@ export default function JoinRequestButton({
   const [state, setState] = useState<
     "idle" | "sending" | "sent" | "duplicate" | "invalid" | "error"
   >("idle");
+  const router = useRouter();
 
   async function handleApply() {
     setState("sending");
@@ -37,7 +39,10 @@ export default function JoinRequestButton({
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        setState("error");
+        // Session expired mid-page — send through login with the full
+        // join URL (incl. ?by=) so attribution survives the round-trip.
+        const joinPath = `/groups/${groupId}/join${invitedBy ? `?by=${invitedBy}` : ""}`;
+        router.push(`/login?next=${encodeURIComponent(joinPath)}`);
         return;
       }
       // Clear a past rejection first (no-op when there is none) so a

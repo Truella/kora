@@ -56,6 +56,12 @@ export default async function JoinPage({
       : { data: null };
   const myStatus = (myRequest as { status?: string } | null)?.status ?? null;
 
+  // Signed-out fallback (proxy normally redirects to /login?next= with the
+  // ?by= intact — this covers an expired session / direct render). The
+  // sign-in CTA carries the full join URL so attribution survives auth.
+  const joinPath = `/groups/${id}/join${invitedBy ? `?by=${invitedBy}` : ""}`;
+  const loginHref = `/login?next=${encodeURIComponent(joinPath)}`;
+
   return (
     <main className="flex flex-1 flex-col items-center px-8 py-12 text-center">
       <span className="flex h-14 w-14 items-center justify-center rounded-[14px] bg-primary/10">
@@ -74,7 +80,20 @@ export default async function JoinPage({
       </p>
 
       <div className="mt-5 w-full max-w-xs">
-        {member ? (
+        {!user ? (
+          <div className="flex flex-col gap-3">
+            <p className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm leading-6 text-[#8A5F14]">
+              Sign in to request to join — your invite is saved and you&apos;ll
+              land back here.
+            </p>
+            <Link
+              href={loginHref}
+              className="rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
+            >
+              Sign in to continue
+            </Link>
+          </div>
+        ) : member ? (
           <div className="flex flex-col gap-3">
             <p className="rounded-[10px] bg-[#E0ECE9] px-4 py-3 text-sm text-[#1E5A4E]">
               You&apos;re already a member of this circle.

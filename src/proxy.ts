@@ -49,8 +49,13 @@ export async function proxy(request: NextRequest) {
 
   if (!user && !isPublic) {
     const login = request.nextUrl.clone();
+    // Preserve the full path + query so invite attribution (?by=) survives
+    // the sign-in round-trip. safeNext() downstream already accepts paths
+    // with a query string; every hop re-encodes `next`.
+    const next = `${pathname}${request.nextUrl.search}`;
     login.pathname = "/login";
-    login.searchParams.set("next", pathname);
+    login.search = "";
+    login.searchParams.set("next", next);
     return NextResponse.redirect(login);
   }
 
