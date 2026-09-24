@@ -10,6 +10,7 @@ import CircleList from "./CircleList";
 import QuickActions from "./QuickActions";
 import ActivityStrip from "./ActivityStrip";
 import EmptyHome from "./EmptyHome";
+import InviteList from "./InviteList";
 
 // Home owns the snapshot as state so a realtime event can swap every figure at
 // once. The section components hold no state and no server-only imports, so
@@ -63,10 +64,22 @@ export default function HomeLive({ initial }: { initial: HomeSnapshot }) {
     [],
   );
 
+  // Zero circles but pending phone invites: the invite rows are the page —
+  // the invitee has no queue, no circles, and no activity yet.
   if (snapshot.circlesTotal === 0) {
     return (
       <main className="flex flex-1 flex-col px-4 py-6">
         <EmptyHome snapshot={snapshot} />
+        {snapshot.invites.length > 0 && (
+          <section className="mt-6 flex flex-col gap-2 border-t border-border pt-4">
+            <h2 className="font-display text-base font-semibold text-text-primary">
+              Circle invites
+            </h2>
+            <ul className="flex flex-col gap-1.5">
+              <InviteList invites={snapshot.invites} />
+            </ul>
+          </section>
+        )}
         <div className="mt-6">
           <QuickActions />
         </div>

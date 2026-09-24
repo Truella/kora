@@ -97,6 +97,17 @@ export type HomeActivity = {
   dayLabel: string;
 };
 
+// Directed phone invite awaiting this user. Resolved server-side by the
+// my_pending_invites() RPC (verified-phone match — no directory lookup), so
+// the snapshot carries names the caller's RLS could never read directly.
+export type HomeInvite = {
+  inviteId: string;
+  groupId: string;
+  groupName: string;
+  inviterName: string;
+  href: string;
+};
+
 /** Sort key is build-time only and never serialized. */
 type RankedActivity = HomeActivity & { sortKey: number };
 
@@ -107,6 +118,7 @@ export type HomeSnapshot = {
   attention: HomeAttention[];
   attentionState: "items" | "caught-up" | "complete" | "none";
   nextDueLabel: string | null;
+  invites: HomeInvite[];
   circles: HomeCircle[];
   circlesTotal: number;
   activity: HomeActivity[];
@@ -163,6 +175,14 @@ type JoinRequestRow = {
   created_at: string | null;
 };
 
+type InviteRpcRow = {
+  invite_id: string;
+  group_id: string;
+  group_name: string;
+  inviter_name: string;
+  created_at: string | null;
+};
+
 // Settled is defined once and pushed into the query as a filter, so the
 // in-memory code never has to re-test the same condition the database already
 // applied. A JS-side `SETTLED` set would only be a second place for the rule to
@@ -186,8 +206,12 @@ export async function getHomeSnapshot(
   const today = todayIn(offset);
   const month = monthName(today);
 
-  // Wave 1 — the three reads that need nothing but the session.
-  const [profileRes, groupsRes] = await Promise.all([
+  // Wave 1 — the reads that need nothing but the session. Invites ride
+  // along separately: the RPC is best-effort (a DB without the migration
+  // answers with an error, never with someone else's invites) and an
+  // invitee often has zero circles, so invites must survive the
+  // groups.length === 0 early return below.
+  const [profileRes, groupsRes, inviteRows] = await Promise.all([
     supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle(),
     // RLS ("view groups you belong to") scopes this to the caller's circles,
     // so it doubles as the group-id source for every scoped read below.
@@ -197,6 +221,10 @@ export async function getHomeSnapshot(
         "id, name, currency, contribution_amount, frequency, status, created_at",
       )
       .order("created_at", { ascending: false }),
+    supabase.rpc("my_pending_invites").then(
+      (res) => (Array.isArray(res.data) ? res.data : []) as InviteRpcRow[],
+      () => [] as InviteRpcRow[],
+    ),
   ]);
 
   if (groupsRes.error) {
@@ -213,11 +241,21 @@ export async function getHomeSnapshot(
   const fullName = (profileRes.data?.full_name as string | null) ?? null;
   const firstName = fullName?.trim().split(/\s+/)[0] || null;
 
+  const invites: HomeInvite[] = inviteRows.map((r) => ({
+    inviteId: r.invite_id,
+    groupId: r.group_id,
+    groupName: r.group_name,
+    inviterName: r.inviter_name,
+    href: `/groups/${r.group_id}/join`,
+  }));
+
   if (groups.length === 0) {
     return {
       ...emptySnapshot(),
       greeting: greetingFor(offset),
       firstName,
+      invites,
+      attentionState: invites.length > 0 ? "items" : "caught-up",
       memberCount: 0,
     };
   }
@@ -491,7 +529,7 @@ export async function getHomeSnapshot(
   // set lookup per group rather than a scan of every cycle.
   const scheduledGroups = groups.filter((g) => scheduledGroupIds.has(g.id));
   const attentionState: HomeSnapshot["attentionState"] =
-    attention.length > 0
+    attention.length > 0 || invites.length > 0
       ? "items"
       : allOwed.length > 0
         ? "caught-up"
@@ -756,6 +794,7 @@ export async function getHomeSnapshot(
     attention,
     attentionState,
     nextDueLabel,
+    invites,
     circles: circles.slice(0, 3),
     circlesTotal: groups.length,
     activity: recent,
@@ -780,6 +819,7 @@ function emptySnapshot(): HomeSnapshot {
     attention: [],
     attentionState: "caught-up",
     nextDueLabel: null,
+    invites: [],
     circles: [],
     circlesTotal: 0,
     activity: [],

@@ -6,6 +6,7 @@ import PayButton from "./PayButton";
 import PayoutAction from "./PayoutAction";
 import ConfirmingBanner from "./ConfirmingBanner";
 import InviteButton from "./InviteButton";
+import InviteByPhone from "./InviteByPhone";
 import VoteButtons from "./VoteButtons";
 import ScheduleGenerator from "./ScheduleGenerator";
 import { RevealLi } from "../../../Reveal";
@@ -379,8 +380,12 @@ export default async function GroupDetailPage({
             {amountLabel} {group.currency} · {group.frequency} · {group.status}
           </p>
         </div>
-        {member && <InviteButton groupId={group.id} memberId={member.id} />}
+        {member && user && (
+          <InviteButton groupId={group.id} inviterId={user.id} />
+        )}
       </div>
+
+      {member && user && <InviteByPhone groupId={group.id} />}
 
       {!cycles || cycles.length === 0 ? (        member && isCreator ? (
           <ScheduleGenerator
@@ -401,11 +406,6 @@ export default async function GroupDetailPage({
         )
       ) : (
         <>
-          <p className="text-sm leading-6 text-text-secondary">
-            How it works: every member pays their own share each round — the
-            combined pot goes to the named receiver. You always pay your
-            share, even on another member&apos;s turn.
-          </p>
           <ul className="flex flex-col gap-3">
           {cycles.map((cycle, i) => {            const contribution = byCycle.get(cycle.id);
             // R1: cycles that fell due before this member joined are not their
@@ -432,29 +432,16 @@ export default async function GroupDetailPage({
                 delay={Math.min(i * 0.05, 0.25)}
                 className={`${ANCHOR_MT} flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4`}
               >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
                     <p className="font-display text-lg font-semibold text-text-primary">
                       Cycle {cycle.cycle_number}
                     </p>
-                    <p className="font-display text-xs font-semibold tabular-nums text-text-secondary">
+                    <p className="mt-0.5 truncate font-display text-xs font-semibold tabular-nums text-text-secondary">
                       {enrolled
-                        ? `${amountLabel} your share · due ${cycle.due_date} ·${""}
-                          ${cycle.status}${
-                            contribution?.paid_at
-                              ? ` · paid ${new Date(contribution.paid_at).toLocaleDateString()}`
-                              : ""
-                          }`
-                        : `${amountLabel} your share · ran before you joined`}
+                        ? `${amountLabel} your share · due ${cycle.due_date}`
+                        : "Ran before you joined — not yours to pay"}
                     </p>
-                    {(recipient || pot) && (
-                      <p className="font-display text-xs font-semibold tabular-nums text-text-secondary">
-                        {pot ? `Pot ${pot}` : "Pot"}
-                        {recipient
-                          ? ` → ${recipient}'s turn to receive`
-                          : ""}
-                      </p>
-                    )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1">
                     <span className="font-mono text-[11px] font-medium uppercase tracking-wide text-text-secondary">
@@ -474,15 +461,13 @@ export default async function GroupDetailPage({
                     amountLabel={amountLabel}
                   />
                 )}
-                {!enrolled && (
-                  <p className="text-xs text-text-secondary">
-                    This round ran before you joined the circle — it isn&apos;t
-                    yours to pay.
-                  </p>
-                )}
                 {isPaid && (
                   <p className="text-xs text-text-secondary">
-                    Paid — receipt confirmed by webhook.
+                    Paid
+                    {contribution?.paid_at
+                      ? ` ${new Date(contribution.paid_at).toLocaleDateString()}`
+                      : ""}
+                    {" "}— receipt confirmed by webhook.
                   </p>
                 )}
                 {status === "late" && (
@@ -493,14 +478,24 @@ export default async function GroupDetailPage({
                 )}
                 {member && (
                   <div className="flex flex-col gap-2 border-t border-border pt-3">
-                    <p className="font-mono text-xs text-text-secondary">
-                      Payout ·{""}
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-mono text-xs text-text-secondary">
+                        Payout
+                      </p>
                       <span
                         className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${BADGE[payoutStatus] ?? BADGE.pending}`}
                       >
                         {payoutStatus}
                       </span>
-                    </p>
+                    </div>
+                    {(recipient || pot) && (
+                      <p className="text-xs text-text-secondary">
+                        {pot ? `Pot ${pot}` : "Pot"}
+                        {recipient
+                          ? ` → ${recipient}'s turn to receive`
+                          : ""}
+                      </p>
+                    )}
                     <PayoutAction
                       cycleId={cycle.id}
                       payoutStatus={payoutStatus}
@@ -581,10 +576,6 @@ export default async function GroupDetailPage({
               );
             })}
           </ul>
-          <p className="text-xs leading-5 text-text-secondary">
-            Scores start at 100 for everyone and move with on-time payments —
-            the counts underneath show what each score is built from.
-          </p>
         </section>
       )}
 

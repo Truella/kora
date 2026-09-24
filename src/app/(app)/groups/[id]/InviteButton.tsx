@@ -4,24 +4,27 @@ import { useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tick01Icon } from "@hugeicons/core-free-icons";
 
-// Invite is link-with-id plus ?by=<inviter member id>: only people
+// Invite is link-with-id plus ?by=<inviter profile id>: only people
 // handed this link can find the join page, and the id attributes the
 // invite for the "Invited by X" label. No directory, no invite-code
-// column. A faked id fails the DB check and the request is saved
-// without attribution — see JoinRequestButton.
+// column. ?by= MUST be a profiles(id): join_requests.invited_by FKs to
+// profiles, and is_valid_inviter checks active membership by user — a
+// group_members.id fails the insert (this was the 23503 "invalid link"
+// bug: attributed invites never saved). A faked id fails the DB check
+// and the request is saved without attribution — see JoinRequestButton.
 export default function InviteButton({
   groupId,
-  memberId,
+  inviterId,
 }: {
   groupId: string;
-  memberId: string;
+  inviterId: string;
 }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
     try {
       await navigator.clipboard.writeText(
-        `${window.location.origin}/groups/${groupId}/join?by=${memberId}`,
+        `${window.location.origin}/groups/${groupId}/join?by=${inviterId}`,
       );
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);

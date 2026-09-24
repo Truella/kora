@@ -16,7 +16,8 @@ export default async function JoinPage({
   const { id } = await params;
   const { by } = await searchParams;
   // Attribution is best-effort: UUID-shaped ids ride along for the DB
-  // to validate (is_valid_inviter), anything else rides as nothing.
+  // to validate (is_valid_inviter checks the id is an ACTIVE MEMBER's
+  // profile id — ?by= carries profiles(id), never group_members.id).
   const invitedBy =
     by &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(

@@ -186,10 +186,6 @@ export default async function ProfilePage() {
               );
             })}
           </ul>
-          <p className="text-xs leading-5 text-text-secondary">
-            Scores are per-circle and move with on-time payments — the counts
-            show what each score is built from.
-          </p>
         </section>
       )}
 

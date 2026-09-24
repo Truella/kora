@@ -17,8 +17,9 @@ import { createClient } from "@/lib/supabase/client";
 // decision, so a rejected applicant first deletes their own rejected
 // row (allowed by the rejected-only delete policy — pending rows can
 // never be wiped, closing the vote-reset exploit), then inserts fresh.
-// invited_by rides along best-effort: a faked id fails the DB check,
-// so the insert is retried bare and attribution falls back to NULL.
+// invited_by rides along best-effort: it must be the inviter's PROFILE id
+// (join_requests.invited_by FKs to profiles). A faked id fails the DB
+// check, so the insert is retried bare and attribution falls back to NULL.
 export default function JoinRequestButton({
   groupId,
   invitedBy,
