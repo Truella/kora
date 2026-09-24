@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { motion } from "motion/react";
+import { useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Home01Icon,
@@ -11,8 +11,6 @@ import {
   Activity01Icon,
   UserIcon,
 } from "@hugeicons/core-free-icons";
-import { createClient } from "@/lib/supabase/client";
-import type { User } from "@supabase/supabase-js";
 
 const TABS = [
   { href: "/home", label: "Home", icon: Home01Icon },
@@ -21,26 +19,35 @@ const TABS = [
   { href: "/profile", label: "Profile", icon: UserIcon },
 ];
 
+// Hover spring, matched to animate-ui's radix sidebar default
+// (components/animate-ui/components/radix/sidebar.tsx).
+const HIGHLIGHT_SPRING = { type: "spring", stiffness: 350, damping: 35 } as const;
+
 function isActive(pathname: string, href: string) {
   return href === "/home" ? pathname === "/home" : pathname.startsWith(href);
 }
 
-// Session-aware app chrome, mounted only by the (app) route group — the
-// landing, auth and error routes are outside it, so no route guard is
-// needed here any more. Mobile gets the bottom tab bar; large screens get a
-// left rail. The rail follows a flat reference: no row backgrounds and no CTA
-// — every glyph sits in its own disc, neutral when idle, petrol when active.
+// App chrome, mounted only by the (app) route group. No client-side session
+// check: proxy.ts already rejects unauthenticated requests to every route in
+// this group, so a getUser() round-trip here only delayed the rail by a
+// network hop — it rendered after the page, then shoved the content sideways.
+// The rail now paints on the first frame, server-rendered.
 export default function AppNav() {
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null | undefined>(undefined);
+  const [highlight, setHighlight] = useState<{ top: number; height: number } | null>(
+    null,
+  );
+  const reduceMotion = useReducedMotion();
 
-  useEffect(() => {
-    createClient()
-      .auth.getUser()
-      .then(({ data }) => setUser(data.user));
-  }, [pathname]);
-
-  if (user === undefined) return null; // session resolving — no flash
+  // Animate UI's sidebar hover: one highlight element springs to the hovered
+  // row's bounds, so moving between rows slides it rather than cross-fading.
+  // The row is passed straight from the event rather than looked up by index —
+  // the highlight is itself a child of the <ul>, so children[index] is off by
+  // one the moment it mounts. Rows are a plain stack, so offsetTop/Height are
+  // exact and avoid getBoundingClientRect layout thrash.
+  function handleEnter(row: HTMLElement) {
+    setHighlight({ top: row.offsetTop, height: row.offsetHeight });
+  }
 
   return (
     <>
@@ -51,16 +58,38 @@ export default function AppNav() {
         {/* w-full is load-bearing: the aside is a flex ROW (flex-col was
             dropped with the tagline), so without an explicit width this ul
             sizes to its content and the hover pill collapses to text width
-            instead of spanning the rail. */}
-        <ul className="flex w-full flex-col gap-0">
+            instead of spanning the rail. relative anchors the highlight. */}
+        <ul
+          className="relative flex w-full flex-col gap-0"
+          onMouseLeave={() => setHighlight(null)}
+        >
+          <AnimatePresence>
+            {highlight && (
+              <motion.div
+                key="rail-highlight"
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 z-0 rounded-[20px] bg-black/[0.04]"
+                initial={{ top: highlight.top, height: highlight.height, opacity: 0 }}
+                animate={{ top: highlight.top, height: highlight.height, opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={
+                  reduceMotion ? { duration: 0 } : HIGHLIGHT_SPRING
+                }
+              />
+            )}
+          </AnimatePresence>
           {TABS.map(({ href, label, icon }) => {
             const active = isActive(pathname, href);
             return (
-              <li key={href}>
+              <li
+                key={href}
+                className="relative"
+                onMouseEnter={(e) => handleEnter(e.currentTarget)}
+              >
                 <Link
                   href={href}
                   aria-current={active ? "page" : undefined}
-                  className={`flex items-center gap-2 rounded-[20px] px-3 py-2 text-[14px] transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
+                  className={`flex items-center gap-2 rounded-[20px] px-3 py-2 text-[14px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-bg ${
                     active
                       ? "font-semibold text-text-primary"
                       : "font-medium text-text-secondary hover:text-text-primary"

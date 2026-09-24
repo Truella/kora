@@ -9,6 +9,9 @@ import type { User } from "@supabase/supabase-js";
 // Slim brand bar for app + auth screens. Mounted by the (app) and (auth)
 // route-group layouts, never by the root layout — so the landing page and
 // the error pages get neither this bar nor the sidebar.
+// The bar itself renders immediately (server-rendered, no auth round-trip);
+// only the Sign out button waits on the session, so the chrome never pops in
+// after the page and shoves the layout sideways.
 // Signed-in users get a header Sign out (the Profile page keeps its own
 // button as a fallback — header is the discoverable one).
 export default function AppHeader() {
@@ -22,8 +25,6 @@ export default function AppHeader() {
       .auth.getUser()
       .then(({ data }) => setUser(data.user));
   }, [pathname]);
-
-  if (user === undefined) return null; // session resolving — no flash
 
   async function signOut() {
     setSigningOut(true);
