@@ -19,6 +19,7 @@
 
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createAdminClient } from "../_shared/supabase.ts";
+import { wasEnrolled } from "../_shared/enrollment.ts";
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -58,7 +59,7 @@ Deno.serve(async (req) => {
     // Cycle → group.
     const { data: cycle, error: cycleError } = await admin
       .from("cycles")
-      .select("id, group_id")
+      .select("id, group_id, due_date")
       .eq("id", cycleId)
       .single();
     if (cycleError || !cycle) return json({ error: "Cycle not found" }, 404);
@@ -101,12 +102,28 @@ Deno.serve(async (req) => {
 
     // Complete: all active members must have settled shares. A missing
     // contribution row means that member never started payment — unpaid.
+    //
+    // R1: a member only counts as "expected" if they were enrolled when this
+    // cycle ran. generate-schedule's sync mode appends a late joiner's
+    // recipient slot at the end of the rotation and never backfills the
+    // rounds already completed, and it creates no contribution rows at all —
+    // so without this a member who joined mid-rotation is counted as owing
+    // every past round, permanently blocking the disbursement of rounds they
+    // were never part of. /home and the circle page apply the identical
+    // boundary so the three never disagree.
+    //
+    // joined_at is compared as a UTC calendar date, matching utcDateOnly() in
+    // src/lib/money.ts. A one-day disagreement between app and function would
+    // mean a member is "expected" for a cycle the app says they do not owe,
+    // which is a gate that can only ever 409.
     const { data: members } = await admin
       .from("group_members")
-      .select("id")
+      .select("id, joined_at")
       .eq("group_id", cycle.group_id)
       .eq("status", "active");
-    const expected = (members ?? []).length;
+    const expected = (members ?? []).filter((m) =>
+      wasEnrolled(String(m.joined_at), cycle.due_date)
+    ).length;
     const { data: settled } = await admin
       .from("contributions")
       .select("id")
