@@ -44,7 +44,7 @@ export default function AvatarUploader({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white">
+    <div className="flex items-center gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4">
       {preview ? (
         <Image
           src={preview}
@@ -53,20 +53,20 @@ export default function AvatarUploader({
           height={56}
           // Local-pick previews are blob: URLs — skip optimization for those.
           unoptimized={preview.startsWith("blob:")}
-          className="h-14 w-14 shrink-0 rounded-2xl object-cover"
+          className="h-14 w-14 shrink-0 rounded-[10px] object-cover"
         />
       ) : (
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-indigo/10 text-lg font-semibold text-indigo dark:bg-white/10 dark:text-gold">
+        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 font-display text-lg font-semibold text-primary">
           ?
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold">Profile photo</p>
-        <p className="text-xs leading-5 text-zinc-500">
+        <p className="text-sm font-semibold text-text-primary">Profile photo</p>
+        <p className="text-xs leading-5 text-text-secondary">
           {uploading ? "Uploading…" : "JPG, PNG, or WebP under 2MB. Circle members will see it."}
         </p>
         {error && (
-          <p role="alert" className="mt-1 text-xs font-medium text-clay">
+          <p role="alert" className="mt-1 text-xs font-medium text-danger">
             {error}
           </p>
         )}
@@ -83,7 +83,7 @@ export default function AvatarUploader({
         type="button"
         disabled={uploading}
         onClick={() => inputRef.current?.click()}
-        className="shrink-0 rounded-full bg-indigo px-4 py-2 text-xs font-semibold text-white disabled:opacity-60"
+        className="shrink-0 rounded-[10px] bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
       >
         {preview ? "Change" : "Upload"}
       </button>

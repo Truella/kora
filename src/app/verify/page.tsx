@@ -11,7 +11,7 @@ import { friendlyAuthError } from "@/lib/auth-errors";
 type Flow = "phone" | "add-phone";
 
 function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/home";
 }
 
 function VerifyForm() {
@@ -29,11 +29,11 @@ function VerifyForm() {
   if (!to) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3 px-8 py-12 text-center">
-        <h1 className="font-display text-2xl font-semibold">No code to check</h1>
-        <p className="text-sm text-indigo/60">
+        <h1 className="font-display text-2xl font-semibold text-text-primary">No code to check</h1>
+        <p className="text-sm text-text-secondary">
           Start from the sign-in screen so we know where to send the code.
         </p>
-        <Link href="/login" className="font-semibold text-indigo">
+        <Link href="/login" className="font-semibold text-text-primary">
           Back to sign in
         </Link>
       </main>
@@ -108,7 +108,7 @@ function VerifyForm() {
       intro={
         <>
           6-digit code sent to{""}
-          <span className="font-mono font-medium text-indigo">{to}</span>
+          <span className="font-mono font-medium text-text-primary">{to}</span>
         </>
       }
     >
@@ -121,17 +121,17 @@ function VerifyForm() {
             inputMode="numeric"
             autoComplete="one-time-code"
             maxLength={6}
-            className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] outline-none placeholder:text-indigo/40 focus:border-indigo"
+            className="rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] text-text-primary outline-none placeholder:text-text-secondary/50 focus:border-primary"
           />
         </label>
 
         {error && (
-          <p role="alert" className="mt-3 text-sm font-medium text-indigo">
+          <p role="alert" className="mt-3 text-sm font-medium text-danger">
             {error}
           </p>
         )}
         {resent && (
-          <p className="mt-3 text-sm font-medium text-indigo">
+          <p className="mt-3 text-sm font-medium text-success">
             New code sent — give it a minute to arrive.
           </p>
         )}
@@ -140,14 +140,14 @@ function VerifyForm() {
           whileTap={{ scale: 0.98 }}
           disabled={verifying || code.length !== 6}
           onClick={() => verify(code)}
-          className="mt-4 w-full rounded-full bg-indigo py-3.5 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
+          className="mt-4 w-full rounded-[10px] bg-primary py-[13px] text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
         >
           {verifying ? "Checking…" : "Verify"}
         </motion.button>
 
         <button
           onClick={resend}
-          className="mt-3 w-full py-2 text-sm font-semibold text-indigo"
+          className="mt-3 w-full py-2 text-sm font-semibold text-text-primary"
         >
           Resend code
         </button>
