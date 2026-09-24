@@ -237,17 +237,26 @@ export default async function GroupDetailPage({
       ? unpaidCycles.filter((c) => c.due_date <= soonCutoff)
       : [];
 
-  // Pending join requests + their votes. Visible to members only via
-  // RLS; status flips come from the tally_join_votes trigger, never
-  // from the client.
-  const { data: requests } = member
-    ? await supabase
-        .from("join_requests")
-        .select("id, applicant_id, created_at")
-        .eq("group_id", id)
-        .eq("status", "pending")
-        .order("created_at", { ascending: true })
+  // Pending join requests + their votes. Names/phones arrive via the
+  // pending_applicants() RPC: applicants are not members yet, so the
+  // shared-group profiles policy hides them and only the RPC (scoped to
+  // active members of this circle) reveals who is asking in. Status flips
+  // come from the tally_join_votes trigger, never from the client.
+  type ApplicantRow = {
+    request_id: string;
+    applicant_name: string | null;
+    applicant_phone: string | null;
+    inviter_name: string | null;
+  };
+  const { data: applicantRows } = member
+    ? await supabase.rpc("pending_applicants", { p_group_id: id })
     : { data: [] };
+  const requests = ((applicantRows ?? []) as ApplicantRow[]).map((r) => ({
+    id: r.request_id,
+    applicant_name: r.applicant_name,
+    applicant_phone: r.applicant_phone,
+    inviter_name: r.inviter_name,
+  }));
 
   const { data: votes } =
     member && requests && requests.length > 0
@@ -606,14 +615,23 @@ export default async function GroupDetailPage({
                   key={request.id}
                   className="flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm text-text-primary">
-                      Applicant{""}
-                      <span className="font-mono text-xs text-text-secondary">
-                        ····{request.applicant_id.slice(-4)}
-                      </span>
-                    </p>
-                    <p className="font-mono text-xs tabular-nums text-text-secondary">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-text-primary">
+                        {request.applicant_name ?? "Applicant"}
+                      </p>
+                      {request.applicant_phone && (
+                        <p className="font-mono text-xs tabular-nums text-text-secondary">
+                          {request.applicant_phone}
+                        </p>
+                      )}
+                      <p className="text-xs text-text-secondary">
+                        {request.inviter_name
+                          ? `Invited by ${request.inviter_name}`
+                          : "Joined via link"}
+                      </p>
+                    </div>
+                    <p className="shrink-0 font-mono text-xs tabular-nums text-text-secondary">
                       {t.approve} yes · {t.reject} no
                     </p>
                   </div>
