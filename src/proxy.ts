@@ -1,8 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Public without a session. / is the public landing page for guests
-// (the page itself renders the dashboard when a session exists).
+// Public without a session. / is the public landing page only — the
+// signed-in app home lives on /home (protected, redirects to /login
+// with ?next= when signed out).
 // /auth/callback receives the magic-link ?code= before any session exists.
 // /api/ussd is the Africa's Talking webhook —
 // callers have no Supabase session (phone-number identity, read-only), so
@@ -15,7 +16,6 @@ const PUBLIC_PATHS = [
   "/offline",
   "/auth/callback",
   "/api/ussd",
-  "/design", // TEMP design-system preview — DELETE before submission
 ];
 
 export async function proxy(request: NextRequest) {
@@ -59,7 +59,7 @@ export async function proxy(request: NextRequest) {
     // /verify is reachable signed-in for the add-phone flow.
     if (pathname === "/login") {
       const home = request.nextUrl.clone();
-      home.pathname = "/";
+      home.pathname = "/home";
       home.search = "";
       return NextResponse.redirect(home);
     }
@@ -71,6 +71,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip static assets and Next internals; everything else goes through auth.
-    "/((?!_next/static|_next/image|favicon.ico|icons|manifest.webmanifest|sw.js).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icons|brand|manifest.webmanifest|sw.js).*)",
   ],
 };
