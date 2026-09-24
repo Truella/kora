@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
+import Dropdown from "../../Dropdown";
 import AuthShell from "../../AuthShell";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import {
@@ -170,20 +171,18 @@ function LoginForm() {
         <div className="mt-5 flex flex-col gap-3">
           {tab === "phone" ? (
             <div className="flex gap-2">
-              <label className="flex w-32 shrink-0 flex-col gap-1.5">
+              <div className="flex w-32 shrink-0 flex-col gap-1.5">
                 <span className="text-sm font-medium">Country</span>
-                <select
+                <Dropdown
                   value={country}
-                  onChange={(e) => setCountry(e.target.value as CountryKey)}
-                  className="rounded-[10px] border-[0.5px] border-border bg-surface px-3 py-3 text-[16px] text-text-primary outline-none focus:border-primary"
-                >
-                  {COUNTRIES.map((c) => (
-                    <option key={c.key} value={c.key}>
-                      +{COUNTRY_CODES[c.key]}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  onChange={setCountry}
+                  options={COUNTRIES.map((c) => ({
+                    value: c.key,
+                    label: `+${COUNTRY_CODES[c.key]}`,
+                  }))}
+                  label="Country"
+                />
+              </div>
               <label className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <span className="text-sm font-medium">
                   Phone · {COUNTRIES.find((c) => c.key === country)?.label}

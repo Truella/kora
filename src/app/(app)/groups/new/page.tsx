@@ -9,6 +9,7 @@ import {
   CheckmarkBadge01Icon,
 } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
+import Dropdown from "../../../Dropdown";
 import type { CountryKey } from "@/lib/phone";
 
 type Currency = "NGN" | "GHS" | "KES" | "UGX";
@@ -275,21 +276,18 @@ export default function NewGroupPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="group-currency" className={labelClass}>
+            <span className={labelClass}>
               Currency
-            </label>
-            <select
-              id="group-currency"
+            </span>
+            <Dropdown
               value={currency}
-              onChange={(e) => setCurrency(e.target.value as Currency)}
-              className={inputClass}
-            >
-              {CURRENCIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code} — {c.label}
-                </option>
-              ))}
-            </select>
+              onChange={setCurrency}
+              options={CURRENCIES.map((c) => ({
+                value: c.code,
+                label: `${c.code} — ${c.label}`,
+              }))}
+              label="Currency"
+            />
             <p className="text-xs text-text-secondary">Locked once members join.</p>
           </div>
         </div>

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Alert02Icon,
-  CheckmarkCircle01Icon,
   Clock01Icon,
   UserMultipleIcon,
 } from "@hugeicons/core-free-icons";
@@ -17,33 +16,18 @@ import InviteList from "./InviteList";
 // window, then circle invites, then pending votes. Money has a deadline; an
 // invite or a join request does not.
 export default function Attention({ snapshot }: { snapshot: HomeSnapshot }) {
-  const { attention, attentionState, nextDueLabel, invites } = snapshot;
+  const { attention, attentionState, invites } = snapshot;
 
   // Nothing owed, and no rotation started anywhere — there is no queue to show
   // and "you're all caught up" would read as a contradiction next to a circle
   // that says "waiting for schedule".
   if (attentionState === "none") return null;
 
-  // Having nothing to do is not a section. A bordered "all caught up" card gave
-  // an empty state the same visual weight as a real overdue payment, which is
-  // exactly backwards. It is now one muted line, and the section only exists
-  // once there is something in it.
-  if (attentionState === "complete") {
-    return (
-      <AllClear>
-        You&apos;re all caught up — this rotation is complete.
-      </AllClear>
-    );
-  }
+  // An empty queue is not a section — no "caught up" card, no muted line.
+  // The section only exists once there is something in it.
+  if (attention.length === 0 && invites.length === 0) return null;
 
-  if (attention.length === 0 && invites.length === 0) {
-    return (
-      <AllClear>
-        You&apos;re all caught up
-        {nextDueLabel ? ` — next contribution ${nextDueLabel}` : "."}
-      </AllClear>
-    );
-  }
+  if (attentionState === "complete") return null;
 
   // Money first, then invites, then votes — the data layer already orders
   // money before votes, so the queue is two filtered passes with the shared
@@ -123,21 +107,5 @@ export default function Attention({ snapshot }: { snapshot: HomeSnapshot }) {
         ))}
       </ul>
     </section>
-  );
-}
-
-// The quiet state. Deliberately not a heading, not a card, not a checkmark in a
-// circle of its own competing for the eye — the forward-looking date survives
-// here, and only here, because the summary no longer carries it.
-function AllClear({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="flex items-center gap-2 text-sm text-text-secondary">
-      <HugeiconsIcon
-        icon={CheckmarkCircle01Icon}
-        size={16}
-        className="shrink-0 text-success"
-      />
-      <span>{children}</span>
-    </p>
   );
 }

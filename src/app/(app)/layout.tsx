@@ -15,7 +15,9 @@ export default function AppLayout({
       <AppHeader />
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col lg:max-w-5xl lg:flex-row lg:gap-8">
         <AppNav />
-        <div className="order-1 flex min-w-0 flex-1 flex-col lg:order-2">
+        {/* Bottom clearance for the fixed mobile tab bar (bar height +
+            safe-area); none on desktop where the bar is hidden. */}
+        <div className="order-1 flex min-w-0 flex-1 flex-col pb-[calc(76px+env(safe-area-inset-bottom))] lg:order-2 lg:pb-0">
           {children}
         </div>
       </div>

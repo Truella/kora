@@ -7,10 +7,10 @@ import type { HomeSnapshot } from "@/lib/home";
 import Summary from "./Summary";
 import Attention from "./Attention";
 import CircleList from "./CircleList";
-import QuickActions from "./QuickActions";
 import ActivityStrip from "./ActivityStrip";
 import EmptyHome from "./EmptyHome";
 import InviteList from "./InviteList";
+import { ActionGrid } from "./QuickActions";
 
 // Home owns the snapshot as state so a realtime event can swap every figure at
 // once. The section components hold no state and no server-only imports, so
@@ -81,7 +81,7 @@ export default function HomeLive({ initial }: { initial: HomeSnapshot }) {
           </section>
         )}
         <div className="mt-6">
-          <QuickActions />
+          <ActionGrid snapshot={snapshot} />
         </div>
       </main>
     );
@@ -90,12 +90,10 @@ export default function HomeLive({ initial }: { initial: HomeSnapshot }) {
   return (
     <main className="flex flex-1 flex-col gap-6 px-4 py-6">
       <Summary snapshot={snapshot} />
+      <ActionGrid snapshot={snapshot} />
       <Attention snapshot={snapshot} />
       <CircleList snapshot={snapshot} />
       <ActivityStrip snapshot={snapshot} />
-      {/* Last, because it is a footer rather than a section — the hairline above
-          it closes the page instead of introducing another block. */}
-      <QuickActions />
     </main>
   );
 }

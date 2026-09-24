@@ -5,8 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import PayButton from "./PayButton";
 import PayoutAction from "./PayoutAction";
 import ConfirmingBanner from "./ConfirmingBanner";
-import InviteButton from "./InviteButton";
-import InviteByPhone from "./InviteByPhone";
+import InviteMenu from "./InviteMenu";
 import VoteButtons from "./VoteButtons";
 import ScheduleGenerator from "./ScheduleGenerator";
 import { RevealLi } from "../../../Reveal";
@@ -381,11 +380,9 @@ export default async function GroupDetailPage({
           </p>
         </div>
         {member && user && (
-          <InviteButton groupId={group.id} inviterId={user.id} />
+          <InviteMenu groupId={group.id} inviterId={user.id} />
         )}
       </div>
-
-      {member && user && <InviteByPhone groupId={group.id} />}
 
       {!cycles || cycles.length === 0 ? (        member && isCreator ? (
           <ScheduleGenerator

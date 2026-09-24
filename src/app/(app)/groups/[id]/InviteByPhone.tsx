@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
+import Dropdown from "../../../Dropdown";
 import {
   normalizeToE164,
   InvalidPhoneError,
@@ -29,7 +30,13 @@ const COUNTRIES: { key: CountryKey; label: string }[] = [
 // against the invitee's own verified phone, so sending reveals nothing about
 // whether the number has an account. A number with no account yet simply sees
 // nothing until they sign up with it (share the link for those cases).
-export default function InviteByPhone({ groupId }: { groupId: string }) {
+export default function InviteByPhone({
+  groupId,
+  bare = false,
+}: {
+  groupId: string;
+  bare?: boolean;
+}) {
   const [country, setCountry] = useState<CountryKey>("NG");
   const [phone, setPhone] = useState("");
   const [state, setState] = useState<
@@ -103,7 +110,13 @@ export default function InviteByPhone({ groupId }: { groupId: string }) {
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4">
+    <div
+      className={
+        bare
+          ? "flex flex-col gap-3"
+          : "flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4"
+      }
+    >
       <div>
         <h2 className="font-display text-base font-semibold text-text-primary">
           Invite by phone number
@@ -126,22 +139,22 @@ export default function InviteByPhone({ groupId }: { groupId: string }) {
       ) : (
         <div className="flex flex-col gap-2">
           <div className="flex gap-2">
-            <label className="flex w-28 shrink-0 flex-col gap-1.5">
+            <div className="flex w-28 shrink-0 flex-col gap-1.5">
               <span className="text-sm font-medium text-text-primary">
                 Country
               </span>
-              <select
+              <Dropdown
                 value={country}
-                onChange={(e) => setCountry(e.target.value as CountryKey)}
-                className="rounded-[10px] border-[0.5px] border-border bg-white px-3 py-3 text-[16px] text-text-primary outline-none focus:border-primary"
-              >
-                {COUNTRIES.map((c) => (
-                  <option key={c.key} value={c.key}>
-                    +{COUNTRY_CODES[c.key]}
-                  </option>
-                ))}
-              </select>
-            </label>
+                onChange={setCountry}
+                options={COUNTRIES.map((c) => ({
+                  value: c.key,
+                  label: `+${COUNTRY_CODES[c.key]}`,
+                }))}
+                label="Country"
+                tone="white"
+                dropUp
+              />
+            </div>
             <label className="flex min-w-0 flex-1 flex-col gap-1.5">
               <span className="text-sm font-medium text-text-primary">
                 Phone · {COUNTRIES.find((c) => c.key === country)?.label}
@@ -178,6 +191,6 @@ export default function InviteByPhone({ groupId }: { groupId: string }) {
           </motion.button>
         </div>
       )}
-    </section>
+    </div>
   );
 }

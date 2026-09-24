@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 import AuthShell from "../../AuthShell";
+import Dropdown from "../../Dropdown";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import {
   normalizeToE164,
@@ -82,20 +83,17 @@ function AddPhoneForm() {
       intro="USSD identifies you by phone — without a verified number, balance checks and payment confirmations can't find you. The app itself works fine it."
     >
       <div className="flex gap-2">
-          <label className="flex w-24 shrink-0 flex-col gap-1.5">
+          <div className="flex w-24 shrink-0 flex-col gap-1.5">
             <span className="text-sm font-medium">Country</span>
-            <select
+            <Dropdown
               value={country}
-              onChange={(e) => setCountry(e.target.value as CountryKey)}
-              className="rounded-[10px] border-[0.5px] border-border bg-surface px-3 py-3 text-[16px] text-text-primary outline-none focus:border-primary"
-            >
-              {(Object.keys(COUNTRY_CODES) as CountryKey[]).map((key) => (
-                <option key={key} value={key}>
-                  +{COUNTRY_CODES[key]}
-                </option>
-              ))}
-            </select>
-          </label>
+              onChange={setCountry}
+              options={(Object.keys(COUNTRY_CODES) as CountryKey[]).map(
+                (key) => ({ value: key, label: `+${COUNTRY_CODES[key]}` }),
+              )}
+              label="Country"
+            />
+          </div>
           <label className="flex min-w-0 flex-1 flex-col gap-1.5">
             <span className="text-sm font-medium">Phone</span>
             <input

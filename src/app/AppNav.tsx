@@ -119,9 +119,13 @@ export default function AppNav() {
         </ul>
       </aside>
 
+      {/* Fixed, not sticky: sticky bottom-0 only holds on screen-tall
+          pages and leaves the bar floating mid-screen under short content.
+          Fixed pins it to the viewport in both cases; the (app) layout
+          pads page content clear of it. Hidden on desktop (sidebar rail). */}
       <nav
         aria-label="Primary"
-        className="sticky bottom-0 z-10 order-2 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+        className="fixed inset-x-0 bottom-0 z-10 order-2 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
       >
         <ul className="mx-auto grid max-w-md grid-cols-4">
           {TABS.map(({ href, label, icon }) => {
