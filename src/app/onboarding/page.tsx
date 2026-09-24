@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 import AuthShell from "../AuthShell";
 import { COUNTRY_CODES, type CountryKey } from "@/lib/phone";
+import { uploadAvatar, validateAvatarFile } from "@/lib/avatar";
 
 function safeNext(raw: string | null): string {
   return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
@@ -28,8 +29,33 @@ function OnboardingForm() {
   const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [country, setCountry] = useState<CountryKey>("NG");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  function pickAvatar(file: File | undefined) {
+    if (!file) return;
+    const invalid = validateAvatarFile(file);
+    if (invalid) {
+      setAvatarError(invalid);
+      return;
+    }
+    setAvatarError(null);
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  }
+
+  function removeAvatar() {
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarFile(null);
+    setAvatarPreview(null);
+    setAvatarError(null);
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+  }
 
   function continueFromName() {
     if (name.trim().length < 2) {
@@ -66,6 +92,25 @@ function OnboardingForm() {
       setSaving(false);
       setError(profileError.message);
       return;
+    }
+    // Optional photo: upload now, point avatar_url at it. A failed upload
+    // doesn't lose the name — stay here so they can retry or remove + skip.
+    if (avatarFile) {
+      try {
+        const publicUrl = await uploadAvatar(supabase, user.id, avatarFile);
+        const { error: avatarError } = await supabase
+          .from("profiles")
+          .update({ avatar_url: publicUrl })
+          .eq("id", user.id);
+        if (avatarError) throw new Error("Photo uploaded, but couldn't save it.");
+      } catch (e) {
+        setSaving(false);
+        setAvatarError(
+          e instanceof Error ? e.message : "Couldn't upload that photo — try again.",
+        );
+        setStep(0);
+        return;
+      }
     }
     // Remember home country for future defaults (dial code, currency).
     await supabase.auth.updateUser({ data: { full_name: trimmed, country } });
@@ -136,6 +181,55 @@ function OnboardingForm() {
               <p className="text-xs leading-5 text-zinc-500">
                 Shows on invites, votes, and the ledger.
               </p>
+              <div className="flex items-center gap-3">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Your profile photo preview"
+                    className="h-12 w-12 shrink-0 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo/10 text-sm font-semibold text-indigo">
+                    {name.trim().charAt(0).toUpperCase() || "?"}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium">
+                    Profile photo <span className="font-normal text-zinc-400">(optional)</span>
+                  </p>
+                  <p className="text-xs text-zinc-500">JPG, PNG, or WebP under 2MB.</p>
+                  {avatarError && (
+                    <p role="alert" className="mt-0.5 text-xs font-medium text-clay">
+                      {avatarError}
+                    </p>
+                  )}
+                </div>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  aria-label="Choose a profile photo"
+                  onChange={(e) => pickAvatar(e.target.files?.[0])}
+                />
+                {avatarPreview ? (
+                  <button
+                    type="button"
+                    onClick={removeAvatar}
+                    className="shrink-0 rounded-full border border-black/10 px-4 py-2 text-xs font-semibold text-ink"
+                  >
+                    Remove
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="shrink-0 rounded-full border border-black/10 px-4 py-2 text-xs font-semibold text-ink"
+                  >
+                    Add
+                  </button>
+                )}
+              </div>
             </>
           )}
 
@@ -176,6 +270,18 @@ function OnboardingForm() {
           {step === 2 && (
             <>
               <dl className="flex flex-col gap-2 rounded-2xl border border-black/10 bg-white p-4">
+                {avatarPreview && (
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-sm text-zinc-500">Photo</dt>
+                    <dd>
+                      <img
+                        src={avatarPreview}
+                        alt="Your profile photo preview"
+                        className="h-10 w-10 rounded-xl object-cover"
+                      />
+                    </dd>
+                  </div>
+                )}
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-sm text-zinc-500">Name</dt>
                   <dd className="text-sm font-semibold text-ink">

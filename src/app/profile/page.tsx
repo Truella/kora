@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { UserIcon, ShieldCheckIcon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import { RevealLi } from "../Reveal";
+import AvatarUploader from "./AvatarUploader";
 import SignOutButton from "./signout-button";
 
 export const metadata = { title: "Profile" };
@@ -16,7 +17,7 @@ export default async function ProfilePage() {
   const { data: profile } = user
     ? await supabase
         .from("profiles")
-        .select("full_name, phone, phone_verified")
+        .select("full_name, phone, phone_verified, avatar_url")
         .eq("id", user.id)
         .single()
     : { data: null };
@@ -82,13 +83,21 @@ export default async function ProfilePage() {
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
       <div className="flex items-center gap-3">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10 dark:bg-white/10">
-          <HugeiconsIcon
-            icon={UserIcon}
-            size={26}
-            className="text-indigo dark:text-gold"
+        {profile?.avatar_url ? (
+          <img
+            src={profile.avatar_url}
+            alt="Your profile photo"
+            className="h-14 w-14 rounded-2xl object-cover"
           />
-        </span>
+        ) : (
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10 dark:bg-white/10">
+            <HugeiconsIcon
+              icon={UserIcon}
+              size={26}
+              className="text-indigo dark:text-gold"
+            />
+          </span>
+        )}
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight">
             {profile?.full_name || "Your profile"}
@@ -98,6 +107,13 @@ export default async function ProfilePage() {
           </p>
         </div>
       </div>
+
+      {user && (
+        <AvatarUploader
+          userId={user.id}
+          currentUrl={profile?.avatar_url ?? null}
+        />
+      )}
 
       <div className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-ink dark:text-white">
         <HugeiconsIcon
