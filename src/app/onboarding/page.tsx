@@ -10,7 +10,7 @@ import { COUNTRY_CODES, type CountryKey } from "@/lib/phone";
 import { uploadAvatar, validateAvatarFile } from "@/lib/avatar";
 
 function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/";
+  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/home";
 }
 
 const COUNTRIES: { key: CountryKey; name: string }[] = [
@@ -142,12 +142,12 @@ function OnboardingForm() {
           <div key={label} className="flex flex-1 flex-col gap-1.5">
             <span
               className={`h-1.5 rounded-full ${
-                i <= step ? "bg-gold" : "bg-indigo/10"
+                i <= step ? "bg-primary" : "bg-border"
               }`}
             />
             <span
-              className={`text-[11px] font-semibold ${
-                i === step ? "text-indigo" : "text-indigo/50"
+              className={`font-mono text-[11px] font-semibold ${
+                i === step ? "text-text-primary" : "text-text-secondary"
               }`}
             >
               {i + 1}. {label}
@@ -176,10 +176,10 @@ function OnboardingForm() {
                   placeholder="Adaeze Okafor"
                   autoComplete="name"
                   autoFocus
-                  className="rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-[16px] outline-none placeholder:text-indigo/50 focus:border-indigo"
+                  className="rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-[16px] text-text-primary outline-none placeholder:text-text-secondary/60 focus:border-primary"
                 />
               </label>
-              <p className="text-xs leading-5 text-indigo/60">
+              <p className="text-xs leading-5 text-text-secondary">
                 Shows on invites, votes, and the ledger.
               </p>
               <div className="flex items-center gap-3">
@@ -190,20 +190,20 @@ function OnboardingForm() {
                     width={48}
                     height={48}
                     unoptimized
-                    className="h-12 w-12 shrink-0 rounded-2xl object-cover"
+                    className="h-12 w-12 shrink-0 rounded-[10px] object-cover"
                   />
                 ) : (
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo/10 text-sm font-semibold text-indigo">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 font-display text-sm font-semibold text-primary">
                     {name.trim().charAt(0).toUpperCase() || "?"}
                   </span>
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium">
-                    Profile photo <span className="font-normal text-zinc-400">(optional)</span>
+                    Profile photo <span className="font-normal text-text-secondary">(optional)</span>
                   </p>
-                  <p className="text-xs text-zinc-500">JPG, PNG, or WebP under 2MB.</p>
+                  <p className="text-xs text-text-secondary">JPG, PNG, or WebP under 2MB.</p>
                   {avatarError && (
-                    <p role="alert" className="mt-0.5 text-xs font-medium text-clay">
+                    <p role="alert" className="mt-0.5 text-xs font-medium text-danger">
                       {avatarError}
                     </p>
                   )}
@@ -220,7 +220,7 @@ function OnboardingForm() {
                   <button
                     type="button"
                     onClick={removeAvatar}
-                    className="shrink-0 rounded-full border border-black/10 px-4 py-2 text-xs font-semibold text-ink"
+                    className="shrink-0 rounded-[10px] border-[0.5px] border-border bg-white px-4 py-2 text-xs font-semibold text-text-primary"
                   >
                     Remove
                   </button>
@@ -228,7 +228,7 @@ function OnboardingForm() {
                   <button
                     type="button"
                     onClick={() => avatarInputRef.current?.click()}
-                    className="shrink-0 rounded-full border border-black/10 px-4 py-2 text-xs font-semibold text-ink"
+                    className="shrink-0 rounded-[10px] border-[0.5px] border-border bg-white px-4 py-2 text-xs font-semibold text-text-primary"
                   >
                     Add
                   </button>
@@ -249,23 +249,23 @@ function OnboardingForm() {
                       role="radio"
                       aria-checked={selected}
                       onClick={() => setCountry(c.key)}
-                      className={`flex flex-col rounded-2xl border-2 px-4 py-3 text-left transition-colors ${
+                      className={`flex flex-col rounded-[14px] border-[0.5px] px-4 py-3 text-left transition-colors ${
                         selected
-                          ? "border-gold bg-gold/10"
-                          : "border-indigo/10 bg-paper"
+                          ? "border-primary bg-primary/5"
+                          : "border-border bg-surface"
                       }`}
                     >
-                      <span className="text-sm font-semibold text-indigo">
+                      <span className="text-sm font-semibold text-text-primary">
                         {c.name}
                       </span>
-                      <span className="font-mono text-xs text-indigo/60">
+                      <span className="font-mono text-xs text-text-secondary">
                         +{COUNTRY_CODES[c.key]}
                       </span>
                     </button>
                   );
                 })}
               </div>
-              <p className="text-xs leading-5 text-indigo/60">
+              <p className="text-xs leading-5 text-text-secondary">
                 Sets your default dial code and currency.
               </p>
             </>
@@ -273,10 +273,10 @@ function OnboardingForm() {
 
           {step === 2 && (
             <>
-              <dl className="flex flex-col gap-2 rounded-2xl border border-black/10 bg-white p-4">
+              <dl className="flex flex-col gap-2 rounded-[14px] border-[0.5px] border-border bg-surface p-4">
                 {avatarPreview && (
                   <div className="flex items-center justify-between gap-3">
-                    <dt className="text-sm text-zinc-500">Photo</dt>
+                    <dt className="text-sm text-text-secondary">Photo</dt>
                     <dd>
                       <Image
                         src={avatarPreview}
@@ -284,37 +284,37 @@ function OnboardingForm() {
                         width={40}
                         height={40}
                         unoptimized
-                        className="h-10 w-10 rounded-xl object-cover"
+                        className="h-10 w-10 rounded-[10px] object-cover"
                       />
                     </dd>
                   </div>
                 )}
                 <div className="flex items-center justify-between gap-3">
-                  <dt className="text-sm text-indigo/60">Name</dt>
-                  <dd className="text-sm font-semibold text-indigo">
+                  <dt className="text-sm text-text-secondary">Name</dt>
+                  <dd className="text-sm font-semibold text-text-primary">
                     {name.trim()}
                   </dd>
                 </div>
-                <div className="flex items-center justify-between gap-3 border-t border-indigo/5 pt-2">
-                  <dt className="text-sm text-indigo/60">Home country</dt>
-                  <dd className="text-sm font-semibold text-indigo">
+                <div className="flex items-center justify-between gap-3 border-t border-border pt-2">
+                  <dt className="text-sm text-text-secondary">Home country</dt>
+                  <dd className="text-sm font-semibold text-text-primary">
                     {chosen?.name} (+{chosen && COUNTRY_CODES[chosen.key]})
                   </dd>
                 </div>
               </dl>
-              <p className="text-xs leading-5 text-indigo/60">
+              <p className="text-xs leading-5 text-text-secondary">
                 Looks right? Circle members will recognize you by this name.
               </p>
             </>
           )}
 
           {error && (
-            <p role="alert" className="text-sm font-medium text-indigo">
+            <p role="alert" className="text-sm font-medium text-danger">
               {error}
             </p>
           )}
 
-          <div className="mt-1 flex gap-2">
+          <div className="mt-1 flex gap-3">
             {step > 0 && (
               <button
                 type="button"
@@ -322,7 +322,7 @@ function OnboardingForm() {
                   setError(null);
                   setStep(step - 1);
                 }}
-                className="rounded-full border border-indigo/10 px-6 py-3.5 text-sm font-semibold text-indigo"
+                className="rounded-[10px] border-[0.5px] border-border bg-white px-6 py-[13px] text-sm font-semibold text-text-primary"
               >
                 Back
               </button>
@@ -332,7 +332,7 @@ function OnboardingForm() {
                 whileTap={{ scale: 0.98 }}
                 type="button"
                 onClick={() => (step === 0 ? continueFromName() : setStep(2))}
-                className="flex-1 rounded-full bg-indigo py-3.5 text-sm font-semibold text-paper hover:bg-indigo-hover"
+                className="flex-1 rounded-[10px] bg-primary py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
               >
                 Continue
               </motion.button>
@@ -342,7 +342,7 @@ function OnboardingForm() {
                 type="button"
                 disabled={saving}
                 onClick={submit}
-                className="flex-1 rounded-full bg-indigo py-3.5 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
+                className="flex-1 rounded-[10px] bg-primary py-[13px] text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
               >
                 {saving ? "Saving…" : "Finish setup"}
               </motion.button>
