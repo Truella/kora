@@ -140,6 +140,12 @@ export default function ScheduleGenerator({
         id="first-due"
         type="date"
         value={firstDue}
+        // R1 guard: a first due date in the past would put cycle 1 before the
+        // founder's own joined_at, and under "you owe only cycles that fell
+        // due on or after you joined" they would owe nothing for their own
+        // first round. min makes the invariant hold by construction rather
+        // than trusting the picker.
+        min={todayISO()}
         onChange={(e) => setFirstDue(e.target.value)}
         className="rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 font-mono text-sm text-text-primary outline-none focus:border-primary"
       />
@@ -173,4 +179,8 @@ function defaultFirstDue(frequency: string): string {
   if (frequency === "monthly") d.setMonth(d.getMonth() + 1);
   else d.setDate(d.getDate() + 7);
   return d.toISOString().slice(0, 10);
+}
+
+function todayISO(): string {
+  return new Date().toISOString().slice(0, 10);
 }

@@ -71,6 +71,12 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip static assets and Next internals; everything else goes through auth.
-    "/((?!_next/static|_next/image|favicon.ico|icons|brand|manifest.webmanifest|sw.js).*)",
+    //
+    // api/home is excluded because it does its own session check and returns
+    // 401 JSON — the redirect below would hand an XHR a 307 to /login and the
+    // client would get HTML where it expects JSON. /api/ussd is public for a
+    // different reason (no Supabase session at all; Africa's Talking
+    // identifies callers by phone).
+    "/((?!_next/static|_next/image|favicon.ico|icons|brand|manifest.webmanifest|sw.js|api/home).*)",
   ],
 };

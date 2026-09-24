@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Activity01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
 import { getLedgerEvents, type LedgerEvent } from "@/lib/ledger";
+import { useLedgerLive } from "@/lib/use-ledger-live";
 
 const BADGE: Record<string, string> = {
   pending: "bg-[#F8EDD9] text-[#8A5F14]",
@@ -32,73 +33,46 @@ export default function LedgerFeed({
 }) {
   const [due, setDue] = useState(initialDue);
   const [history, setHistory] = useState(initialHistory);
-  const [live, setLive] = useState(false);
-  const subscribedOnce = useRef(false);
 
+  // A fresh server snapshot (router.refresh() after a payment return, say)
+  // must win over state seeded at mount — otherwise the feed sits on stale
+  // rows until the next realtime event happens to arrive. Adjusting during
+  // render rather than in an effect is the sanctioned pattern here and avoids
+  // painting one frame of the stale list first.
+  const [synced, setSynced] = useState({ due: initialDue, history: initialHistory });
+  if (initialDue !== synced.due || initialHistory !== synced.history) {
+    setSynced({ due: initialDue, history: initialHistory });
+    setDue(initialDue);
+    setHistory(initialHistory);
+  }
+
+  // The subscription itself now lives in useLedgerLive, shared with /home.
+  // This mounted ref replaces the old closure-local `cancelled` flag so a
+  // refetch still in flight cannot setState after unmount.
+  const mounted = useRef(true);
   useEffect(() => {
-    const supabase = createClient();
-    let cancelled = false;
-
-    async function refresh() {
-      try {
-        const next = await getLedgerEvents(supabase, groupId);
-        if (!cancelled) {
-          setDue(next.due);
-          setHistory(next.history);
-        }
-      } catch (err) {
-        // Keep the stale list; the live dot shows the connection state.
-        console.error("ledger refresh failed", err);
-      }
-    }
-
-    const channel = supabase
-      .channel(`ledger:${groupId ?? "all"}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "contributions" },
-        () => {
-          void refresh();
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "payouts" },
-        () => {
-          void refresh();
-        },
-      )
-      .on(
-        // Cycle rows carry the due dates the Due-now section orders by —
-        // without this a rescheduled cycle never refreshes the feed.
-        "postgres_changes",
-        { event: "*", schema: "public", table: "cycles" },
-        () => {
-          void refresh();
-        },
-      )
-      .subscribe((status) => {
-        if (cancelled) return;
-        if (status === "SUBSCRIBED") {
-          setLive(true);
-          // First SUBSCRIBED has fresh server data; anything later is a
-          // reconnect after a drop, so resync to cover missed events.
-          if (subscribedOnce.current) void refresh();
-          else subscribedOnce.current = true;
-        } else if (
-          status === "CHANNEL_ERROR" ||
-          status === "TIMED_OUT" ||
-          status === "CLOSED"
-        ) {
-          setLive(false);
-        }
-      });
-
+    mounted.current = true;
     return () => {
-      cancelled = true;
-      void supabase.removeChannel(channel);
+      mounted.current = false;
     };
+  }, []);
+
+  const refresh = useCallback(async () => {
+    try {
+      const next = await getLedgerEvents(createClient(), groupId);
+      if (mounted.current) {
+        setDue(next.due);
+        setHistory(next.history);
+      }
+    } catch (err) {
+      // Keep the stale list; the live dot shows the connection state.
+      console.error("ledger refresh failed", err);
+    }
   }, [groupId]);
+
+  const live = useLedgerLive(`ledger:${groupId ?? "all"}`, () => {
+    void refresh();
+  });
 
   const shownDue =
     previewCount !== undefined ? due.slice(0, previewCount) : due;

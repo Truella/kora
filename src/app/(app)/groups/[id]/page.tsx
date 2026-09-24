@@ -11,6 +11,7 @@ import ScheduleGenerator from "./ScheduleGenerator";
 import { RevealLi } from "../../../Reveal";
 import LedgerFeed from "../../activity/LedgerFeed";
 import { getLedgerEvents } from "@/lib/ledger";
+import { utcDateOnly } from "@/lib/money";
 
 export const metadata = { title: "Circle" };
 
@@ -27,7 +28,14 @@ const BADGE: Record<string, string> = {
   late: "bg-[#F3E1E0] text-[#8A2A21]",
   completed: "bg-[#E0ECE9] text-[#1E5A4E]",
   failed: "bg-[#F3E1E0] text-[#8A2A21]",
+  // R1: a cycle that ran before the member joined. Not an obligation, so it
+  // gets a neutral chip rather than a pending one that begs for payment.
+  skipped: "bg-[#EFEDE4] text-[#5B645E]",
 };
+
+// Anchors the /home attention queue deep-links to. The scroll margin keeps the
+// sticky app header from covering the row it just scrolled to.
+const ANCHOR_MT = "scroll-mt-[calc(var(--app-header-h)+1rem)]";
 
 // Reminder windows, computed once per render outside the component body
 // so the purity lint stays quiet — values are plain date strings.
@@ -89,7 +97,7 @@ export default async function GroupDetailPage({
   const { data: member } = user
     ? await supabase
         .from("group_members")
-        .select("id")
+        .select("id, joined_at")
         .eq("group_id", id)
         .eq("user_id", user.id)
         .eq("status", "active")
@@ -186,14 +194,40 @@ export default async function GroupDetailPage({
     cycles.length > 0 &&
     (activeCount ?? 0) > scheduledCount;
 
+  // R1 — retroactive contribution bug. generate-schedule's sync mode appends a
+  // late joiner's recipient slot at the end of the rotation and never
+  // backfills the rounds that already ran, and it creates no contribution
+  // rows at all. So "no row" used to mean unpaid for every cycle in the
+  // group, and this page offered a Pay button for rounds that finished —
+  // and were already disbursed — before the member arrived.
+  //
+  // A member owes a cycle only if its due date falls on or after the day they
+  // became an active member. This governs billing only: a settled payment is
+  // history and still counts, however late it was made. /home applies the
+  // same rule to its attention queue and progress bar, and process-payout to
+  // its settle check — all three have to agree or the data contradicts itself.
+  //
+  // utcDateOnly rather than the member's own offset: process-payout decides
+  // this same boundary from the stored timestamptz and has no way to read each
+  // member's auth metadata, so a one-day disagreement there would make a
+  // member "expected" for a cycle this page says they do not owe — a gate
+  // that would 409 forever.
+  const memberRow = member as { id: string; joined_at?: string } | null;
+  const joinedAt = memberRow?.joined_at ?? null;
+  const joinedDate = joinedAt ? utcDateOnly(joinedAt) : null;
+  const enrolledIn = (c: { due_date: string }) =>
+    !joinedDate || c.due_date >= joinedDate;
+
+  const isCreator = !!user && group.created_by === user.id;
+  const { today, soonCutoff } = dueWindows();
+
   // In-app reminders: computed from already-fetched rows, no new queries.
   // A contribution row only exists once Pay starts, so "no row" counts as
   // unpaid — the nudge must fire before the first payment too. Late rows
   // are settled money (the webhook wrote them on verified payment), so
   // they leave the nudge lists alone.
-  const isCreator = !!user && group.created_by === user.id;
-  const { today, soonCutoff } = dueWindows();
   const unpaidCycles = (cycles ?? []).filter((c) => {
+    if (!enrolledIn(c)) return false;
     const mine = byCycle.get(c.id) as { status?: string } | undefined;
     return !mine || (mine.status !== "paid" && mine.status !== "late");
   });
@@ -374,7 +408,12 @@ export default async function GroupDetailPage({
           </p>
           <ul className="flex flex-col gap-3">
           {cycles.map((cycle, i) => {            const contribution = byCycle.get(cycle.id);
-            const status = contribution?.status ?? "pending";
+            // R1: cycles that fell due before this member joined are not their
+            // obligation, so they read as "not in rotation" rather than pending.
+            const enrolled = enrolledIn(cycle);
+            const status = enrolled
+              ? contribution?.status ?? "pending"
+              : "skipped";
             const isPaid = status === "paid";
             // Late is settled money (webhook-verified, just past due) —
             // no second Pay button, terminal copy instead.
@@ -389,8 +428,9 @@ export default async function GroupDetailPage({
             return (
               <RevealLi
                 key={cycle.id}
+                id={`cycle-${cycle.id}`}
                 delay={Math.min(i * 0.05, 0.25)}
-                className="flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4"
+                className={`${ANCHOR_MT} flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -398,11 +438,14 @@ export default async function GroupDetailPage({
                       Cycle {cycle.cycle_number}
                     </p>
                     <p className="font-display text-xs font-semibold tabular-nums text-text-secondary">
-                      {amountLabel} your share · due {cycle.due_date} ·{""}
-                      {cycle.status}
-                      {contribution?.paid_at
-                        ? ` · paid ${new Date(contribution.paid_at).toLocaleDateString()}`
-                        : ""}
+                      {enrolled
+                        ? `${amountLabel} your share · due ${cycle.due_date} ·${""}
+                          ${cycle.status}${
+                            contribution?.paid_at
+                              ? ` · paid ${new Date(contribution.paid_at).toLocaleDateString()}`
+                              : ""
+                          }`
+                        : `${amountLabel} your share · ran before you joined`}
                     </p>
                     {(recipient || pot) && (
                       <p className="font-display text-xs font-semibold tabular-nums text-text-secondary">
@@ -424,12 +467,18 @@ export default async function GroupDetailPage({
                     </span>
                   </div>
                 </div>
-                {member && !isSettled && (
+                {member && enrolled && !isSettled && (
                   <PayButton
                     cycleId={cycle.id}
                     groupId={group.id}
                     amountLabel={amountLabel}
                   />
+                )}
+                {!enrolled && (
+                  <p className="text-xs text-text-secondary">
+                    This round ran before you joined the circle — it isn&apos;t
+                    yours to pay.
+                  </p>
                 )}
                 {isPaid && (
                   <p className="text-xs text-text-secondary">
@@ -554,7 +603,10 @@ export default async function GroupDetailPage({
       )}
 
       {member && requests && requests.length > 0 && (
-        <section className="flex flex-col gap-3">
+        <section
+          id="pending-requests"
+          className={`${ANCHOR_MT} flex flex-col gap-3`}
+        >
           <h2 className="font-display text-lg font-semibold text-text-primary">
             Pending requests
           </h2>
