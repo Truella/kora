@@ -34,7 +34,7 @@ export default function InviteButton({
     <button
       type="button"
       onClick={copy}
-      className="inline-flex items-center gap-2 rounded-full border border-indigo/10 px-4 py-2 text-sm font-medium text-indigo hover:bg-indigo/5"
+      className="inline-flex items-center gap-2 rounded-[10px] border-[0.5px] border-border bg-white px-4 py-2 text-sm font-semibold text-text-primary"
     >
       {copied && <HugeiconsIcon icon={Tick01Icon} size={16} />}
       {copied ? "Link copied" : "Copy invite link"}

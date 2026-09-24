@@ -25,14 +25,14 @@ export default function PayoutAction({
 
   if (payoutStatus === "completed") {
     return (
-      <p className="text-xs text-indigo">
+      <p className="text-xs text-success">
         Payout disbursed — the pot went to this cycle&apos;s receiver.
       </p>
     );
   }
   if (payoutStatus === "failed") {
     return (
-      <p className="text-xs text-indigo">
+      <p className="text-xs font-medium text-danger">
         Payout failed — contact the organizer to retry disbursement.
       </p>
     );
@@ -93,13 +93,13 @@ export default function PayoutAction({
         onClick={handleComplete}
         disabled={working}
         whileTap={{ scale: 0.97 }}
-        className="flex items-center justify-center gap-2 rounded-full bg-indigo px-6 py-3 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
+        className="flex items-center justify-center gap-2 rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
       >
         {working ? "Disbursing…" : "Mark payout disbursed"}
         {!working && <HugeiconsIcon icon={ArrowRight01Icon} size={18} />}
       </motion.button>
       {message && (
-        <p className="rounded-xl bg-gold/15 px-4 py-2.5 text-sm text-indigo">
+        <p className="rounded-[10px] bg-[#F8EDD9] px-4 py-2.5 text-sm text-[#8A5F14]">
           {message}
         </p>
       )}
