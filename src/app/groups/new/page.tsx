@@ -160,34 +160,34 @@ export default function NewGroupPage() {
   if (status === "created") {
     return (
       <main className="flex flex-1 flex-col items-center px-8 py-12 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10">
-          <HugeiconsIcon icon={CheckmarkBadge01Icon} size={28} className="text-indigo" />
+        <span className="flex h-14 w-14 items-center justify-center rounded-[14px] bg-primary/10">
+          <HugeiconsIcon icon={CheckmarkBadge01Icon} size={28} className="text-primary" />
         </span>
-        <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight text-indigo">
+        <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight text-text-primary">
           {name.trim()} is live
         </h1>
-        <p className="mt-2 max-w-xs font-mono text-sm text-indigo">
+        <p className="mt-2 max-w-xs font-display text-sm font-semibold tabular-nums text-text-secondary">
           {symbol}
           {Number(amount).toLocaleString()} {currency} · {frequency}
         </p>
-        <p className="mt-1 max-w-xs text-sm leading-6 text-indigo/60">
+        <p className="mt-1 max-w-xs text-sm leading-6 text-text-secondary">
           {threshold}% vote to admit · you are member 1.
         </p>
-        <p className="mt-1 max-w-xs text-sm leading-6 text-indigo/60">
+        <p className="mt-1 max-w-xs text-sm leading-6 text-text-secondary">
           Open your circle from View circles and tap Invite to share the
           join link.
         </p>
         <div className="mt-5 flex gap-3">
           <Link
             href="/groups"
-            className="rounded-full border border-indigo/10 px-6 py-2.5 text-sm font-medium text-indigo hover:bg-indigo/5"
+            className="rounded-[10px] border-[0.5px] border-border bg-white px-6 py-[13px] text-sm font-semibold text-text-primary"
           >
             View circles
           </Link>
           <button
             type="button"
             onClick={reset}
-            className="rounded-full bg-indigo px-6 py-2.5 text-sm font-medium text-paper"
+            className="rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
           >
             Create another
           </button>
@@ -196,21 +196,21 @@ export default function NewGroupPage() {
     );
   }
 
-  const labelClass = "text-sm font-medium text-indigo";
+  const labelClass = "text-sm font-medium text-text-primary";
   const inputClass =
-    "rounded-xl border border-indigo/10 bg-paper px-4 py-3 text-indigo outline-none focus:border-indigo [&>option]:bg-paper [&>option]:text-indigo";
+    "rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-text-primary outline-none focus:border-primary [&>option]:bg-surface [&>option]:text-text-primary";
 
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo/10">
-          <HugeiconsIcon icon={UserGroupIcon} size={20} className="text-indigo" />
+        <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/10">
+          <HugeiconsIcon icon={UserGroupIcon} size={20} className="text-primary" />
         </span>
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight text-indigo">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
             Create a circle
           </h1>
-          <p className="text-sm text-indigo/60">
+          <p className="text-sm text-text-secondary">
             Set the terms — the group votes the members in.
           </p>
         </div>
@@ -219,7 +219,7 @@ export default function NewGroupPage() {
       <form
         onSubmit={handleSubmit}
         noValidate
-        className="flex flex-col gap-5 rounded-2xl border border-indigo/10 bg-paper p-5"
+        className="flex flex-col gap-5 rounded-[14px] border-[0.5px] border-border bg-surface p-5"
       >
         <div className="flex flex-col gap-1.5">
           <label htmlFor="group-name" className={labelClass}>
@@ -232,13 +232,13 @@ export default function NewGroupPage() {
             placeholder="e.g. Lagos Market Women"
             className={inputClass}
           />
-          {errors.name && <p className="text-sm text-indigo">{errors.name}</p>}
+          {errors.name && <p className="text-sm font-medium text-danger">{errors.name}</p>}
         </div>
 
         <div className="flex flex-col gap-1.5">
           <label htmlFor="group-desc" className={labelClass}>
             Description{""}
-            <span className="font-normal text-indigo/50">(optional)</span>
+            <span className="font-normal text-text-secondary">(optional)</span>
           </label>
           <textarea
             id="group-desc"
@@ -249,7 +249,7 @@ export default function NewGroupPage() {
             className={inputClass}
           />
           {errors.description && (
-            <p className="text-sm text-indigo">{errors.description}</p>
+            <p className="text-sm font-medium text-danger">{errors.description}</p>
           )}
         </div>
 
@@ -258,19 +258,19 @@ export default function NewGroupPage() {
             <label htmlFor="group-amount" className={labelClass}>
               Contribution per cycle
             </label>
-            <div className="flex items-center rounded-xl border border-indigo/10 bg-paper focus-within:border-indigo">
-              <span className="pl-4 font-medium text-indigo/60">{symbol}</span>
+            <div className="flex items-center rounded-[10px] border-[0.5px] border-border bg-surface focus-within:border-primary">
+              <span className="pl-4 font-medium text-text-secondary">{symbol}</span>
               <input
                 id="group-amount"
                 inputMode="decimal"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="5,000"
-                className="w-full rounded-xl bg-transparent px-2 py-3 font-mono text-indigo outline-none"
+                className="w-full rounded-[10px] bg-transparent px-2 py-3 font-display font-semibold tabular-nums text-text-primary outline-none"
               />
             </div>
             {errors.amount && (
-              <p className="text-sm text-indigo">{errors.amount}</p>
+              <p className="text-sm font-medium text-danger">{errors.amount}</p>
             )}
           </div>
 
@@ -290,7 +290,7 @@ export default function NewGroupPage() {
                 </option>
               ))}
             </select>
-            <p className="text-xs text-indigo/50">Locked once members join.</p>
+            <p className="text-xs text-text-secondary">Locked once members join.</p>
           </div>
         </div>
 
@@ -300,10 +300,10 @@ export default function NewGroupPage() {
             {(["weekly", "monthly"] as const).map((option) => (
               <label
                 key={option}
-                className={`flex-1 cursor-pointer rounded-xl border px-4 py-3 text-center text-sm capitalize ${
+                className={`flex-1 cursor-pointer rounded-[10px] border-[0.5px] px-4 py-3 text-center text-sm capitalize ${
                   frequency === option
-                    ? "border-indigo bg-indigo/5 font-medium text-indigo"
-                    : "border-indigo/10 text-indigo/60"
+                    ? "border-primary bg-primary/5 font-medium text-text-primary"
+                    : "border-border text-text-secondary"
                 }`}
               >
                 <input
@@ -323,7 +323,7 @@ export default function NewGroupPage() {
         <div className="flex flex-col gap-2">
           <label htmlFor="group-threshold" className={labelClass}>
             Votes needed to admit a member —{""}
-            <span className="font-mono text-indigo">
+            <span className="font-display font-semibold tabular-nums text-text-primary">
               {threshold}%
             </span>
           </label>
@@ -335,23 +335,23 @@ export default function NewGroupPage() {
             step={1}
             value={threshold}
             onChange={(e) => setThreshold(Number(e.target.value))}
-            className="accent-indigo"
+            className="accent-primary"
           />
-          <p className="text-xs text-indigo/50">
+          <p className="text-xs text-text-secondary">
             In a circle of 5, {threshold}% means{""}
             {Math.ceil((threshold / 100) * 5)} yes-votes to let someone in.
           </p>
           {errors.threshold && (
-            <p className="text-sm text-indigo">{errors.threshold}</p>
+            <p className="text-sm font-medium text-danger">{errors.threshold}</p>
           )}
         </div>
 
         {status === "needs-login" && (
-          <p className="rounded-xl bg-gold/15 px-4 py-3 text-sm text-indigo">
+          <p className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm text-[#8A5F14]">
             Everything above checks out —{""}
             <Link
               href="/login?next=/groups/new"
-              className="font-medium text-indigo underline"
+              className="font-medium text-text-primary underline"
             >
               log in
             </Link>{""}
@@ -359,7 +359,7 @@ export default function NewGroupPage() {
           </p>
         )}
         {submitError && (
-          <p className="rounded-xl bg-gold/15 px-4 py-3 text-sm text-indigo">
+          <p className="rounded-[10px] bg-[#F3E1E0] px-4 py-3 text-sm text-[#8A2A21]">
             {submitError}
           </p>
         )}
@@ -367,7 +367,7 @@ export default function NewGroupPage() {
         <button
           type="submit"
           disabled={saving}
-          className="flex items-center justify-center gap-2 rounded-full bg-indigo px-6 py-3 text-sm font-semibold text-paper hover:bg-indigo-hover disabled:opacity-60"
+          className="flex items-center justify-center gap-2 rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
         >
           {saving ? "Saving…" : "Create circle"}
           {!saving && <HugeiconsIcon icon={ArrowRight01Icon} size={18} />}

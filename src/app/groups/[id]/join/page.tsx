@@ -58,17 +58,17 @@ export default async function JoinPage({
 
   return (
     <main className="flex flex-1 flex-col items-center px-8 py-12 text-center">
-      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo/10">
+      <span className="flex h-14 w-14 items-center justify-center rounded-[14px] bg-primary/10">
         <HugeiconsIcon
           icon={UserGroupIcon}
           size={26}
-          className="text-indigo"
+          className="text-primary"
         />
       </span>
-      <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight text-indigo">
+      <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight text-text-primary">
         You&apos;re invited
       </h1>
-      <p className="mt-2 max-w-xs text-sm leading-6 text-indigo/60">
+      <p className="mt-2 max-w-xs text-sm leading-6 text-text-secondary">
         Someone shared this circle with you. Only people with this link can
         ask to join — and the group votes every new member in.
       </p>
@@ -76,24 +76,24 @@ export default async function JoinPage({
       <div className="mt-5 w-full max-w-xs">
         {member ? (
           <div className="flex flex-col gap-3">
-            <p className="rounded-2xl bg-indigo/10 px-4 py-3 text-sm text-indigo">
+            <p className="rounded-[10px] bg-[#E0ECE9] px-4 py-3 text-sm text-[#1E5A4E]">
               You&apos;re already a member of this circle.
             </p>
             <Link
               href={`/groups/${id}`}
-              className="rounded-full bg-indigo px-6 py-3 text-sm font-semibold text-paper hover:bg-indigo-hover"
+              className="rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
             >
               Open the circle
             </Link>
           </div>
         ) : myStatus === "pending" ? (
-          <p className="rounded-2xl bg-gold/15 px-4 py-3 text-sm leading-6 text-indigo">
+          <p className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm leading-6 text-[#8A5F14]">
             Request sent — the circle is still voting. Someone from the
             group will tell you the outcome.
           </p>
         ) : myStatus === "rejected" ? (
           <div className="flex flex-col gap-3">
-            <p className="rounded-2xl bg-gold/15 px-4 py-3 text-sm leading-6 text-indigo">
+            <p className="rounded-[10px] bg-[#F3E1E0] px-4 py-3 text-sm leading-6 text-[#8A2A21]">
               The circle voted not to admit you this time. If that was a
               mistake, you can ask once more — it starts a fresh vote.
             </p>
