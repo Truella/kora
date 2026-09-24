@@ -8,7 +8,7 @@ import ConfirmingBanner from "./ConfirmingBanner";
 import InviteButton from "./InviteButton";
 import VoteButtons from "./VoteButtons";
 import ScheduleGenerator from "./ScheduleGenerator";
-import { RevealLi } from "../../Reveal";
+import { RevealLi } from "../../../Reveal";
 import LedgerFeed from "../../activity/LedgerFeed";
 import { getLedgerEvents } from "@/lib/ledger";
 

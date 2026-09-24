@@ -2,7 +2,7 @@ import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserGroupIcon, Add01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
-import { RevealLi } from "../Reveal";
+import { RevealLi } from "../../Reveal";
 
 export const metadata = { title: "Circles" };
 
