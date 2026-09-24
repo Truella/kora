@@ -32,7 +32,7 @@ function useSessionUser() {
   return user;
 }
 
-function Nav({ signedIn, ready }: { signedIn: boolean; ready: boolean }) {
+function Nav({ signedIn }: { signedIn: boolean }) {
   return (
     <nav className="sticky top-0 z-20 border-b border-border bg-bg/90 backdrop-blur">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-4 py-3">
@@ -58,7 +58,7 @@ function Nav({ signedIn, ready }: { signedIn: boolean; ready: boolean }) {
           </Link>
         </div>
         <div className="flex items-center gap-2">
-          {!ready ? null : signedIn ? (
+          {signedIn ? (
             <motion.span whileTap={{ scale: 0.97 }} className="inline-flex">
               <Link
                 href="/home"
@@ -172,7 +172,7 @@ export default function Landing() {
 
   return (
     <div className="flex flex-1 flex-col bg-bg">
-      <Nav signedIn={signedIn} ready={user !== undefined} />
+      <Nav signedIn={signedIn} />
 
       {/* Hero */}
       <header className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 pb-14 pt-10 lg:flex-row lg:items-center lg:pt-16">
