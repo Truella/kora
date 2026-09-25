@@ -10,6 +10,9 @@ import {
   UserMultipleIcon,
 } from "@hugeicons/core-free-icons";
 import InviteByPhone from "./InviteByPhone";
+// Shares the grid tile's hover/focus treatment with its three siblings. A
+// `<button>`, not an `<a>`, so it reuses the class rather than the component.
+import { ACTION_TILE } from "./TurnViews";
 
 // The single entry point for inviting. One CTA opens a custom dropdown with
 // the two paths side by side: anonymous link (works before an account
@@ -79,7 +82,7 @@ export default function InviteMenu({
           aria-haspopup="menu"
           className={
             grid
-              ? "flex w-full flex-col items-center gap-1.5 rounded-[14px] border-[0.5px] border-border bg-surface p-3 text-center transition-colors hover:bg-black/[0.02]"
+              ? ACTION_TILE
               : "inline-flex items-center gap-2 rounded-[10px] border-[0.5px] border-border bg-white px-4 py-2 text-sm font-semibold text-text-primary"
           }
         >

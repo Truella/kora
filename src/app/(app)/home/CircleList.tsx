@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { HomeCircle, HomeSnapshot } from "@/lib/home";
-import { collectPositionLabel } from "@/lib/rotation";
+import { collectTurnLabel } from "@/lib/rotation";
 import ProgressBar from "./ProgressBar";
 import SectionHead from "./SectionHead";
 import CircleAttentionTooltip from "./CircleAttentionTooltip";
@@ -42,14 +42,10 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
   const isCompleted = circle.status === "completed";
   // Your position in the rotation: only meaningful while the circle is live
   // and scheduled. Paused shows the halted panel, completed shows history.
-  // Gated on the label itself rather than on the raw fields, so a position
-  // that cannot be stated honestly (slot outside the roster, after a
-  // departure left a gap) hides the whole block instead of leaving an empty
-  // cell beside a dangling "· date".
-  const positionLabel = collectPositionLabel(
-    circle.myRoundNumber,
-    circle.rotationTotal,
-  );
+  // Gated on the label itself rather than the raw field, so an unstatable
+  // position hides the whole block rather than leaving an empty cell beside a
+  // dangling "· date".
+  const positionLabel = collectTurnLabel(circle.myRoundNumber);
   const showPosition =
     !circle.awaitingSchedule && !isPaused && !isCompleted && !!positionLabel;
 
@@ -142,7 +138,7 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
         {showPosition && (
           <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold tabular-nums text-text-primary">
+              <p className="text-[11px] font-semibold leading-tight tabular-nums text-text-primary">
                 {positionLabel}
               </p>
               <p className="mt-0.5 text-xs text-text-secondary">
