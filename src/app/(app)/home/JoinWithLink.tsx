@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, Link2, X } from "lucide-react";
+import { ArrowRight, Link, Link2, X } from "lucide-react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,15 +52,17 @@ export default function JoinWithLink({
             <button
               type="button"
               aria-label="Join a circle with an invite link"
-              className={buttonVariants({
-                variant: "ghost",
-                className: cn(
-                  "group mb-0.5 h-11 gap-2.5 rounded-[14px] bg-surface px-3 font-semibold text-text-primary shadow-[0_6px_18px_rgba(11,38,36,0.045)] hover:bg-surface hover:shadow-[0_8px_22px_rgba(11,38,36,0.07)]",
-                  className,
-                ),
-              })}
+              className={cn(
+                buttonVariants({
+                  variant: "ghost",
+                  className: cn(
+                    "group mb-0.5 h-11 gap-2.5 rounded-[14px] bg-surface px-3 font-semibold text-text-primary shadow-[0_6px_18px_rgba(11,38,36,0.045)] hover:bg-surface hover:shadow-[0_8px_22px_rgba(11,38,36,0.07)]",
+                    className,
+                  ),
+                }),
+              )}
             >
-              <Link2
+              <Link
                 aria-hidden
                 className="shrink-0 text-text-secondary transition-colors duration-150 ease-out group-hover:text-primary"
                 size={16}
@@ -117,7 +119,7 @@ export default function JoinWithLink({
             className,
           )}
         >
-          <Link2 aria-hidden size={16} strokeWidth={1.9} />
+          <Link aria-hidden size={16} strokeWidth={1.9} />
           <span className="sm:hidden">Join</span>
           <span className="hidden sm:inline">Join a circle</span>
         </Button>

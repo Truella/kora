@@ -8,10 +8,9 @@ import Summary from "./Summary";
 import NextUp from "./NextUp";
 import Attention from "./Attention";
 import CircleList from "./CircleList";
-import QuickActions from "./QuickActions";
 import ActivityStrip from "./ActivityStrip";
 import ProgressPanel from "./ProgressPanel";
-import JoinWithLink from "./JoinWithLink";
+import HomeActions from "./HomeActions";
 import HomeEmptyState from "./HomeEmptyState";
 
 const GREETING = {
@@ -73,14 +72,14 @@ export default function HomeLive({ initial }: { initial: HomeSnapshot }) {
 
   return (
     <main className="flex w-full flex-1 flex-col gap-8 px-4 pt-6 sm:px-6 lg:px-0 lg:pb-10 lg:pt-8 xl:gap-10">
-      <header className="flex items-end justify-between gap-4">
-        <div>
+      <header className="flex flex-col items-start gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
           <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary lg:text-3xl">
             {GREETING[snapshot.greeting]}
             {snapshot.firstName ? `, ${snapshot.firstName}` : ""}
           </h1>
         </div>
-        <JoinWithLink variant="compact" />
+        <HomeActions />
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.5fr)_minmax(270px,0.8fr)]">
@@ -107,8 +106,6 @@ export default function HomeLive({ initial }: { initial: HomeSnapshot }) {
           )}
         </div>
       )}
-
-      <QuickActions />
     </main>
   );
 }

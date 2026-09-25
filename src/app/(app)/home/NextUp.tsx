@@ -69,7 +69,9 @@ export default function NextUp({ snapshot }: { snapshot: HomeSnapshot }) {
 }
 
 function nextUpContent(snapshot: HomeSnapshot): NextUpContent | null {
-  const nextPayout = snapshot.circles.find((circle) => circle.myPayoutLabel);
+  const nextPayout = snapshot.circles.find(
+    (circle) => circle.status !== "paused" && circle.myPayoutLabel,
+  );
   if (nextPayout) {
     return {
       eyebrow: "YOUR NEXT PAYOUT",
@@ -84,7 +86,10 @@ function nextUpContent(snapshot: HomeSnapshot): NextUpContent | null {
   }
 
   const nextContribution = snapshot.circles.find(
-    (circle) => !circle.awaitingSchedule && circle.nextDueLabel,
+    (circle) =>
+      circle.status === "active" &&
+      !circle.awaitingSchedule &&
+      circle.nextDueLabel,
   );
   if (nextContribution) {
     return {
@@ -100,7 +105,7 @@ function nextUpContent(snapshot: HomeSnapshot): NextUpContent | null {
   }
 
   const scheduleCircle = snapshot.circles.find(
-    (circle) => circle.awaitingSchedule,
+    (circle) => circle.status !== "paused" && circle.awaitingSchedule,
   );
   if (scheduleCircle) {
     return {
@@ -136,6 +141,8 @@ function nextUpContent(snapshot: HomeSnapshot): NextUpContent | null {
 
 const TONES = {
   payout: {
+    // Gold = money / payout / your turn, carried by the icon only — the card
+    // itself stays white like every other primary surface.
     surface: "border-border bg-surface",
     icon: "bg-[#F3EDDF] text-[#7A6028]",
     eyebrow: "text-text-secondary",
