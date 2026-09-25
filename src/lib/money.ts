@@ -150,6 +150,20 @@ export function daysUntil(value: string, today: CalendarDate): number {
   return Math.round((target - base) / 86_400_000);
 }
 
+/** "Tomorrow" / "Next week" / "Next month" for a future `date` column —
+ * used where the card answers "when is mine", not the exact calendar day. */
+export function relativeDayLabel(value: string, today: CalendarDate): string {
+  const diff = daysUntil(value, today);
+  if (diff <= 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff <= 7) return "Next week";
+  if (diff <= 14) return "In 2 weeks";
+  if (diff <= 21) return "In 3 weeks";
+  if (diff <= 28) return "In 4 weeks";
+  if (diff <= 62) return "Next month";
+  return formatCycleDateShort(value);
+}
+
 /** "Today" / "Yesterday" / "20 Sep" for a settled event. */
 export function settledDayLabel(
   instant: string | null,

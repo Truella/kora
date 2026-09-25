@@ -7,6 +7,7 @@ import {
   localParts,
   monthName,
   offsetForCountry,
+  relativeDayLabel,
   settledDayLabel,
   todayIn,
   utcDateOnly,
@@ -74,7 +75,7 @@ export type HomeAttention =
 export type HomeCircle = {
   groupId: string;
   name: string;
-  status: string;
+  status: "forming" | "active" | "paused" | "completed";
   currency: string;
   amountLabel: string;
   savedLabel: string;
@@ -91,6 +92,12 @@ export type HomeCircle = {
   // tiles were removed from the card because they repeated information already
   // available on the circle detail page.
   frequency: string;
+  // The member's own position in the rotation: their payout round number and
+  // the circle size. Null when the rotation has no row naming them yet (e.g.
+  // joined after every cycle ran) — the card then falls back to circle totals.
+  myRoundNumber: number | null;
+  rotationTotal: number;
+  memberCount: number;
   // Null once the round has been paid out — at that point it belongs in
   // activity as "You received", and repeating it here would be a second,
   // staler copy of the same fact.
@@ -465,9 +472,17 @@ export async function getHomeSnapshot(
   const owedByGroup = new Map<string, Owed[]>();
   const allOwed: Owed[] = [];
 
+  // Paused circles freeze: no new dues accrue while paused, so their cycles
+  // never enter the owed queue (attention + NextUp money picks derive from
+  // this queue and stay clean automatically).
+  const pausedGroupIds = new Set(
+    groups.filter((g) => g.status === "paused").map((g) => g.id),
+  );
+
   for (const cycle of cycles) {
     // Disbursed rounds are history, not a work queue.
     if (cycle.status === "completed") continue;
+    if (pausedGroupIds.has(cycle.group_id)) continue;
     const joinedDate = joinedDateByGroup.get(cycle.group_id);
     // No membership row means the caller cannot be a current member of a circle
     // RLS returned, so there is nothing to owe.
@@ -671,6 +686,7 @@ export async function getHomeSnapshot(
 
   // -------------------------------------------------------------- circles
   const circles: HomeCircle[] = groups.map((group) => {
+    const isPaused = group.status === "paused";
     const groupCycles = cyclesByGroup.get(group.id) ?? [];
     const joinedDate = joinedDateByGroup.get(group.id);
     // Enrolled = the cycles this member was actually present for. A member who
@@ -705,11 +721,16 @@ export async function getHomeSnapshot(
     // shows it when the row itself says pending.
     const payoutPending = myPayout !== null && myPayout.status !== "completed";
 
-    const nextOwed = (owedByGroup.get(group.id) ?? [])[0] ?? null;
-    const inPlay =
-      groupCycles.find(
-        (c) => c.status !== "completed" && payoutByCycle.get(c.id)?.status === "pending",
-      ) ?? null;
+    const nextOwed = isPaused
+      ? null
+      : ((owedByGroup.get(group.id) ?? [])[0] ?? null);
+    const inPlay = isPaused
+      ? null
+      : (groupCycles.find(
+          (c) =>
+            c.status !== "completed" &&
+            payoutByCycle.get(c.id)?.status === "pending",
+        ) ?? null);
     let payoutNote: string | null = null;
     if (inPlay) {
       const active = activeCountByGroup.get(group.id) ?? 0;
@@ -729,7 +750,7 @@ export async function getHomeSnapshot(
     return {
       groupId: group.id,
       name: group.name,
-      status: group.status,
+      status: group.status as HomeCircle["status"],
       currency: group.currency,
       amountLabel: formatMoney(share, group.currency),
       // Symbol included here rather than prepended in the component: this module
@@ -755,19 +776,27 @@ export async function getHomeSnapshot(
         (o) => o.days <= DUE_SOON_DAYS,
       ),
       frequency: group.frequency,
+      myRoundNumber: myCycle ? myCycle.cycle_number : null,
+      rotationTotal: groupCycles.length,
+      memberCount: activeCountByGroup.get(group.id) ?? 0,
       myPayoutLabel: payoutPending
         ? formatMoney(myPayout.amount, group.currency)
         : null,
-      myPayoutDateLabel: myCycle ? formatCycleDate(myCycle.due_date) : null,
+      myPayoutDateLabel: myCycle
+        ? relativeDayLabel(myCycle.due_date, today)
+        : null,
       href: `/groups/${group.id}`,
     };
   });
 
   // "Circles that matter most right now": anything with money due (soonest
   // first), then circles still waiting on a schedule because that needs the
-  // organizer to act, then the rest newest-first.
+  // organizer to act, then live circles at rest, then paused, then completed
+  // history last.
   circles.sort((a, b) => {
     const rank = (c: HomeCircle) => {
+      if (c.status === "completed") return 4;
+      if (c.status === "paused") return 3;
       const due = (owedByGroup.get(c.groupId) ?? [])[0];
       if (due && due.days <= DUE_SOON_DAYS) return 0;
       if (c.awaitingSchedule) return 1;
