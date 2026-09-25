@@ -86,7 +86,7 @@ export default function JoinRequestButton({
   if (state === "sent") {
     return (
       <p className="rounded-[10px] bg-[#E0ECE9] px-4 py-3 text-sm leading-6 text-[#1E5A4E]">
-        Request sent. The circle votes on new members — someone from the
+        Request sent. The circle votes on new members. Someone from the
         group will tell you the outcome.
       </p>
     );
@@ -95,7 +95,7 @@ export default function JoinRequestButton({
   if (state === "duplicate") {
     return (
       <p className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm leading-6 text-[#8A5F14]">
-        You already have a request in for this circle — the vote is still
+        You already have a request in for this circle. The vote is still
         going. Ask a member for the outcome.
       </p>
     );
@@ -104,7 +104,7 @@ export default function JoinRequestButton({
   if (state === "invalid") {
     return (
       <p className="rounded-[10px] bg-[#F3E1E0] px-4 py-3 text-sm leading-6 text-[#8A2A21]">
-        This invite link looks invalid — ask the sender for a fresh one.
+        This invite link looks invalid. Ask the sender for a fresh one.
       </p>
     );
   }

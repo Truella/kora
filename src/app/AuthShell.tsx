@@ -14,7 +14,7 @@ const DEFAULT_POINTS = [
   },
   {
     title: "Members vote on who joins",
-    body: "Invite-only circles — no public pools, strangers.",
+    body: "Invite-only circles. No public pools, no strangers.",
   },
 ];
 

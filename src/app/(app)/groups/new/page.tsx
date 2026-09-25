@@ -217,7 +217,7 @@ export default function NewGroupPage() {
             Create a circle
           </h1>
           <p className="text-sm text-text-secondary">
-            Set the terms — the group votes the members in.
+            Set the terms. The group votes the members in.
           </p>
         </div>
       </div>
@@ -294,7 +294,7 @@ export default function NewGroupPage() {
               onChange={setCurrency}
               options={CURRENCIES.map((c) => ({
                 value: c.code,
-                label: `${c.code} — ${c.label}`,
+                label: `${c.code} · ${c.label}`,
               }))}
               label="Currency"
             />
@@ -330,7 +330,7 @@ export default function NewGroupPage() {
 
         <div className="flex flex-col gap-2">
           <label htmlFor="group-threshold" className={labelClass}>
-            Votes needed to admit a member —{""}
+            Votes needed to admit a member:{" "}
             <span className="font-display font-semibold tabular-nums text-text-primary">
               {threshold}%
             </span>
@@ -356,7 +356,7 @@ export default function NewGroupPage() {
 
         {status === "needs-login" && (
           <p className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm text-[#8A5F14]">
-            Everything above checks out —{""}
+            Everything above checks out.{" "}
             <Link
               href="/login?next=/groups/new"
               className="font-medium text-text-primary underline"
