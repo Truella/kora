@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { formatCycleDateShort } from "./money";
 
 // Shared ledger shape for Day 4A. Used by the server pages for the
 // initial snapshot AND by LedgerFeed for client-side refetches, so the
@@ -38,7 +39,8 @@ function money(amount: number | string, currency: string): string {
 
 function fmtDate(value: string | null): string {
   if (!value) return "—";
-  return new Date(value).toLocaleDateString();
+  // Pinned calendar fields, never the host locale — matches home's dates.
+  return formatCycleDateShort(value);
 }
 
 type CycleJoin = {

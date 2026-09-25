@@ -103,6 +103,17 @@ export type HomeCircle = {
   // staler copy of the same fact.
   myPayoutLabel: string | null;
   myPayoutDateLabel: string | null;
+  // Current turn in flight (the inPlay cycle the payoutNote is about).
+  // Needed so the card never presents the member's *future* payout as if
+  // they were collecting now.
+  currentTurnNumber: number | null;
+  isMyTurnNow: boolean;
+  currentPotLabel: string | null;
+  currentDueLabel: string | null;
+  // True when the caller is one of the outstanding shares blocking the
+  // current payout — the note then names them ("waiting on you") instead
+  // of the anonymous "waiting on 1 member".
+  waitingOnYou: boolean;
   href: string;
 };
 
@@ -377,7 +388,7 @@ export async function getHomeSnapshot(
     openCycleIds.length
       ? supabase
           .from("contributions")
-          .select("cycle_id")
+          .select("cycle_id, member_id")
           .in("cycle_id", openCycleIds)
           .in("status", SETTLED_STATUSES)
       : Promise.resolve({ data: [], error: null }),
@@ -446,11 +457,18 @@ export async function getHomeSnapshot(
   // note compares this against *all* active members, not just the caller's
   // rows, which is why it needs its own query rather than myContributions.
   const settledCountByCycle = new Map<string, number>();
-  for (const row of settledCountRes.data ?? []) {
+  const settledMembersByCycle = new Map<string, Set<string>>();
+  for (const row of (settledCountRes.data ?? []) as {
+    cycle_id: string;
+    member_id: string;
+  }[]) {
     settledCountByCycle.set(
       row.cycle_id,
       (settledCountByCycle.get(row.cycle_id) ?? 0) + 1,
     );
+    const set = settledMembersByCycle.get(row.cycle_id) ?? new Set<string>();
+    set.add(row.member_id);
+    settledMembersByCycle.set(row.cycle_id, set);
   }
 
   // Keyed by cycle: one member has at most one contribution per cycle, and
@@ -733,6 +751,9 @@ export async function getHomeSnapshot(
             payoutByCycle.get(c.id)?.status === "pending",
         ) ?? null);
     let payoutNote: string | null = null;
+    // True when the caller still owes their share of the in-play turn.
+    // R1-enrolled: a turn due before they joined is never theirs to owe.
+    let waitingOnYou = false;
     if (inPlay) {
       const active = activeCountByGroup.get(group.id) ?? 0;
       const settled = settledCountByCycle.get(inPlay.id) ?? 0;
@@ -741,12 +762,44 @@ export async function getHomeSnapshot(
       // about — "your payout is waiting on someone" is actionable in a way
       // "a payout is waiting" is not.
       const mine = inPlay.recipient_member_id === myMemberId;
-      const subject = mine ? "Your payout" : "Payout";
-      payoutNote =
-        outstanding > 0
-          ? `${subject} waiting on ${outstanding} member${outstanding === 1 ? "" : "s"}`
-          : `${subject} ready to disburse`;
+      const settledMembers = settledMembersByCycle.get(inPlay.id);
+      const enrolledInPlay =
+        !!myMemberId && !!joinedDate && inPlay.due_date >= joinedDate;
+      waitingOnYou =
+        enrolledInPlay && !!settledMembers && !settledMembers.has(myMemberId!);
+      // Name the turn when it is not the caller's, so a blocked Turn 1 never
+      // reads as the caller's own Turn 2 payout stalling.
+      const subject = mine
+        ? "Your payout"
+        : `Turn ${inPlay.cycle_number} payout`;
+      if (outstanding > 0) {
+        if (waitingOnYou && outstanding === 1) {
+          payoutNote = mine
+            ? "Your payout waiting on you"
+            : `Turn ${inPlay.cycle_number} payout waiting on you`;
+        } else if (waitingOnYou) {
+          const others = outstanding - 1;
+          payoutNote = `${subject} waiting on you + ${others} other${others === 1 ? "" : "s"}`;
+        } else {
+          payoutNote = `${subject} waiting on ${outstanding} member${outstanding === 1 ? "" : "s"}`;
+        }
+      } else {
+        payoutNote = `${subject} ready to disburse`;
+      }
     }
+    const isMyTurnNow =
+      !!inPlay && !!myMemberId && inPlay.recipient_member_id === myMemberId;
+    const inPlayPayout = inPlay ? payoutByCycle.get(inPlay.id) : undefined;
+    const activeForPot = activeCountByGroup.get(group.id) ?? 0;
+    const currentPotLabel = inPlay
+      ? formatMoney(
+          inPlayPayout ? inPlayPayout.amount : share * activeForPot,
+          group.currency,
+        )
+      : null;
+    const currentDueLabel = inPlay
+      ? relativeDayLabel(inPlay.due_date, today)
+      : null;
 
     return {
       groupId: group.id,
@@ -786,6 +839,11 @@ export async function getHomeSnapshot(
       myPayoutDateLabel: myCycle
         ? relativeDayLabel(myCycle.due_date, today)
         : null,
+      currentTurnNumber: inPlay ? inPlay.cycle_number : null,
+      isMyTurnNow,
+      currentPotLabel,
+      currentDueLabel,
+      waitingOnYou,
       href: `/groups/${group.id}`,
     };
   });
