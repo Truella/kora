@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  cloneElement,
   createContext,
   isValidElement,
   useCallback,
@@ -11,7 +10,6 @@ import {
   useRef,
   useState,
   type ComponentProps,
-  type ReactElement,
   type ReactNode,
 } from "react";
 import {
@@ -134,24 +132,32 @@ function MorphingPopoverTrigger({
   }
 
   if (asChild && isValidElement(children)) {
-    const child = children as ReactElement<{
-      "aria-controls"?: string;
-      "aria-expanded"?: boolean;
-      "aria-haspopup"?: "dialog" | true;
-    }>;
+    // Canonical morph pattern: the layoutId lives directly on the button
+    // itself, not on a wrapper div — so the button rect morphs into the
+    // panel rect instead of a wrapper flying away. Our asChild usage is
+    // always a native <button>, so motion.button preserves every child prop
+    // (className, type, aria-label, children) while adding the morph.
+    const childProps = children.props as {
+      children?: ReactNode;
+      className?: string;
+      onClick?: (event: React.MouseEvent<HTMLElement>) => void;
+      [key: string]: unknown;
+    };
 
     return (
-      <motion.div
-        key={context.uniqueId}
+      <motion.button
+        {...childProps}
+        onClick={(event) => {
+          childProps.onClick?.(event);
+          context.open();
+        }}
         layoutId={`popover-trigger-${context.uniqueId}`}
-        onClick={context.open}
-      >
-        {cloneElement(child, {
-          "aria-controls": `popover-content-${context.uniqueId}`,
-          "aria-expanded": context.isOpen,
-          "aria-haspopup": "dialog",
-        })}
-      </motion.div>
+        className={childProps.className}
+        key={context.uniqueId}
+        aria-expanded={context.isOpen}
+        aria-controls={`popover-content-${context.uniqueId}`}
+        aria-haspopup="dialog"
+      />
     );
   }
 

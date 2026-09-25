@@ -65,7 +65,7 @@ export default function Summary({ snapshot }: { snapshot: HomeSnapshot }) {
             {totals.monthCount}
           </p>
           <p className="mt-0.5 text-xs text-white/60">
-            contribution{totals.monthCount === 1 ? "" : "s"} in {totals.monthName}
+            contribution{totals.monthCount === 1 ? "" : "s"} this month
           </p>
         </div>
       </div>
