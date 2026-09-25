@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import { MembersPanel, type MemberRow } from "../TurnViews";
 
@@ -69,6 +71,7 @@ export default async function MembersPage({
   const circleRows = (circleMembers ?? []) as CircleMemberRow[];
 
   let profileNames = new Map<string, string>();
+  let profileAvatars = new Map<string, string>();
   if (circleRows.length > 0) {
     const needIds = [
       ...new Set([
@@ -80,13 +83,18 @@ export default async function MembersPage({
     ];
     const { data: mprofs } = await supabase
       .from("profiles")
-      .select("id, full_name")
+      .select("id, full_name, avatar_url")
       .in("id", needIds);
-    profileNames = new Map(
-      ((mprofs ?? []) as { id: string; full_name: string }[]).map((p) => [
-        p.id,
-        p.full_name,
-      ]),
+    const profRows = (mprofs ?? []) as {
+      id: string;
+      full_name: string;
+      avatar_url: string | null;
+    }[];
+    profileNames = new Map(profRows.map((p) => [p.id, p.full_name]));
+    profileAvatars = new Map(
+      profRows
+        .filter((p) => p.avatar_url)
+        .map((p) => [p.id, p.avatar_url as string]),
     );
   }
 
@@ -162,6 +170,7 @@ export default async function MembersPage({
       id: m.id,
       initial: (name.trim().charAt(0) || "·").toUpperCase(),
       name,
+      avatarUrl: profileAvatars.get(m.user_id) ?? null,
       you: !!user && m.user_id === user.id,
       next: m.id === nextRecipientId,
       role,
@@ -180,9 +189,9 @@ export default async function MembersPage({
       <div>
         <Link
           href={`/groups/${group.id}`}
-          className="rounded-[10px] border-[0.5px] border-border bg-white px-3 py-1.5 text-sm font-semibold text-text-primary"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-text-secondary hover:text-text-primary"
         >
-          ← Back to circle
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={16} /> Back to circle
         </Link>
         <h1 className="mt-3 font-display text-2xl font-semibold capitalize tracking-tight text-text-primary">
           {group.name}

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { RevealLi } from "../../../Reveal";
@@ -187,6 +188,9 @@ export type MemberRow = {
   you?: boolean;
   next?: boolean;
   role: string;
+  // Profile photo. Null when the member has none — the initial wash
+  // covers it.
+  avatarUrl?: string | null;
   // Receive slot in the rotation.
   slot: number;
   // This turn's share state. Null pre-schedule, when per-turn states
@@ -230,9 +234,14 @@ export function MembersPanel({
   return (
     <section className="overflow-hidden rounded-[20px] border-[0.5px] border-border bg-surface">
       <div className="px-4 pb-1 pt-4">
-        <h2 className="font-display text-base font-semibold tracking-tight text-text-primary">
-          Members · {count}
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="font-display text-base font-semibold tracking-tight text-text-primary">
+            Members
+          </h2>
+          <span className="rounded-full bg-black/[0.05] px-2 py-px font-mono text-[11px] font-semibold tabular-nums text-text-secondary">
+            {count}
+          </span>
+        </div>
         {note ? (
           <p className="mt-0.5 text-[11px] text-text-secondary">{note}</p>
         ) : null}
@@ -245,11 +254,21 @@ export function MembersPanel({
               key={m.id}
               className="flex items-center gap-3 px-2 py-2.5"
             >
-              <span
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold ${tone ? tone.tone : "bg-black/[0.04] text-text-secondary"}`}
-              >
-                {m.initial}
-              </span>
+              {m.avatarUrl ? (
+                <Image
+                  src={m.avatarUrl}
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="h-8 w-8 shrink-0 rounded-full object-cover"
+                />
+              ) : (
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold ${tone ? tone.tone : "bg-black/[0.04] text-text-secondary"}`}
+                >
+                  {m.initial}
+                </span>
+              )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-text-primary">
                   {m.name}
@@ -292,13 +311,23 @@ export function MembersPanel({
   );
 }
 
-// Compressed turn rows for history + upcoming. Keeps the `cycle-<id>`
-// anchor so /home attention deep-links land.
+// Compressed rows for the upcoming turns. Keeps the `cycle-<id>` anchor so
+// /home attention deep-links land.
+//
+// Upcoming only. Completed turns are not listed: `LedgerFeed` on the detail
+// page, `/activity` and the home activity strip already carry every settled
+// contribution and payout with its turn number and date, so a "Previous
+// turns" list was a second copy of the same ledger in a layout that said it
+// worse. The rows themselves are untouched in the database — the detail page
+// just stopped re-telling them.
+//
+// No per-row state chip either. The section is already headed "Upcoming
+// turns", so an "Upcoming" pill on every row repeated its own container. The
+// share line is the only per-turn state here, and it is the caller's own.
 export function TurnRow({
   anchorId,
   turnNumber,
   meta,
-  done,
   shareLine,
   action,
   delay = 0.05,
@@ -306,7 +335,6 @@ export function TurnRow({
   anchorId: string;
   turnNumber: number;
   meta: ReactNode;
-  done: boolean;
   shareLine: ReactNode;
   action?: ReactNode;
   delay?: number;
@@ -317,25 +345,16 @@ export function TurnRow({
       delay={delay}
       className={`${ANCHOR_MT} flex flex-col gap-2 rounded-[14px] border-[0.5px] border-border bg-surface p-4`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-display text-base font-semibold text-text-primary">
-            Turn {turnNumber}
-          </p>
-          <p className="mt-0.5 text-xs tabular-nums leading-5 text-text-secondary">
-            {meta}
-          </p>
-        </div>
-        {done ? (
-          <SettledChip label="✓ Complete" />
-        ) : (
-          <span className="inline-flex shrink-0 items-center rounded-full bg-[#F8EDD9] px-2.5 py-0.5 text-[11px] font-semibold text-[#8A5F14]">
-            Upcoming
-          </span>
-        )}
+      <div className="min-w-0">
+        <p className="font-display text-base font-semibold text-text-primary">
+          Turn {turnNumber}
+        </p>
+        <p className="mt-0.5 text-xs tabular-nums leading-5 text-text-secondary">
+          {meta}
+        </p>
       </div>
       <div className="border-t border-border pt-2.5 text-xs leading-5 text-text-secondary">
-        <p>{shareLine}</p>
+        {shareLine}
       </div>
       {action}
     </RevealLi>
