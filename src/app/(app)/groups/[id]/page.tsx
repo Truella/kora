@@ -580,6 +580,7 @@ export default async function GroupDetailPage({
         : paymentSentence;
     return (
       <TurnRow
+        key={cycle.id}
         anchorId={`cycle-${cycle.id}`}
         turnNumber={cycle.cycle_number}
         meta={meta}
