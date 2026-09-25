@@ -13,6 +13,21 @@ const SYMBOLS: Record<string, string> = {
   UGX: "USh",
 };
 
+// Same explicit states as the home circle card (CircleList STATUS_BADGE).
+const STATUS_LABEL: Record<string, string> = {
+  forming: "Forming",
+  active: "Active",
+  paused: "Paused",
+  completed: "Completed",
+};
+
+const STATUS_BADGE: Record<string, string> = {
+  forming: "bg-[#F8EDD9] text-[#8A5F14]",
+  active: "bg-[#E0ECE9] text-primary",
+  paused: "bg-[#F8EDD9] text-[#8A5F14]",
+  completed: "bg-black/[0.04] text-text-secondary",
+};
+
 export default async function GroupsPage() {
   const supabase = await createClient();
   // RLS ("view groups you belong to") returns only the caller's circles.
@@ -85,10 +100,15 @@ export default async function GroupsPage() {
               <p className="truncate font-display text-lg font-semibold text-text-primary">
                 {group.name}
               </p>
-              <p className="font-display text-xs font-semibold tabular-nums text-text-secondary">
+              <p className="mt-1 flex flex-wrap items-center gap-2 font-display text-xs font-semibold tabular-nums text-text-secondary">
                 {SYMBOLS[group.currency] ?? group.currency}
                 {Number(group.contribution_amount).toLocaleString()} ·{""}
-                {group.frequency} · {group.status}
+                {group.frequency}
+                <span
+                  className={`inline-flex items-center rounded-full px-2 py-px text-[11px] font-semibold ${STATUS_BADGE[group.status] ?? STATUS_BADGE.active}`}
+                >
+                  {STATUS_LABEL[group.status] ?? group.status}
+                </span>
               </p>
             </div>
             </Link>

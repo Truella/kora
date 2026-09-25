@@ -33,6 +33,21 @@ const BADGE: Record<string, string> = {
   skipped: "bg-[#EFEDE4] text-[#5B645E]",
 };
 
+// Explicit circle states, shared with the home card + circles list.
+const STATUS_LABEL: Record<string, string> = {
+  forming: "Forming",
+  active: "Active",
+  paused: "Paused",
+  completed: "Completed",
+};
+
+const STATUS_BADGE: Record<string, string> = {
+  forming: "bg-[#F8EDD9] text-[#8A5F14]",
+  active: "bg-[#E0ECE9] text-[#1E5A4E]",
+  paused: "bg-[#F8EDD9] text-[#8A5F14]",
+  completed: "bg-black/[0.04] text-text-secondary",
+};
+
 // Anchors the /home attention queue deep-links to. The scroll margin keeps the
 // sticky app header from covering the row it just scrolled to.
 const ANCHOR_MT = "scroll-mt-[calc(var(--app-header-h)+1rem)]";
@@ -351,7 +366,7 @@ export default async function GroupDetailPage({
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-4 px-4 py-6">
+    <main className="flex flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       {confirming && <ConfirmingBanner groupId={group.id} />}
 
       {member && overdue.length > 0 && (
@@ -384,8 +399,13 @@ export default async function GroupDetailPage({
           <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
             {group.name}
           </h1>
-          <p className="font-display text-xs font-semibold tabular-nums text-text-secondary">
-            {amountLabel} {group.currency} · {group.frequency} · {group.status}
+          <p className="mt-1 flex flex-wrap items-center gap-2 font-display text-xs font-semibold tabular-nums text-text-secondary">
+            {amountLabel} {group.currency} · {group.frequency}
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-px text-[11px] font-semibold ${STATUS_BADGE[group.status] ?? STATUS_BADGE.active}`}
+            >
+              {STATUS_LABEL[group.status] ?? group.status}
+            </span>
           </p>
         </div>
         {member && user && (

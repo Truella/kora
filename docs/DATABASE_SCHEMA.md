@@ -112,7 +112,7 @@ create table public.groups (
   currency text not null default 'NGN'
     check (currency in ('NGN', 'GHS', 'KES', 'UGX')),
   frequency text not null check (frequency in ('weekly','monthly')),  vote_threshold numeric(3,2) not null default 0.60,
-  status text not null default 'forming' check (status in ('forming','active','completed')),
+  status text not null default 'forming' check (status in ('forming','active','paused','completed')),
   created_at timestamptz not null default now()
 );
 ```
@@ -397,7 +397,7 @@ using (created_by = auth.uid());
 
 Locked by migration `20260923140000_lock_group_terms.sql`: `groups_currency_allowed` check (`NGN`/`GHS`/`KES`/`UGX` only) plus the `freeze_group_terms` trigger — `contribution_amount`/`currency` updates raise once the group is no longer `forming` or a second active member exists. This is what the creation form promises ("Locked once members join"); without it a mid-rotation switch would break the payment webhook's amount/currency re-check for in-flight contributions.
 
-Locked further by migration `20260923160000_lock_group_governance.sql`: the `lock_group_governance` trigger freezes `vote_threshold`/`frequency` under the same gate (active or second member joined), and `status` may only move forward (`forming` → `active` → `completed`, so the generator's flip still works). Name/description stay editable always.
+Locked further by migration `20260923160000_lock_group_governance.sql`: the `lock_group_governance` trigger freezes `vote_threshold`/`frequency` under the same gate (active or second member joined), and `status` follows `forming → active ↔ paused → completed` (completed terminal, so the generator's flip still works). Name/description stay editable always. Migration `20260925120000_circle_pause_states.sql` adds the `paused` state: while paused the app freezes dues (no new owed rows, excluded from attention/NextUp) and the card shows a "Paused — contributions halted" panel instead of the progress bar.
 
 ### group_members
 
