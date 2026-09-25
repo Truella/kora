@@ -121,9 +121,11 @@ export default function InviteByPhone({
       }
     >
       <div>
+      {!bare && (
         <h2 className="font-display text-base font-semibold text-text-primary">
           Invite by phone number
         </h2>
+      )}
       </div>
 
       {state === "sent" ? (
