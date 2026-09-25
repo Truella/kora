@@ -17,7 +17,7 @@ export default async function ActivityPage() {
     : { due: [], history: [] };
 
   return (
-    <main className="flex flex-1 flex-col gap-4 px-4 py-6">
+    <main className="flex flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
         Activity
       </h1>

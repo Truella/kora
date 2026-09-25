@@ -127,7 +127,7 @@ export default function AppNav() {
         aria-label="Primary"
         className="fixed inset-x-0 bottom-0 z-10 order-2 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
       >
-        <ul className="mx-auto grid max-w-md grid-cols-4">
+        <ul className="grid grid-cols-4">
           {TABS.map(({ href, label, icon }) => {
             const active = isActive(pathname, href);
             return (
