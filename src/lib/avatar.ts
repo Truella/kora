@@ -55,9 +55,9 @@ export async function uploadAvatar(
   const { error: uploadError } = await supabase.storage
     .from(AVATAR_BUCKET)
     .upload(path, file, { contentType: file.type, upsert: false });
-  if (uploadError) throw new Error("Couldn't upload that photo — try again.");
+  if (uploadError) throw new Error("Couldn't upload that photo. Try again.");
 
   const { data } = supabase.storage.from(AVATAR_BUCKET).getPublicUrl(path);
-  if (!data.publicUrl) throw new Error("Couldn't upload that photo — try again.");
+  if (!data.publicUrl) throw new Error("Couldn't upload that photo. Try again.");
   return data.publicUrl;
 }

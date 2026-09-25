@@ -132,7 +132,7 @@ function VerifyForm() {
         )}
         {resent && (
           <p className="mt-3 text-sm font-medium text-success">
-            New code sent — give it a minute to arrive.
+            New code sent. Give it a minute to arrive.
           </p>
         )}
 

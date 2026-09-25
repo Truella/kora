@@ -60,7 +60,7 @@ function OnboardingForm() {
 
   function continueFromName() {
     if (name.trim().length < 2) {
-      setError("Tell us your name — circle members will see it.");
+      setError("Tell us your name. Circle members will see it.");
       return;
     }
     setError(null);
@@ -71,7 +71,7 @@ function OnboardingForm() {
     const trimmed = name.trim();
     if (trimmed.length < 2) {
       setStep(0);
-      setError("Tell us your name — circle members will see it.");
+      setError("Tell us your name. Circle members will see it.");
       return;
     }
     setSaving(true);
@@ -107,7 +107,7 @@ function OnboardingForm() {
       } catch (e) {
         setSaving(false);
         setAvatarError(
-          e instanceof Error ? e.message : "Couldn't upload that photo — try again.",
+          e instanceof Error ? e.message : "Couldn't upload that photo. Try again.",
         );
         setStep(0);
         return;
@@ -135,7 +135,7 @@ function OnboardingForm() {
     <AuthShell
       kicker="Onboarding"
       title="You're in."
-      intro="Three quick steps — this is the profile your circle members will see."
+      intro="Three quick steps. This is the profile your circle members will see."
     >
       <div className="flex items-center gap-2">
         {STEP_LABELS.map((label, i) => (
