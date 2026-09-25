@@ -48,7 +48,7 @@ function MockConfirm() {
       aria-hidden
       className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white"
     >
-      Confirm receipt
+      Confirm money collected
       <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
     </span>
   );
@@ -78,12 +78,12 @@ const PAID = (
 );
 const PENDING = (
   <p className="text-xs leading-5 text-white/70">
-    Pending · due Tue, 30 Sep — pay from the card above.
+    Pending · due Tue, 30 Sep. Pay from the card above.
   </p>
 );
 const LATE = (
   <p className="text-xs font-medium text-[#F2B8B5]">
-    Paid late — it arrived after the due date, so your trust score dropped.
+    Paid late. It arrived after the due date, so your trust score dropped.
   </p>
 );
 
@@ -130,17 +130,17 @@ export default function CircleDemoPage() {
           Circle states catalog
         </h1>
         <p className="mt-1 text-sm text-text-secondary">
-          Every state of the circle workspace through the real components —
-          mock data, buttons inert.
+          Every state of the circle workspace through the real components.
+          Mock data, buttons inert.
         </p>
       </div>
 
-      <Scenario index="01" title="Share due — pay event + pending hero">
+      <Scenario index="01" title="Share due · pay event + pending hero">
         <EventCard
           tone="gold"
           eyebrow="Your turn to pay"
           title="Your ₦5,700 share · Turn 1"
-          sub="Due Tue, 30 Sep — pay now, late payments lower your trust score."
+          sub="Due Tue, 30 Sep. Pay now, late payments lower your trust score."
           action={<MockPay label="Pay your ₦5,700 share" />}
         />
         <TurnHero
@@ -159,7 +159,7 @@ export default function CircleDemoPage() {
         />
       </Scenario>
 
-      <Scenario index="02" title="Paid — waiting on others, no event">
+      <Scenario index="02" title="Paid · waiting on others, no event">
         <TurnHero
           anchorId="demo-waiting"
           turnNumber={1}
@@ -176,12 +176,12 @@ export default function CircleDemoPage() {
         />
       </Scenario>
 
-      <Scenario index="03" title="Payout ready — confirm event + full bar">
+      <Scenario index="03" title="Payout ready · confirm event + full bar">
         <EventCard
           tone="teal"
-          eyebrow="Your payout is ready"
-          title="Pot ₦11,400 · 2 shares · Turn 1"
-          sub="Every share is in — confirming releases the pot and settles the turn."
+          eyebrow="Everyone has paid"
+          title="Turn 1: ₦11,400 is ready for you."
+          sub="Everyone has paid. Confirm that you collected the money to complete this turn."
           action={
             <div className="flex justify-end">
               <MockConfirm />
@@ -204,7 +204,7 @@ export default function CircleDemoPage() {
         />
       </Scenario>
 
-      <Scenario index="04" title="Received — settled hero">
+      <Scenario index="04" title="Received · settled hero">
         <TurnHero
           anchorId="demo-received"
           turnNumber={1}
@@ -266,7 +266,7 @@ export default function CircleDemoPage() {
           receiverLabel="Your turn"
           receiverAmount="₦11,400"
           receiverHighlight
-          receiverSub="Payout failed — contact the organizer"
+          receiverSub="Payout failed. Contact the organizer"
           settled={2}
           expected={2}
         />
@@ -277,7 +277,7 @@ export default function CircleDemoPage() {
           <TurnRow
             anchorId="demo-upcoming"
             turnNumber={2}
-            meta="Pot ₦11,400 · 2 shares · Due Tue, 7 Oct · Olagunju Alameen receives"
+            meta="2 people will pay ₦5,700 each. Olagunju Alameen will receive ₦11,400 on Tue, 7 Oct."
             done={false}
             shareLine="Your share · Pending · Payout pending"
             action={<MockCompactPay label="Pay ₦5,700" />}
@@ -285,14 +285,14 @@ export default function CircleDemoPage() {
           <TurnRow
             anchorId="demo-past"
             turnNumber={1}
-            meta="Pot ₦5,700 · 1 share · Due Tue, 23 Sep · You received"
+            meta="1 person paid ₦5,700. You received ₦5,700 on Tue, 23 Sep."
             done
             shareLine="Your share ✓ · Payout ✓"
           />
         </ul>
       </Scenario>
 
-      <Scenario index="09" title="Members — paid, pending, late, new">
+      <Scenario index="09" title="Members · paid, pending, late, new">
         <MembersPanel
           count={3}
           note="New members join by member vote"
@@ -306,7 +306,7 @@ export default function CircleDemoPage() {
             Waiting for schedule
           </p>
           <p className="mt-1 text-sm leading-6 text-text-secondary">
-            The payout rotation has not been generated yet — the organizer
+            The payout rotation has not been generated yet. The organizer
             starts it once membership settles.
           </p>
         </div>

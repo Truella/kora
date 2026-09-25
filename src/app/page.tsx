@@ -1,7 +1,7 @@
 import Landing from "./Landing";
 
 export const metadata = {
-  title: "Kora — Save together. Keep everyone in the loop.",
+  title: "Kora · Save together. Keep everyone in the loop.",
 };
 
 // / is the public landing page for everyone — guests and signed-in members
