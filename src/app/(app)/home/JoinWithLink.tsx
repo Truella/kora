@@ -27,12 +27,15 @@ const POPOVER_TRANSITION = {
   ease: "easeOut",
 } as const;
 
-// One join-link flow with two responsive presentations: a non-modal morphing
-// popover on tablet/desktop and a focused bottom sheet on mobile.
+// One join-link flow with two responsive presentations: a morphing popover on
+// tablet/desktop (button morphs into the panel anchored at its own top-right,
+// so it expands in place) and a full-width bottom sheet on mobile.
 export default function JoinWithLink({
   variant = "card",
+  className,
 }: {
   variant?: "card" | "compact";
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const compact = variant === "compact";
@@ -51,8 +54,10 @@ export default function JoinWithLink({
               aria-label="Join a circle with an invite link"
               className={buttonVariants({
                 variant: "ghost",
-                className:
+                className: cn(
                   "group mb-0.5 h-11 gap-2.5 rounded-[14px] bg-surface px-3 font-semibold text-text-primary shadow-[0_6px_18px_rgba(11,38,36,0.045)] hover:bg-surface hover:shadow-[0_8px_22px_rgba(11,38,36,0.07)]",
+                  className,
+                ),
               })}
             >
               <Link2
@@ -70,7 +75,7 @@ export default function JoinWithLink({
           <MorphingPopoverContent
             aria-describedby="desktop-join-popover-description"
             aria-labelledby="desktop-join-popover-title"
-            className="right-0 top-[calc(100%+10px)] w-[min(390px,calc(100vw-2rem))] origin-top-right p-0"
+            className="right-0 top-0 w-[min(390px,calc(100vw-2rem))] origin-top-right p-0"
           >
             <div className="p-5">
               <div>
@@ -107,7 +112,10 @@ export default function JoinWithLink({
           aria-label="Join a circle with an invite link"
           aria-haspopup="dialog"
           aria-expanded={open}
-          className="mb-0.5 h-11 gap-2.5 rounded-[14px] bg-surface px-3 font-semibold text-text-primary shadow-[0_6px_18px_rgba(11,38,36,0.045)] hover:bg-surface hover:shadow-[0_8px_22px_rgba(11,38,36,0.07)] md:hidden"
+          className={cn(
+            "mb-0.5 h-11 gap-2.5 rounded-[14px] bg-surface px-3 font-semibold text-text-primary shadow-[0_6px_18px_rgba(11,38,36,0.045)] hover:bg-surface hover:shadow-[0_8px_22px_rgba(11,38,36,0.07)] md:hidden",
+            className,
+          )}
         >
           <Link2 aria-hidden size={16} strokeWidth={1.9} />
           <span className="sm:hidden">Join</span>
@@ -127,7 +135,10 @@ export default function JoinWithLink({
         type="button"
         variant="outline"
         onClick={() => setOpen(true)}
-        className="h-auto w-full items-start justify-start gap-3 rounded-[16px] p-4 text-left"
+        className={cn(
+          "h-auto w-full items-start justify-start gap-3 rounded-[16px] p-4 text-left",
+          className,
+        )}
       >
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-black/[0.035] text-primary">
           <Link2 aria-hidden size={19} />
@@ -284,9 +295,9 @@ function JoinDialog({
         exit={{ opacity: 0, y: 12, scale: 0.985 }}
         transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
         className={cn(
-          "relative w-full max-w-[440px] rounded-t-[24px] bg-surface px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_24px_80px_rgba(11,38,36,0.22)]",
+          "relative w-full rounded-t-[24px] bg-surface px-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_24px_80px_rgba(11,38,36,0.22)]",
           !mobileOnly &&
-            "sm:rounded-[24px] sm:px-6 sm:pb-7 sm:pt-6",
+            "sm:max-w-[440px] sm:rounded-[24px] sm:px-6 sm:pb-7 sm:pt-6",
         )}
       >
         <span

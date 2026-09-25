@@ -207,7 +207,7 @@ export default function NewGroupPage() {
     "rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-text-primary outline-none focus:border-primary [&>option]:bg-surface [&>option]:text-text-primary";
 
   return (
-    <main className="flex flex-1 flex-col gap-4 px-4 py-6">
+    <main className="flex flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       <div className="flex items-center gap-3">
         <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-primary/10">
           <HugeiconsIcon icon={UserGroupIcon} size={20} className="text-primary" />
