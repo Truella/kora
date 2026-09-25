@@ -3,7 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { UserGroupIcon, Add01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import { getHomeSnapshot, type HomeCircle } from "@/lib/home";
-import { collectPositionLabel } from "@/lib/rotation";
+import { collectTurnLabel } from "@/lib/rotation";
 import { RevealLi } from "../../Reveal";
 
 export const metadata = { title: "Circles" };
@@ -57,18 +57,15 @@ function countLine(circles: HomeCircle[]): string | null {
   return [`${circles.length} total`, ...parts].join(" · ");
 }
 
-// Where am I in it. The position label carries its own total ("… of 3"), but
-// the member count beside it is a different number — `rotationTotal` is
-// scheduled turns, `memberCount` is the active roster — so both stay.
+// Where am I in it. The position line names my own turn; the member count
+// beside it is a different number — `rotationTotal` is scheduled turns,
+// `memberCount` is the active roster — so both stay.
 // Null while unscheduled: the footer already carries "N members joined",
 // so a member line here would just repeat it.
 function memberLine(circle: HomeCircle): string | null {
   if (circle.awaitingSchedule) return null;
   const members = `${circle.memberCount} member${circle.memberCount === 1 ? "" : "s"}`;
-  const position = collectPositionLabel(
-    circle.myRoundNumber,
-    circle.rotationTotal,
-  );
+  const position = collectTurnLabel(circle.myRoundNumber);
   if (position) {
     return `${members} · ${position}`;
   }
