@@ -36,7 +36,7 @@ export default function InviteActions({
       }
       if (data === "accepted" || data === "already_pending") {
         setDone(
-          "Request sent — the circle votes every new member in. Someone from the group will tell you the outcome.",
+          "Request sent. The circle votes every new member in. Someone from the group will tell you the outcome.",
         );
       } else if (data === "already_member") {
         setDone("You're already in this circle.");

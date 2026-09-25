@@ -76,7 +76,7 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
         {isPaused ? (
           <div className="mt-6 rounded-[14px] bg-[#F8EDD9] px-4 py-4">
             <p className="font-display text-base font-semibold text-text-primary">
-              Paused — contributions halted
+              Paused. Contributions halted
             </p>
             <p className="mt-1 text-xs leading-5 text-text-secondary">
               The organizer paused this circle. Nothing is due until it
@@ -145,15 +145,49 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
               </p>
             </div>
             <div className="min-w-0 text-right">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-text-secondary">
-                Your payout
-              </p>
-              <p className="mt-0.5 truncate text-xs font-semibold tabular-nums text-text-primary">
-                {circle.myPayoutLabel ?? circle.amountLabel}
-                {circle.myPayoutDateLabel
-                  ? ` · ${circle.myPayoutDateLabel}`
-                  : ""}
-              </p>
+              {circle.isMyTurnNow ? (
+                <>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                    Your payout
+                  </p>
+                  <p className="mt-0.5 truncate text-xs font-semibold tabular-nums text-text-primary">
+                    {circle.myPayoutLabel ?? circle.amountLabel}
+                    {circle.myPayoutDateLabel
+                      ? ` · ${circle.myPayoutDateLabel}`
+                      : ""}
+                  </p>
+                </>
+              ) : circle.currentPotLabel ? (
+                <>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                    Turn {circle.currentTurnNumber} pot
+                  </p>
+                  <p className="mt-0.5 truncate text-xs font-semibold tabular-nums text-text-primary">
+                    {circle.currentPotLabel}
+                    {circle.currentDueLabel
+                      ? ` · ${circle.currentDueLabel}`
+                      : ""}
+                  </p>
+                  {circle.myPayoutDateLabel && (
+                    <p className="mt-0.5 truncate text-[11px] tabular-nums text-text-secondary">
+                      Yours Turn {circle.myRoundNumber} ·{" "}
+                      {circle.myPayoutDateLabel}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-text-secondary">
+                    Your payout
+                  </p>
+                  <p className="mt-0.5 truncate text-xs font-semibold tabular-nums text-text-primary">
+                    {circle.myPayoutLabel ?? circle.amountLabel}
+                    {circle.myPayoutDateLabel
+                      ? ` · ${circle.myPayoutDateLabel}`
+                      : ""}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         )}

@@ -71,8 +71,8 @@ export default function ScheduleGenerator({
       setMessage(
         n > 0
           ? mode === "sync"
-            ? `Schedule synced — ${n} new cycle${n === 1 ? "" : "s"} appended.`
-            : `Rotation live — ${n} cycle${n === 1 ? "" : "s"} scheduled from ${firstDue}.`
+            ? `Schedule synced. ${n} new cycle${n === 1 ? "" : "s"} appended.`
+            : `Rotation live. ${n} cycle${n === 1 ? "" : "s"} scheduled from ${firstDue}.`
           : fixed > 0
             ? `Repaired ${fixed} cycle${fixed === 1 ? "" : "s"} missing payout${fixed === 1 ? "" : "s"}.`
             : "Schedule is already up to date.",
