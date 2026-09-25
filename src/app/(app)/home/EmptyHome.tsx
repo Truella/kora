@@ -40,7 +40,7 @@ export default function EmptyHome({ snapshot }: { snapshot: HomeSnapshot }) {
           </h2>
           <p className="mt-2 text-sm leading-6 text-text-secondary">
             Invite-only circles. Members vote who joins. Money moves
-            member&nbsp;→&nbsp;recipient directly — the organizer never holds it.
+            member&nbsp;→&nbsp;recipient directly. The organizer never holds it.
           </p>
           <motion.div whileTap={{ scale: 0.97 }} className="mt-4 inline-flex">
             <Link

@@ -94,7 +94,7 @@ export default function ConfirmingBanner({ groupId }: { groupId: string }) {
   if (outcome === "confirmed") {
     return (
       <div className="rounded-[10px] bg-[#E0ECE9] px-4 py-3 text-sm font-medium text-[#1E5A4E]">
-        Payment confirmed — receipt verified. Your share is marked paid below.
+        Payment confirmed. Receipt verified. Your share is marked paid below.
       </div>
     );
   }
@@ -103,7 +103,7 @@ export default function ConfirmingBanner({ groupId }: { groupId: string }) {
     return (
       <div className="flex items-center justify-between gap-3 rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm text-[#8A5F14]">
         <p>
-          No payment went through — no money left your account. If you
+          No payment went through. No money left your account. If you
           cancelled on Flutterwave, hit Pay below to retry.
         </p>
         <button
@@ -119,7 +119,7 @@ export default function ConfirmingBanner({ groupId }: { groupId: string }) {
 
   return (
     <div className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm text-[#8A5F14]">
-      Back from Flutterwave — confirming your payment. Give it a few seconds;
+      Back from Flutterwave. Confirming your payment. Give it a few seconds;
       this page updates on its own.
     </div>
   );

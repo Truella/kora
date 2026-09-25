@@ -54,12 +54,12 @@ export default function InviteByPhone({
     } catch (err) {
       if (err instanceof MismatchedCountryError) {
         setError(
-          `That looks like a ${COUNTRY_NAMES[err.detected]} number — switch the country selector to ${COUNTRY_NAMES[err.detected]} (+${COUNTRY_CODES[err.detected]}).`,
+          `That looks like a ${COUNTRY_NAMES[err.detected]} number. Switch the country selector to ${COUNTRY_NAMES[err.detected]} (+${COUNTRY_CODES[err.detected]}).`,
         );
       } else {
         setError(
           err instanceof InvalidPhoneError
-            ? "That number doesn't look right — check the country and try again."
+            ? "That number doesn't look right. Check the country and try again."
             : "That number doesn't look right.",
         );
       }
@@ -74,7 +74,7 @@ export default function InviteByPhone({
       } = await supabase.auth.getUser();
       if (!user) {
         setState("error");
-        setError("You signed out — sign back in and try again.");
+        setError("You signed out. Sign back in and try again.");
         return;
       }
       const { error: insertError } = await supabase
