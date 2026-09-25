@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Alert02Icon,
@@ -14,12 +15,14 @@ import {
 type CircleAttentionKind = "alert" | "clock";
 
 type CircleAttentionTooltipProps = {
+  href: string;
   kind: CircleAttentionKind;
   label: string;
   className: string;
 };
 
 export default function CircleAttentionTooltip({
+  href,
   kind,
   label,
   className,
@@ -30,11 +33,10 @@ export default function CircleAttentionTooltip({
     <Tooltip delay={150}>
       <TooltipTrigger
         render={
-          <span
+          <Link
+            href={href}
             aria-label={label}
-            className={className}
-            role="img"
-            tabIndex={0}
+            className={`${className} focus-visible:outline-none`}
           />
         }
       >
