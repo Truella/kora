@@ -50,7 +50,7 @@ export default async function GroupsPage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col gap-3 px-4 py-6">
+    <main className="flex flex-1 flex-col gap-3 px-4 py-6 sm:px-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
           Your circles

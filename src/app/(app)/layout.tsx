@@ -13,7 +13,7 @@ export default function AppLayout({
   return (
     <>
       <AppHeader />
-      <div className="mx-auto flex w-full max-w-md flex-1 flex-col md:max-w-5xl md:flex-row md:gap-8">
+      <div className="mx-auto flex w-full flex-1 flex-col md:max-w-5xl md:flex-row md:gap-8">
         <AppNav />
         {/* Bottom clearance for the fixed mobile tab bar (bar height +
             safe-area); none from tablet up where the sidebar rail is shown. */}
