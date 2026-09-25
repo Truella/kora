@@ -5,6 +5,7 @@ import {
   Clock01Icon,
   Wallet01Icon,
 } from "@hugeicons/core-free-icons";
+import { collectTurnLabel } from "@/lib/rotation";
 import type { HomeSnapshot } from "@/lib/home";
 
 type NextUpContent = {
@@ -132,6 +133,46 @@ function nextUpContent(snapshot: HomeSnapshot): NextUpContent | null {
       href: completeCircle.href,
       cta: "View history",
       icon: Wallet01Icon,
+      tone: "neutral",
+    };
+  }
+
+  // Nothing owed, nothing pending, no schedule missing, rotation not over: the
+  // member is simply between turns. This is the resting state of a healthy
+  // circle, not an empty dashboard, so the card names the slot they collect on
+  // instead of vanishing and leaving the grid's second column blank.
+  const atRest = snapshot.circles.find((circle) => circle.status !== "paused");
+  if (atRest) {
+    return {
+      eyebrow: "NOTHING DUE",
+      // No amount here on purpose. A member collects the *pot* (share × active
+      // members), not their own share, and the snapshot only carries a pot for
+      // the current turn — printing `amountLabel` would understate the payout
+      // and `currentPotLabel` would name someone else's turn. A state word is
+      // the honest thing to show until a real payout row exists.
+      value: "Up to date",
+      title: atRest.name,
+      meta: collectTurnLabel(atRest.myRoundNumber) ?? "No contribution due right now",
+      href: atRest.href,
+      cta: "View circle",
+      icon: Clock01Icon,
+      tone: "neutral",
+    };
+  }
+
+  // Terminal: a paused circle is all that is left, and it is the one state
+  // where genuinely nothing is scheduled. Said out loud rather than left blank,
+  // because an empty column reads as a bug, not as a circle that is on hold.
+  const paused = snapshot.circles.find((circle) => circle.status === "paused");
+  if (paused) {
+    return {
+      eyebrow: "CIRCLE STATUS",
+      value: "Paused",
+      title: paused.name,
+      meta: "Contributions halted until the organizer resumes",
+      href: paused.href,
+      cta: "View circle",
+      icon: Clock01Icon,
       tone: "neutral",
     };
   }
