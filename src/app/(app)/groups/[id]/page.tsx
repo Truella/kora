@@ -18,12 +18,13 @@ import {
   TurnHero,
   EventCard,
   TurnRow,
+  ActionTile,
   DueChip,
   SettledChip,
 } from "./TurnViews";
 import { getLedgerEvents } from "@/lib/ledger";
 import { utcDateOnly, formatCycleDate, formatCycleDateShort } from "@/lib/money";
-import { collectPositionLabel } from "@/lib/rotation";
+import { collectTurnLabel } from "@/lib/rotation";
 
 export const metadata = { title: "Circle" };
 
@@ -633,10 +634,7 @@ export default async function GroupDetailPage({
                   />
                 )
               }
-              positionLine={collectPositionLabel(
-                myTurnPosition,
-                rotationTotal,
-              )}
+              positionLine={collectTurnLabel(myTurnPosition)}
               contributionAmount={amountLabel}
               contributionState={
                 myCurrentStatus === "skipped" ? (
@@ -702,48 +700,24 @@ export default async function GroupDetailPage({
             aria-label="Quick actions"
             className="grid grid-cols-4 gap-2"
           >
-            <Link
+            <ActionTile
               href={`/groups/${group.id}/ledger`}
-              className="flex flex-col items-center gap-1.5 rounded-[14px] border-[0.5px] border-border bg-surface p-3 text-center transition-colors hover:bg-black/[0.02]"
-            >
-              <HugeiconsIcon
-                icon={Book02Icon}
-                size={24}
-                className="text-primary"
-              />
-              <span className="text-xs font-semibold text-text-primary">
-                Ledger
-              </span>
-            </Link>
-            <Link
+              icon={<HugeiconsIcon icon={Book02Icon} size={24} />}
+              label="Ledger"
+            />
+            <ActionTile
               href={`/groups/${group.id}/members`}
-              className="flex flex-col items-center gap-1.5 rounded-[14px] border-[0.5px] border-border bg-surface p-3 text-center transition-colors hover:bg-black/[0.02]"
-            >
-              <HugeiconsIcon
-                icon={UserMultipleIcon}
-                size={24}
-                className="text-primary"
-              />
-              <span className="text-xs font-semibold text-text-primary">
-                Members
-              </span>
-            </Link>
+              icon={<HugeiconsIcon icon={UserMultipleIcon} size={24} />}
+              label="Members"
+            />
             {member && user && (
               <InviteMenu groupId={group.id} inviterId={user.id} grid />
             )}
-            <a
+            <ActionTile
               href="#activity"
-              className="flex flex-col items-center gap-1.5 rounded-[14px] border-[0.5px] border-border bg-surface p-3 text-center transition-colors hover:bg-black/[0.02]"
-            >
-              <HugeiconsIcon
-                icon={Activity01Icon}
-                size={24}
-                className="text-primary"
-              />
-              <span className="text-xs font-semibold text-text-primary">
-                Activity
-              </span>
-            </a>
+              icon={<HugeiconsIcon icon={Activity01Icon} size={24} />}
+              label="Activity"
+            />
           </nav>
 
           {upcomingCycles.length > 0 && (
