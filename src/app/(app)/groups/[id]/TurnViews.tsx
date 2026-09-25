@@ -4,14 +4,12 @@ import { Alert02Icon, Tick01Icon } from "@hugeicons/core-free-icons";
 import { RevealLi } from "../../../Reveal";
 
 // Presentational building blocks for the circle workspace. No data fetching
-// here: the detail page wires Supabase rows into these props, and
-// /demo/circle wires mock rows into the same components — so the state
-// catalog can never drift from the real thing. Action slots (Pay, Confirm)
-// take nodes: the detail page passes the live client buttons, the demo
-// passes inert lookalikes.
+// here: the detail page wires Supabase rows into these props. Action slots
+// (Pay, Confirm) take nodes so the detail page can pass the live client
+// buttons.
 
 // Anchors the /home attention queue deep-links to. Duplicated from the
-// detail page so this module stays importable from the demo.
+// detail page so this module stays self-contained.
 const ANCHOR_MT = "scroll-mt-[calc(var(--app-header-h)+1rem)]";
 
 const DARK_HERO =
@@ -185,18 +183,41 @@ export function EventCard({
 export type MemberRow = {
   id: string;
   initial: string;
-  wash: string;
   name: string;
   you?: boolean;
   next?: boolean;
   role: string;
-  turnPos: string;
-  // Null pre-schedule, when per-turn states don't exist yet.
-  state?: string | null;
-  trust: string;
+  // Receive slot in the rotation.
+  slot: number;
+  // This turn's share state. Null pre-schedule, when per-turn states
+  // don't exist yet.
+  share?: "paid" | "pending" | "late" | null;
+  // Cached score. Null until the first settled share — rendered as
+  // "No score yet" rather than an unearned 100.
+  trust?: number | null;
 };
 
-// Compact single-column rotation list. Lives at the bottom of the workspace.
+// One tint per share state, worn by both the avatar wash and the pill so
+// the two can never disagree.
+const SHARE_TONE = {
+  paid: {
+    label: "Paid",
+    tone: "bg-[#E0ECE9] text-[#1E5A4E]",
+  },
+  pending: {
+    label: "To pay",
+    tone: "bg-[#F8EDD9] text-[#8A5F14]",
+  },
+  late: {
+    label: "Paid late",
+    tone: "bg-[#F3E1E0] text-[#8A2A21]",
+  },
+} as const;
+
+// Rotation list: who is in the circle, how they joined, when they
+// collect, their trust score, and what their share looks like this turn.
+// One quiet facts line under the name; the share pill docked right is
+// the only loud thing per row.
 export function MembersPanel({
   count,
   note,
@@ -216,57 +237,56 @@ export function MembersPanel({
           <p className="mt-0.5 text-[11px] text-text-secondary">{note}</p>
         ) : null}
       </div>
-      <ul className="flex flex-col px-2 pb-2">
-        {rows.map((m) => (
-          <li
-            key={m.id}
-            className="flex items-center gap-3 rounded-[12px] px-2 py-2"
-          >
-            <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold ${m.wash}`}
+      <ul className="flex flex-col divide-y divide-border px-2 pb-2">
+        {rows.map((m) => {
+          const tone = m.share ? SHARE_TONE[m.share] : null;
+          return (
+            <li
+              key={m.id}
+              className="flex items-center gap-3 px-2 py-2.5"
             >
-              {m.initial}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-text-primary">
-                {m.name}
-                {m.you ? (
-                  <span className="font-normal text-text-secondary">
-                    {" "}
-                    · You
-                  </span>
-                ) : (
-                  ""
-                )}
-                {m.next ? (
-                  <span className="ml-1.5 rounded-full bg-[#F8EDD9] px-2 py-px text-[10px] font-semibold text-[#8A5F14]">
-                    Next
-                  </span>
-                ) : (
-                  ""
-                )}
-              </p>
-              <p className="truncate font-mono text-[11px] text-text-secondary">
-                {m.role}
-              </p>
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="font-mono text-[11px] tabular-nums text-text-secondary">
-                {m.turnPos}
-              </p>
-              {m.state ? (
-                <p className="font-mono text-[11px] text-text-secondary">
-                  {m.state}
+              <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold ${tone ? tone.tone : "bg-black/[0.04] text-text-secondary"}`}
+              >
+                {m.initial}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-text-primary">
+                  {m.name}
+                  {m.you ? (
+                    <span className="font-normal text-text-secondary">
+                      {" "}
+                      · You
+                    </span>
+                  ) : (
+                    ""
+                  )}
+                  {m.next ? (
+                    <span className="ml-1.5 rounded-full bg-[#F8EDD9] px-2 py-px text-[10px] font-semibold text-[#8A5F14]">
+                      Next
+                    </span>
+                  ) : (
+                    ""
+                  )}
                 </p>
+                <p className="mt-0.5 font-mono text-[11px] leading-4 text-text-secondary">
+                  {m.role} · Collects turn {m.slot} ·{" "}
+                  {m.trust != null ? `Trust ${m.trust}` : "No score yet"}
+                </p>
+              </div>
+              {tone ? (
+                <span
+                  aria-label={`This turn's share: ${tone.label}`}
+                  className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${tone.tone}`}
+                >
+                  {tone.label}
+                </span>
               ) : (
                 ""
               )}
-              <p className="font-mono text-[11px] tabular-nums text-text-secondary">
-                {m.trust}
-              </p>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
