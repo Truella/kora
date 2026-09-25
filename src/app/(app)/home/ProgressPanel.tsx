@@ -1,10 +1,11 @@
 import type { HomeSnapshot } from "@/lib/home";
 
-// A compact record of payment reliability, not another decorative percentage.
-// It only appears once there is a settled payment to describe, and the ring,
-// numerator and denominator all encode the same real on-time ratio.
+// A Kora-specific contribution record, not a generic finance score. The ring,
+// numerator and denominator all encode the same real on-time ratio, and the
+// footer grounds it in circle participation: how many circles are live and
+// whether anything was missed.
 export default function ProgressPanel({ snapshot }: { snapshot: HomeSnapshot }) {
-  const { paymentProgress } = snapshot;
+  const { paymentProgress, activeCircleCount } = snapshot;
   if (paymentProgress.settledCount === 0) return null;
 
   const ringColor =
@@ -18,7 +19,7 @@ export default function ProgressPanel({ snapshot }: { snapshot: HomeSnapshot }) 
             Your progress
           </p>
           <h2 className="mt-1 font-display text-lg font-semibold tracking-tight text-text-primary">
-            Payment record
+            Contribution record
           </h2>
         </div>
 
@@ -43,12 +44,16 @@ export default function ProgressPanel({ snapshot }: { snapshot: HomeSnapshot }) 
         <p className="font-display text-2xl font-semibold tabular-nums text-text-primary">
           {paymentProgress.onTimeCount} of {paymentProgress.settledCount}
         </p>
-        <p className="mt-1 text-sm text-text-secondary">settled contributions on time</p>
-        {paymentProgress.lateCount > 0 && (
-          <p className="mt-3 text-xs font-medium text-[#8A5F14]">
-            {paymentProgress.lateCount} paid late
-          </p>
-        )}
+        <p className="mt-1 text-sm text-text-secondary">
+          contributions made on time
+        </p>
+        <p className="mt-3 text-xs font-medium text-text-secondary">
+          {activeCircleCount} active circle
+          {activeCircleCount === 1 ? "" : "s"}
+          {paymentProgress.lateCount > 0
+            ? ` · ${paymentProgress.lateCount} paid late`
+            : " · 0 missed"}
+        </p>
       </div>
     </section>
   );
