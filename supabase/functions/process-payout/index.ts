@@ -8,8 +8,11 @@
 //
 // - complete (default): every active member's contribution for the cycle must
 //   be settled (paid or late, webhook-verified). Missing row = unpaid, so the
-//   payout unlocks only when all shares arrived. Marks the payout completed
-//   (paid_at + payout_reference) and flips the cycle to completed.
+//   payout unlocks only when all shares arrived. Collection additionally opens
+//   on the cycle's due date — all shares in early still waits for the date,
+//   otherwise each early collection completes its turn early and the whole
+//   rotation compresses. Marks the payout completed (paid_at +
+//   payout_reference) and flips the cycle to completed.
 // - fail: records a failed disbursement attempt (payout_reference marker,
 //   paid_at stays null so the ledger shows it as missed, not paid).
 //
@@ -98,6 +101,19 @@ Deno.serve(async (req) => {
         .eq("id", payout.id);
       if (failError) return json({ error: "Could not record payout" }, 500);
       return json({ status: "failed", payoutReference: failRef });
+    }
+
+    // Collection opens on the turn's due date, even when every share
+    // arrived early. Without this the rotation compresses: collecting on
+    // day 1 completes the turn, the next turn opens on day 1, and due
+    // dates stop meaning anything. UTC calendar basis, same as the
+    // enrollment boundary below.
+    const today = new Date().toISOString().slice(0, 10);
+    if (cycle.due_date > today) {
+      return json(
+        { error: "Turn not due for collection", dueDate: cycle.due_date },
+        409,
+      );
     }
 
     // Complete: all active members must have settled shares. A missing

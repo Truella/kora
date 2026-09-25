@@ -6,12 +6,14 @@ import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
+import { formatCycleDate } from "@/lib/money";
 
 // Disbursement trigger for a cycle's payout. Payout rows are written only
 // by the process-payout Edge Function (service role) — this just invokes
 // it and refreshes into the completed/failed state it records. The function
-// refuses until every active member's share is settled (paid/late), so this
-// button is safe to show to any member: early taps get the count, not money.
+// refuses until every active member's share is settled (paid/late) and the
+// turn's due date is reached, so this button is safe to show to any member:
+// early taps get the count or the date, not money.
 //
 // Contextual by design: it renders only while the payout is pending, as a
 // small right-aligned receipt confirmation inside the hero's payout row —
@@ -69,8 +71,27 @@ export default function PayoutAction({
         const status = (fnError as { context?: { status?: number } })?.context
           ?.status;
         if (status === 409) {
+          // A 409 is shares or the calendar: read the function body when
+          // it survived, so an early tap names the date, not the shares.
+          let opensOn: string | null = null;
+          try {
+            const res = (fnError as { context?: unknown })?.context;
+            const body =
+              res instanceof Response
+                ? ((await res.clone().json()) as {
+                    error?: string;
+                    dueDate?: string;
+                  })
+                : null;
+            if (body?.error === "Turn not due for collection" && body.dueDate)
+              opensOn = body.dueDate;
+          } catch {
+            opensOn = null;
+          }
           setMessage(
-            "Still waiting on shares. The payout opens once everyone has paid.",
+            opensOn
+              ? `You can collect it on ${formatCycleDate(opensOn)}.`
+              : "Still waiting on shares. The payout opens once everyone has paid.",
           );
           router.refresh();
         } else {
