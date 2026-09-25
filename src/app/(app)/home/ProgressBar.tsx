@@ -20,7 +20,7 @@ export default function ProgressBar({
       aria-valuenow={percent}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-valuetext={`${percent}% — ${label}`}
+      aria-valuetext={`${percent}%, ${label}`}
       className="h-2 w-full overflow-hidden rounded-full bg-black/[0.07]"
     >
       <motion.div

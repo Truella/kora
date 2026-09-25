@@ -17,14 +17,14 @@ export function friendlyAuthError(
     msg.includes("rate_limit") ||
     (msg.includes("after") && msg.includes("second"))
   ) {
-    return "Too many attempts — wait a minute, then try again.";
+    return "Too many attempts. Wait a minute, then try again.";
   }
 
   if (msg.includes("expired")) {
     if (kind === "code") {
-      return "That code expired — tap Resend below for a fresh one.";
+      return "That code expired. Tap Resend below for a fresh one.";
     }
-    return "That link expired — head back and request a fresh one.";
+    return "That link expired. Head back and request a fresh one.";
   }
 
   if (
@@ -35,9 +35,9 @@ export function friendlyAuthError(
     (msg.includes("token") && kind === "code")
   ) {
     if (kind === "code") {
-      return "That code didn't match — check the digits and try again.";
+      return "That code didn't match. Check the digits and try again.";
     }
-    return "That link didn't work — request a fresh one and try again.";
+    return "That link didn't work. Request a fresh one and try again.";
   }
 
   if (msg.includes("failed to fetch") || msg.includes("network")) {
@@ -52,11 +52,11 @@ export function friendlyAuthError(
     msg.includes("twilio") ||
     msg.includes("vonage")
   ) {
-    return "We couldn't send the text right now — line may be down. Try again shortly, or use email instead.";
+    return "We couldn't send the text right now. The line may be down. Try again shortly, or use email instead.";
   }
 
   if (msg.includes("signup") || msg.includes("sign up")) {
-    return "New sign-ups are paused at the moment — try again later.";
+    return "New sign-ups are paused at the moment. Try again later.";
   }
 
   if (kind === "send") {
@@ -65,5 +65,5 @@ export function friendlyAuthError(
   if (kind === "link") {
     return "That sign-in link failed. Head back and request a fresh one.";
   }
-  return "That code didn't work — check it and try again.";
+  return "That code didn't work. Check it and try again.";
 }

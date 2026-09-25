@@ -52,12 +52,12 @@ function AddPhoneForm() {
     } catch (err) {
       if (err instanceof MismatchedCountryError) {
         setError(
-          `That looks like a ${COUNTRY_NAMES[err.detected]} number — switch the country selector to ${COUNTRY_NAMES[err.detected]} (+${COUNTRY_CODES[err.detected]}).`,
+          `That looks like a ${COUNTRY_NAMES[err.detected]} number. Switch the country selector to ${COUNTRY_NAMES[err.detected]} (+${COUNTRY_CODES[err.detected]}).`,
         );
       } else {
         setError(
           err instanceof InvalidPhoneError
-            ? "That number doesn't look right — check the country and try again."
+            ? "That number doesn't look right. Check the country and try again."
             : "That number doesn't look right.",
         );
       }
@@ -81,7 +81,7 @@ function AddPhoneForm() {
     <AuthShell
       kicker="USSD access"
       title="Add your number"
-      intro="USSD identifies you by phone — without a verified number, balance checks and payment confirmations can't find you. The app itself works fine it."
+      intro="USSD identifies you by phone. Without a verified number, balance checks and payment confirmations can't find you. The app itself works fine without it."
     >
       <div className="flex gap-2">
           <div className="flex w-24 shrink-0 flex-col gap-1.5">
