@@ -254,7 +254,7 @@ export default function NewGroupPage() {
             rows={2}
             maxLength={280}
             placeholder="What is this circle saving toward?"
-            className={inputClass}
+            className={`${inputClass} resize-none`}
           />
           {errors.description && (
             <p className="text-sm font-medium text-danger">{errors.description}</p>

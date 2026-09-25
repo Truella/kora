@@ -4,7 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { UserIcon, ShieldCheckIcon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import { RevealLi } from "../../Reveal";
-import AvatarUploader from "./AvatarUploader";
+import ProfileEditor from "./ProfileEditor";
 import SignOutButton from "./signout-button";
 
 export const metadata = { title: "Profile" };
@@ -112,9 +112,10 @@ export default async function ProfilePage() {
       </div>
 
       {user && (
-        <AvatarUploader
+        <ProfileEditor
           userId={user.id}
-          currentUrl={profile?.avatar_url ?? null}
+          currentName={profile?.full_name ?? ""}
+          currentAvatarUrl={profile?.avatar_url ?? null}
         />
       )}
 
