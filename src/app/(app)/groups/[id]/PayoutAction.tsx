@@ -16,9 +16,9 @@ import { createClient } from "@/lib/supabase/client";
 // Contextual by design: it renders only while the payout is pending, as a
 // small right-aligned receipt confirmation inside the hero's payout row —
 // never a full-width giant. Settled/failed states are terminal copy, no
-// button. Labeled "Confirm receipt" (not "Mark as paid") because completion
-// is gated server-side on every share settling via payment webhooks —
-// a tap without settled shares just returns the outstanding count.
+// button. Labeled "Confirm money collected" (not "Mark as paid") because
+// completion is gated server-side on every share settling via payment webhooks
+// — a tap without settled shares just returns the outstanding count.
 export default function PayoutAction({
   cycleId,
   payoutStatus,
@@ -51,7 +51,7 @@ export default function PayoutAction({
       <p
         className={`text-right text-xs font-medium ${onDark ? "text-[#F2B8B5]" : "text-danger"}`}
       >
-        Payout failed — contact the organizer to retry.
+        Payout failed. Contact the organizer to retry.
       </p>
     );
   }
@@ -70,7 +70,7 @@ export default function PayoutAction({
           ?.status;
         if (status === 409) {
           setMessage(
-            "Not all shares are in yet — the payout unlocks once every member's contribution settles.",
+            "Still waiting on shares. The payout opens once everyone has paid.",
           );
           router.refresh();
         } else {
@@ -86,7 +86,7 @@ export default function PayoutAction({
           typeof data.expected === "number"
         ) {
           setMessage(
-            `${data.settled} of ${data.expected} shares settled — the payout unlocks once every member's contribution settles.`,
+            `${data.expected - data.settled} more share${data.expected - data.settled === 1 ? "" : "s"} to go. The payout opens once everyone has paid.`,
           );
         } else if (data.error === "Payout already settled") {
           setMessage("This payout is already settled.");
@@ -113,7 +113,7 @@ export default function PayoutAction({
         whileTap={{ scale: 0.97 }}
         className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold disabled:opacity-60 ${onDark ? "bg-[#E2C98F] text-[#0B2624] hover:bg-[#D8BE85]" : "bg-primary text-white hover:bg-primary-hover"}`}
       >
-        {working ? "Confirming…" : "Confirm receipt"}
+        {working ? "Confirming…" : "Confirm money collected"}
         {!working && <HugeiconsIcon icon={ArrowRight01Icon} size={14} />}
       </motion.button>
       {message && (

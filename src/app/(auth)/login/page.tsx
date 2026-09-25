@@ -53,12 +53,12 @@ function LoginForm() {
     } catch (err) {
       if (err instanceof MismatchedCountryError) {
         setError(
-          `That looks like a ${COUNTRY_NAMES[err.detected]} number — switch the country selector to ${COUNTRY_NAMES[err.detected]} (+${COUNTRY_CODES[err.detected]}).`,
+          `That looks like a ${COUNTRY_NAMES[err.detected]} number. Switch the country selector to ${COUNTRY_NAMES[err.detected]} (+${COUNTRY_CODES[err.detected]}).`,
         );
       } else {
         setError(
           err instanceof InvalidPhoneError
-            ? "That number doesn't look right — check the country and try again."
+            ? "That number doesn't look right. Check the country and try again."
             : "That number doesn't look right.",
         );
       }
@@ -112,7 +112,7 @@ function LoginForm() {
             <span className="font-display font-semibold text-text-primary">
               {linkSentTo}
             </span>
-            . Tap it on this device and you&apos;re in — no code to type.
+            . Tap it on this device and you&apos;re in. No code to type.
           </>
         }
       >
@@ -132,8 +132,8 @@ function LoginForm() {
       title="Join Kora"
       intro={
         tab === "phone"
-          ? "Enter your number — we'll text you a 6-digit code."
-          : "Enter your email and we'll send a sign-in link. You'll add phone number after — USSD needs one, the PWA doesn't."
+          ? "Enter your number. We'll text you a 6-digit code."
+          : "Enter your email and we'll send a sign-in link. You'll add phone number after. USSD needs one, the PWA doesn't."
       }
     >
 
