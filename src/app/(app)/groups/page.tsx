@@ -77,7 +77,7 @@ function memberLine(circle: HomeCircle): string | null {
 // circle-level state for turns that concern someone else.
 function nextEvent(circle: HomeCircle): { text: string; emphasis: boolean } {
   if (circle.status === "paused") {
-    return { text: "Paused — contributions halted", emphasis: false };
+    return { text: "Paused. Contributions halted", emphasis: false };
   }
   if (circle.status === "completed") {
     return { text: "Rotation complete", emphasis: false };
@@ -93,15 +93,30 @@ function nextEvent(circle: HomeCircle): { text: string; emphasis: boolean } {
   // Mirrors the home card footer exactly: the payout line falls back to the
   // member's share amount when no pending payout row names the turn yet —
   // requiring a pending row here is what once printed "No contributions due
-  // yet" on a circle home already showed a payout for.
+  // yet" on a circle home already showed a payout for. Turn-qualified when it
+  // is not the current turn, so a Turn 2 payout never reads as collecting now
+  // while Turn 1 is still blocked.
   if (circle.myPayoutDateLabel) {
+    const mineNow = circle.isMyTurnNow;
+    const turnSuffix =
+      !mineNow && circle.myRoundNumber !== null
+        ? ` Turn ${circle.myRoundNumber}`
+        : "";
     return {
-      text: `Your payout · ${circle.myPayoutLabel ?? circle.amountLabel} · ${circle.myPayoutDateLabel}`,
+      text: `Your payout${turnSuffix} · ${circle.myPayoutLabel ?? circle.amountLabel} · ${circle.myPayoutDateLabel}`,
       emphasis: true,
     };
   }
   if (circle.myPayoutLabel) {
-    return { text: `Your payout · ${circle.myPayoutLabel}`, emphasis: true };
+    const mineNow = circle.isMyTurnNow;
+    const turnSuffix =
+      !mineNow && circle.myRoundNumber !== null
+        ? ` Turn ${circle.myRoundNumber}`
+        : "";
+    return {
+      text: `Your payout${turnSuffix} · ${circle.myPayoutLabel}`,
+      emphasis: true,
+    };
   }
   if (circle.nextDueLabel) {
     return {
@@ -159,8 +174,8 @@ export default async function GroupsPage() {
           No circles yet
         </h1>
         <p className="max-w-xs text-sm leading-6 text-text-secondary">
-          Create one to get started — once you join a circle, it will show up
-          here.
+          Create one to get started. Once you join a circle, it will show
+          up here.
         </p>
         <Link
           href="/groups/new"

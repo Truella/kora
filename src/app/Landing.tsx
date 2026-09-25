@@ -158,7 +158,7 @@ const VALUE = [
   {
     icon: UserGroupIcon,
     title: "Everyone has a say.",
-    body: "Invite someone and let the group decide. New members go to a vote — membership stays with people already saving together.",
+    body: "Invite someone and let the group decide. New members go to a vote. Membership stays with people already saving together.",
   },
   {
     icon: Activity01Icon,
@@ -325,7 +325,7 @@ export default function Landing() {
             </p>
             <ul className="mt-6 flex flex-col gap-2">
               {[
-                "Invite-only — no public pools, strangers",
+                "Invite-only. No public pools, no strangers",
                 "Every join request goes to a member vote",
                 "The organizer sets the schedule, never holds money",
               ].map((t) => (

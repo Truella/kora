@@ -26,7 +26,7 @@ const robotoMono = Roboto_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Kora — Digital Savings Circles",
+    default: "Kora · Digital Savings Circles",
     template: "%s | Kora",
   },
   description:
