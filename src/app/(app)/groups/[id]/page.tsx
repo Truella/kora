@@ -17,11 +17,9 @@ import LedgerFeed from "../../activity/LedgerFeed";
 import {
   TurnHero,
   EventCard,
-  MembersPanel,
   TurnRow,
   DueChip,
   SettledChip,
-  type MemberRow,
 } from "./TurnViews";
 import { getLedgerEvents } from "@/lib/ledger";
 import { utcDateOnly, formatCycleDate, formatCycleDateShort } from "@/lib/money";
@@ -232,9 +230,6 @@ export default async function GroupDetailPage({
     sortedCycles.find((c) => c.status !== "completed") ??
     sortedCycles[sortedCycles.length - 1] ??
     null;
-  const currentIdx = currentCycle
-    ? sortedCycles.findIndex((c) => c.id === currentCycle.id)
-    : -1;
   const pastCycles = currentCycle
     ? sortedCycles
         .filter((c) => c.cycle_number < currentCycle.cycle_number)
@@ -243,14 +238,10 @@ export default async function GroupDetailPage({
   const upcomingCycles = currentCycle
     ? sortedCycles.filter((c) => c.cycle_number > currentCycle.cycle_number)
     : [];
-  const nextRecipientId =
-    currentIdx >= 0 && currentIdx + 1 < sortedCycles.length
-      ? sortedCycles[currentIdx + 1].recipient_member_id
-      : null;
 
   // Per-member settlement for the current turn only — feeds the hero
-  // progress bar and the members panel states. One RLS-covered select;
-  // history rows show the caller's own share from byCycle instead.
+  // progress bar. One RLS-covered select; history rows show the caller's
+  // own share from byCycle instead.
   const { data: currentContributions } =
     member && currentCycle
       ? await supabase
@@ -359,54 +350,24 @@ export default async function GroupDetailPage({
     ? await getLedgerEvents(supabase, id)
     : { due: [], history: [] };
 
-  // Members with trust + inviter labels (Day 5A). Read-only: RLS
-  // "view members of your groups" scopes to fellow members; profiles
-  // resolve via the shared-group policy with a masked fallback.
+  // Active roster — feeds "Your turn: X of Y", the payout-gate member
+  // count, and the rotation size. Read-only: RLS "view members of your
+  // groups" scopes to fellow members. Full profiles live on /members.
   type CircleMemberRow = {
     id: string;
     user_id: string;
-    invited_by: string | null;
-    trust_score_cache: number | string;
     payout_position: number | null;
     joined_at: string;
   };
   const { data: circleMembers } = member
     ? await supabase
         .from("group_members")
-        .select(
-          "id, user_id, invited_by, trust_score_cache, payout_position, joined_at",
-        )
+        .select("id, user_id, payout_position, joined_at")
         .eq("group_id", id)
         .eq("status", "active")
         .order("payout_position", { ascending: true })
     : { data: [] };
   const circleRows = (circleMembers ?? []) as CircleMemberRow[];
-  // invited_by references profiles(id), so one profile map covers both
-  // member names and inviter names.
-  let profileNames = new Map<string, string>();
-  if (member && circleRows.length > 0) {
-    const needIds = [
-      ...new Set([
-        ...circleRows.map((m) => m.user_id),
-        ...circleRows
-          .map((m) => m.invited_by)
-          .filter((v): v is string => v !== null),
-      ]),
-    ];
-    const { data: mprofs } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", needIds);
-    profileNames = new Map(
-      ((mprofs ?? []) as { id: string; full_name: string }[]).map((p) => [
-        p.id,
-        p.full_name,
-      ]),
-    );
-  }
-
-  // Trust scores arrive on the member rows (trust_score_cache); the panel
-  // shows the number, no extra breakdown query needed at this scale.
 
   // "Your turn: X of Y" — the caller's own slot in the rotation, shown in
   // the hero header. Null positions hide the line rather than guessing.
@@ -415,26 +376,6 @@ export default async function GroupDetailPage({
     : undefined;
   const myTurnPosition = myCircleRow?.payout_position ?? null;
   const rotationTotal = circleRows.length;
-
-  // Which members have any settled share in this circle. A newcomer with no
-  // settled share reads as "New" rather than a perfect 100 they haven't
-  // earned — one RLS-covered select, no per-member queries.
-  const { data: memberSettledRows } =
-    member && circleRows.length > 0 && cycles && cycles.length > 0
-      ? await supabase
-          .from("contributions")
-          .select("member_id")
-          .in(
-            "cycle_id",
-            cycles.map((c) => c.id),
-          )
-          .in("status", ["paid", "late"])
-      : { data: [] };
-  const settledMemberIds = new Set(
-    ((memberSettledRows ?? []) as { member_id: string }[]).map(
-      (r) => r.member_id,
-    ),
-  );
 
   // How many shares a pot holds: pot ÷ share. Makes "₦5,700 vs ₦11,400"
   // legible as 1 share vs 2 shares instead of a math error.
@@ -486,52 +427,6 @@ export default async function GroupDetailPage({
   // The confirm button only exists once the payout can actually complete.
   // Before that the row says what's missing instead of offering a dead tap.
   const payoutReady = expectedCount > 0 && settledCount >= expectedCount;
-
-  // Member rows for the shared MembersPanel. Raw values only — wording
-  // and tints live in the component so every row reads the same.
-  const memberRows: MemberRow[] = circleRows.map((m, i) => {
-    const name = profileNames.get(m.user_id) ?? `····${m.user_id.slice(-4)}`;
-    const isFounder = m.user_id === group.created_by;
-    const inviter = m.invited_by ? profileNames.get(m.invited_by) : null;
-    const role = isFounder
-      ? "Founder"
-      : m.invited_by
-        ? `Invited by ${inviter ?? "a member"}`
-        : "Joined via link";
-    const raw = currentCycle ? (settledByMember.get(m.id) ?? "pending") : null;
-    // "To pay" on purpose: the collect slot beside it is a Turn number,
-    // so a bare "Pending" would read ambiguously.
-    const share =
-      raw === "paid" ? ("paid" as const) : raw === "late" ? ("late" as const) : raw ? ("pending" as const) : null;
-    const score = Number(m.trust_score_cache);
-    return {
-      id: m.id,
-      initial: (name.trim().charAt(0) || "·").toUpperCase(),
-      name,
-      you: !!user && m.user_id === user.id,
-      next: m.id === nextRecipientId,
-      role,
-      slot: m.payout_position ?? i + 1,
-      share,
-      // No settled share yet → null ("No score yet"), not a perfect 100
-      // unearned.
-      trust: settledMemberIds.has(m.id)
-        ? Number.isFinite(score)
-          ? score
-          : 100
-        : null,
-    };
-  });
-  const membersPanel =
-    member && circleRows.length > 0 ? (
-      <div id="members" className={ANCHOR_MT}>
-        <MembersPanel
-          count={circleRows.length}
-          note="New members join by member vote"
-          rows={memberRows}
-        />
-      </div>
-    ) : null;
 
   // Compressed turn rows for history + upcoming, via the shared TurnRow.
   // Upcoming rows keep a compact Pay affordance — a share can fall due
@@ -674,7 +569,6 @@ export default async function GroupDetailPage({
               </p>
             </div>
           )}
-          {membersPanel}
         </>
       ) : currentCycle ? (
         <>
@@ -895,10 +789,6 @@ export default async function GroupDetailPage({
           newCount={(activeCount ?? scheduledCount) - scheduledCount}
         />
       )}
-
-      {/* Members live at the bottom as a compact single-column list. */}
-
-      {membersPanel}
 
       {member && (
         <section id="activity" className={`${ANCHOR_MT} flex flex-col gap-3`}>
