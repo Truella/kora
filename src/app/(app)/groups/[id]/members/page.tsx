@@ -148,38 +148,30 @@ export default async function MembersPage({
       : m.invited_by
         ? `Invited by ${inviter ?? "a member"}`
         : "Joined via link";
-    const turnState = currentCycle
-      ? (settledByMember.get(m.id) ?? "pending")
-      : null;
-    const state =
-      turnState === "paid"
-        ? "Share paid"
-        : turnState === "late"
-          ? "Share late"
-          : turnState
-            ? "Share pending"
+    const raw = currentCycle ? (settledByMember.get(m.id) ?? "pending") : null;
+    const share =
+      raw === "paid"
+        ? ("paid" as const)
+        : raw === "late"
+          ? ("late" as const)
+          : raw
+            ? ("pending" as const)
             : null;
     const score = Number(m.trust_score_cache);
     return {
       id: m.id,
       initial: (name.trim().charAt(0) || "·").toUpperCase(),
-      wash:
-        turnState === "paid"
-          ? "bg-[#E0ECE9] text-[#1E5A4E]"
-          : turnState === "late"
-            ? "bg-[#F3E1E0] text-[#8A2A21]"
-            : turnState
-              ? "bg-[#F8EDD9] text-[#8A5F14]"
-              : "bg-black/[0.04] text-text-secondary",
       name,
       you: !!user && m.user_id === user.id,
       next: m.id === nextRecipientId,
       role,
-      turnPos: `Turn ${m.payout_position ?? i + 1}`,
-      state,
+      slot: m.payout_position ?? i + 1,
+      share,
       trust: settledMemberIds.has(m.id)
-        ? `Trust ${Number.isFinite(score) ? score : 100}`
-        : "Trust · New",
+        ? Number.isFinite(score)
+          ? score
+          : 100
+        : null,
     };
   });
 
@@ -196,16 +188,12 @@ export default async function MembersPage({
           {group.name}
         </h1>
         <p className="mt-1 font-mono text-xs text-text-secondary">
-          Members · {circleRows.length} · New members join by member vote
+          {circleRows.length === 1 ? "1 member" : `${circleRows.length} members`}
         </p>
       </div>
 
       {circleRows.length > 0 ? (
-        <MembersPanel
-          count={circleRows.length}
-          note="New members join by member vote"
-          rows={memberRows}
-        />
+        <MembersPanel count={circleRows.length} rows={memberRows} />
       ) : (
         <div className="rounded-[14px] border-[0.5px] border-border bg-surface p-5 text-center">
           <p className="font-display text-lg font-semibold text-text-primary">
