@@ -126,7 +126,7 @@ export default function LedgerFeed({
           {shownDue.length > 0 && (
             <section className="flex flex-col gap-2">
               <h2 className="font-display text-lg font-semibold text-text-primary">
-                Due now
+                Due & upcoming
               </h2>
               <ul className="flex flex-col gap-2">
                 {shownDue.map((e) => (
@@ -175,10 +175,9 @@ function LedgerRow({
     <li className="flex items-center justify-between gap-3 rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3">
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-text-primary">
-          {event.actor}{""}
+          {event.actor} · {event.kind === "payout" ? "receives" : "owes"}{" "}
           <span className="font-display font-semibold tabular-nums">
-            · {event.kind === "payout" ? "receives" : "owes"} {event.amountLabel}{""}
-            {event.currency}
+            {event.amountLabel}
           </span>
         </p>
         <p className="truncate font-mono text-xs text-text-secondary">
