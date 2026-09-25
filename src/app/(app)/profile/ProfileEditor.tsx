@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { friendlyAuthError } from "@/lib/auth-errors";
 import AvatarUploader from "./AvatarUploader";
 
 // Display/edit split for the profile tab. Display is the default —
@@ -13,26 +14,68 @@ export default function ProfileEditor({
   userId,
   currentName,
   currentAvatarUrl,
+  currentEmail,
 }: {
   userId: string;
   currentName: string;
   currentAvatarUrl: string | null;
+  currentEmail: string | null;
 }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(currentName);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [linking, setLinking] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const [linkSentTo, setLinkSentTo] = useState<string | null>(null);
 
   // A fresh server snapshot (router.refresh() after a photo upload)
   // must win over the draft seeded at mount.
   const [synced, setSynced] = useState({
     name: currentName,
     url: currentAvatarUrl,
+    email: currentEmail,
   });
-  if (currentName !== synced.name || currentAvatarUrl !== synced.url) {
-    setSynced({ name: currentName, url: currentAvatarUrl });
+  if (
+    currentName !== synced.name ||
+    currentAvatarUrl !== synced.url ||
+    currentEmail !== synced.email
+  ) {
+    setSynced({ name: currentName, url: currentAvatarUrl, email: currentEmail });
     setName(currentName);
+    // A newly linked address arrives via refresh — clear the pending state.
+    if (currentEmail !== synced.email) setLinkSentTo(null);
+  }
+
+  async function linkEmail() {
+    const trimmed = email.trim();
+    if (!trimmed.includes("@") || linking) return;
+    setLinking(true);
+    setLinkError(null);
+    try {
+      const supabase = createClient();
+      // Phone-first accounts gain a second sign-in path. Supabase emails
+      // a confirmation to the new address; the link lands on the shared
+      // /auth/callback, which routes by profile state, then /profile shows
+      // it as linked after refresh.
+      const { error: updateError } = await supabase.auth.updateUser(
+        { email: trimmed },
+        {
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/profile`,
+        },
+      );
+      if (updateError) throw updateError;
+      setLinkSentTo(trimmed);
+      setEmail("");
+    } catch (e) {
+      setLinkError(
+        friendlyAuthError(e instanceof Error ? e.message : null, "send"),
+      );
+    } finally {
+      setLinking(false);
+    }
   }
 
   async function saveName() {
@@ -118,9 +161,52 @@ export default function ProfileEditor({
           {error}
         </p>
       )}
-      <p className="text-xs leading-5 text-text-secondary">
-        Shows on invites, votes, and the ledger.
-      </p>
+      <div className="flex flex-col gap-1.5 border-t border-border pt-3">
+        <span className="text-sm font-medium text-text-primary">Email</span>
+        {currentEmail ? (
+          <p className="text-sm leading-6 text-text-secondary">
+            {currentEmail}
+          </p>
+        ) : linkSentTo ? (
+          <p className="text-sm leading-6 text-text-secondary">
+            Confirmation sent to {linkSentTo}. Tap the link in that inbox and
+            the address links to this account.
+          </p>
+        ) : (
+          <>
+            <p className="text-xs leading-5 text-text-secondary">
+              No email on this account yet. Link one for a second way in.
+            </p>
+            <span className="flex gap-2">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setLinkError(null);
+                }}
+                placeholder="you@example.com"
+                autoComplete="email"
+                inputMode="email"
+                className="min-w-0 flex-1 rounded-[10px] border-[0.5px] border-border bg-white px-4 py-2.5 text-sm text-text-primary outline-none placeholder:text-text-secondary/60 focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={() => void linkEmail()}
+                disabled={linking || !email.trim().includes("@")}
+                className="shrink-0 rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-50"
+              >
+                {linking ? "Sending…" : "Link"}
+              </button>
+            </span>
+            {linkError && (
+              <p role="alert" className="text-sm font-medium text-danger">
+                {linkError}
+              </p>
+            )}
+          </>
+        )}
+      </div>
     </section>
   );
 }

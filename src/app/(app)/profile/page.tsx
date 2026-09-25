@@ -105,9 +105,16 @@ export default async function ProfilePage() {
           <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
             {profile?.full_name || "Your profile"}
           </h1>
-          <p className="font-mono text-xs text-text-secondary">
-            {profile?.phone ?? user?.email ?? ""}
-          </p>
+          {profile?.phone && (
+            <p className="font-mono text-xs text-text-secondary">
+              {profile.phone}
+            </p>
+          )}
+          {user?.email && (
+            <p className="font-mono text-xs text-text-secondary">
+              {user.email}
+            </p>
+          )}
         </div>
       </div>
 
@@ -116,6 +123,7 @@ export default async function ProfilePage() {
           userId={user.id}
           currentName={profile?.full_name ?? ""}
           currentAvatarUrl={profile?.avatar_url ?? null}
+          currentEmail={user.email ?? null}
         />
       )}
 
