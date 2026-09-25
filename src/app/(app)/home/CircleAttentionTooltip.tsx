@@ -47,7 +47,7 @@ export default function CircleAttentionTooltip({
           strokeWidth={2}
         />
       </TooltipTrigger>
-      <TooltipPanel className="rounded-[10px] text-white">{label}</TooltipPanel>
+      <TooltipPanel className="rounded-[10px]">{label}</TooltipPanel>
     </Tooltip>
   );
 }

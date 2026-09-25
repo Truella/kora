@@ -59,13 +59,13 @@ function TooltipPanel({
       >
         <TooltipPopupPrimitive
           className={cn(
-            'bg-primary text-primary-foreground w-fit origin-(--transform-origin) rounded-md px-3 py-1.5 text-xs text-balance',
+            'bg-surface text-text-primary border-[0.5px] border-border shadow-[0_12px_30px_rgba(11,38,36,0.12)] w-fit origin-(--transform-origin) rounded-md px-3 py-1.5 text-xs text-balance',
             className,
           )}
           style={style}
         >
           {children}
-          <TooltipArrowPrimitive className="bg-primary fill-primary z-50 size-2.5 data-[side='bottom']:-top-[4px] data-[side='right']:-left-[4px] data-[side='left']:-right-[4px] data-[side='inline-start']:-right-[4px] data-[side='inline-end']:-left-[4px] rotate-45 rounded-[2px]" />
+          <TooltipArrowPrimitive className="bg-surface fill-surface z-50 size-2.5 data-[side='bottom']:-top-[4px] data-[side='right']:-left-[4px] data-[side='left']:-right-[4px] data-[side='inline-start']:-right-[4px] data-[side='inline-end']:-left-[4px] rotate-45 rounded-[2px]" />
         </TooltipPopupPrimitive>
       </TooltipPositionerPrimitive>
     </TooltipPortalPrimitive>

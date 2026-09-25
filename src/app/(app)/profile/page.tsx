@@ -82,7 +82,7 @@ export default async function ProfilePage() {
   const myCircles = (circles ?? []) as { id: string; name: string }[];
 
   return (
-    <main className="flex flex-1 flex-col gap-4 px-4 py-6">
+    <main className="flex flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       <div className="flex items-center gap-3">
         {profile?.avatar_url ? (
           <Image
