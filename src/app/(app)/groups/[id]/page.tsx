@@ -482,9 +482,8 @@ export default async function GroupDetailPage({
   // Before that the row says what's missing instead of offering a dead tap.
   const payoutReady = expectedCount > 0 && settledCount >= expectedCount;
 
-  // Member rows for the shared MembersPanel — the demo feeds the same
-  // component with mocks. Trust stays as the cached number; the
-  // on-time/late breakdown behind it was cut from this surface.
+  // Member rows for the shared MembersPanel. Raw values only — wording
+  // and tints live in the component so every row reads the same.
   const memberRows: MemberRow[] = circleRows.map((m, i) => {
     const name = profileNames.get(m.user_id) ?? `····${m.user_id.slice(-4)}`;
     const isFounder = m.user_id === group.created_by;
@@ -494,49 +493,35 @@ export default async function GroupDetailPage({
       : m.invited_by
         ? `Invited by ${inviter ?? "a member"}`
         : "Joined via link";
-    const turnState = currentCycle
-      ? (settledByMember.get(m.id) ?? "pending")
-      : null;
-    // "Share …" on purpose: the Turn number beside it is the receive
-    // slot, so a bare "Pending" would read ambiguously.
-    const state =
-      turnState === "paid"
-        ? "Share paid"
-        : turnState === "late"
-          ? "Share late"
-          : turnState
-            ? "Share pending"
-            : null;
-    const wash =
-      turnState === "paid"
-        ? "bg-[#E0ECE9] text-[#1E5A4E]"
-        : turnState === "late"
-          ? "bg-[#F3E1E0] text-[#8A2A21]"
-          : turnState
-            ? "bg-[#F8EDD9] text-[#8A5F14]"
-            : "bg-black/[0.04] text-text-secondary";
+    const raw = currentCycle ? (settledByMember.get(m.id) ?? "pending") : null;
+    // "To pay" on purpose: the collect slot beside it is a Turn number,
+    // so a bare "Pending" would read ambiguously.
+    const share =
+      raw === "paid" ? ("paid" as const) : raw === "late" ? ("late" as const) : raw ? ("pending" as const) : null;
     const score = Number(m.trust_score_cache);
     return {
       id: m.id,
       initial: (name.trim().charAt(0) || "·").toUpperCase(),
-      wash,
       name,
       you: !!user && m.user_id === user.id,
       next: m.id === nextRecipientId,
       role,
-      turnPos: `Turn ${m.payout_position ?? i + 1}`,
-      state,
-      // No settled share yet → "New", not a perfect 100 unearned.
+      slot: m.payout_position ?? i + 1,
+      share,
+      // No settled share yet → null ("No score yet"), not a perfect 100
+      // unearned.
       trust: settledMemberIds.has(m.id)
-        ? `Trust ${Number.isFinite(score) ? score : 100}`
-        : "Trust · New",
+        ? Number.isFinite(score)
+          ? score
+          : 100
+        : null,
     };
   });
   const membersPanel =
     member && circleRows.length > 0 ? (
       <MembersPanel
         count={circleRows.length}
-        note="New members join by member vote"
+        note="New members join by vote"
         rows={memberRows}
       />
     ) : null;
