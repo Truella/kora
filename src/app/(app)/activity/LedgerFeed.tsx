@@ -25,11 +25,15 @@ export default function LedgerFeed({
   initialHistory,
   groupId,
   previewCount,
+  title,
 }: {
   initialDue: LedgerEvent[];
   initialHistory: LedgerEvent[];
   groupId?: string;
   previewCount?: number;
+  // Optional section title. When present it shares one row with the live
+  // dot instead of stacking two headers.
+  title?: string;
 }) {
   const [due, setDue] = useState(initialDue);
   const [history, setHistory] = useState(initialHistory);
@@ -82,13 +86,22 @@ export default function LedgerFeed({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <span
-          className={`h-2 w-2 rounded-full ${live ? "bg-success" : "bg-text-secondary"}`}
-        />
-        <p className="font-mono text-xs text-text-secondary">
-          {live ? "Live" : "Connecting…"}
-        </p>
+      <div className="flex items-center justify-between gap-3">
+        {title ? (
+          <h2 className="font-display text-lg font-semibold tracking-tight text-text-primary">
+            {title}
+          </h2>
+        ) : (
+          <span />
+        )}
+        <span className="flex shrink-0 items-center gap-2">
+          <span
+            className={`h-2 w-2 rounded-full ${live ? "bg-success" : "bg-text-secondary"}`}
+          />
+          <span className="font-mono text-xs text-text-secondary">
+            {live ? "Live" : "Connecting…"}
+          </span>
+        </span>
       </div>
 
       {empty ? (

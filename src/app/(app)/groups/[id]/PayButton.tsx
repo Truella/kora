@@ -14,10 +14,18 @@ export default function PayButton({
   cycleId,
   groupId,
   amountLabel,
+  variant = "default",
+  tone = "default",
 }: {
   cycleId: string;
   groupId: string;
   amountLabel: string;
+  // Compact renders a small inline pill for upcoming-turn rows — the hero
+  // keeps the full-width primary button as the main pay affordance.
+  variant?: "default" | "compact";
+  // On-dark renders a white button for petrol surfaces (teal-on-petrol is
+  // muddy) — used by the turn hero card.
+  tone?: "default" | "onDark";
 }) {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +79,32 @@ export default function PayButton({
     }
   }
 
+  const primaryClass =
+    tone === "onDark"
+      ? "bg-white text-[#0B2624] hover:bg-white/90"
+      : "bg-primary text-white hover:bg-primary-hover";
+
+  if (variant === "compact") {
+    return (
+      <div className="flex flex-col gap-2">
+        <motion.button
+          type="button"
+          onClick={handlePay}
+          disabled={starting}
+          whileTap={{ scale: 0.97 }}
+          className={`inline-flex items-center justify-center gap-1.5 self-start rounded-full px-4 py-2 text-xs font-semibold disabled:opacity-60 ${primaryClass}`}
+        >
+          {starting ? "Starting…" : `Pay ${amountLabel}`}
+        </motion.button>
+        {error && (
+          <p className="rounded-[10px] bg-[#F3E1E0] px-3 py-2 text-xs text-[#8A2A21]">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <motion.button
@@ -78,7 +112,7 @@ export default function PayButton({
         onClick={handlePay}
         disabled={starting}
         whileTap={{ scale: 0.97 }}
-        className="flex items-center justify-center gap-2 rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
+        className={`flex items-center justify-center gap-2 rounded-[10px] px-6 py-[13px] text-sm font-semibold disabled:opacity-60 ${primaryClass}`}
       >
         {starting ? "Starting payment…" : `Pay your ${amountLabel} share`}
         {!starting && <HugeiconsIcon icon={ArrowRight01Icon} size={18} />}

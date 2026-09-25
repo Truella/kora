@@ -186,9 +186,9 @@ async function paymentStatus(
       ? new Date(row.paid_at).toLocaleDateString()
       : target.due_date;
     const late = row.status === "late" ? "(late)" : "";
-    return `END Cycle ${target.cycle_number}: received${late} ${when}. Trust ${circle.trust_score_cache}.`;
+    return `END Turn ${target.cycle_number}: received${late} ${when}. Trust ${circle.trust_score_cache}.`;
   }
-  return `END Cycle ${target.cycle_number}: share due ${target.due_date}. Pay in the app to protect your trust.`;
+  return `END Turn ${target.cycle_number}: share due ${target.due_date}. Pay in the app to protect your trust.`;
 }
 
 // Screen 3: the next pending payout — who receives, how much, when.
@@ -244,7 +244,7 @@ async function nextPayout(
   }
   const pot = potByCycle.get(next.id);
   return (
-    `END Cycle ${next.cycle_number}: ${pot ? `${Number(pot).toLocaleString()} to ` : "pot to"}` +
+    `END Turn ${next.cycle_number}: ${pot ? `${Number(pot).toLocaleString()} to ` : "pot to"}` +
     `${name}, due ${next.due_date}.`
   );
 }
