@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { HomeCircle, HomeSnapshot } from "@/lib/home";
+import { collectPositionLabel } from "@/lib/rotation";
 import ProgressBar from "./ProgressBar";
 import SectionHead from "./SectionHead";
 import CircleAttentionTooltip from "./CircleAttentionTooltip";
@@ -41,11 +42,16 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
   const isCompleted = circle.status === "completed";
   // Your position in the rotation: only meaningful while the circle is live
   // and scheduled. Paused shows the halted panel, completed shows history.
+  // Gated on the label itself rather than on the raw fields, so a position
+  // that cannot be stated honestly (slot outside the roster, after a
+  // departure left a gap) hides the whole block instead of leaving an empty
+  // cell beside a dangling "· date".
+  const positionLabel = collectPositionLabel(
+    circle.myRoundNumber,
+    circle.rotationTotal,
+  );
   const showPosition =
-    !circle.awaitingSchedule &&
-    !isPaused &&
-    !isCompleted &&
-    circle.myRoundNumber !== null;
+    !circle.awaitingSchedule && !isPaused && !isCompleted && !!positionLabel;
 
   return (
     <div className="relative flex h-full flex-col rounded-[20px] border-[0.5px] border-border bg-surface shadow-[0_12px_30px_rgba(11,38,36,0.05)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_40px_rgba(11,38,36,0.09)] focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:ring-offset-bg active:translate-y-0 active:scale-[0.99]">
@@ -137,7 +143,7 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
           <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
             <div className="min-w-0">
               <p className="text-[11px] font-semibold tabular-nums text-text-primary">
-                Your turn: {circle.myRoundNumber} of {circle.rotationTotal}
+                {positionLabel}
               </p>
               <p className="mt-0.5 text-xs text-text-secondary">
                 {circle.memberCount} member
@@ -170,8 +176,7 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
                   </p>
                   {circle.myPayoutDateLabel && (
                     <p className="mt-0.5 truncate text-[11px] tabular-nums text-text-secondary">
-                      Yours Turn {circle.myRoundNumber} ·{" "}
-                      {circle.myPayoutDateLabel}
+                      {positionLabel} · {circle.myPayoutDateLabel}
                     </p>
                   )}
                 </>

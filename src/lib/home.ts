@@ -498,9 +498,22 @@ export async function getHomeSnapshot(
     groups.filter((g) => g.status === "paused").map((g) => g.id),
   );
 
+  // Only the current turn is payable: the first open (non-completed)
+  // cycle per group. Cycles arrive ordered by cycle_number ascending,
+  // so the first open id seen per group wins.
+  const firstOpenByGroup = new Map<string, string>();
+  for (const cycle of cycles) {
+    if (cycle.status === "completed") continue;
+    if (!firstOpenByGroup.has(cycle.group_id))
+      firstOpenByGroup.set(cycle.group_id, cycle.id);
+  }
+
   for (const cycle of cycles) {
     // Disbursed rounds are history, not a work queue.
     if (cycle.status === "completed") continue;
+    // Later turns open when the current one settles — they never enter
+    // the queue, so attention and NextUp can only point at payable turns.
+    if (firstOpenByGroup.get(cycle.group_id) !== cycle.id) continue;
     if (pausedGroupIds.has(cycle.group_id)) continue;
     const joinedDate = joinedDateByGroup.get(cycle.group_id);
     // No membership row means the caller cannot be a current member of a circle

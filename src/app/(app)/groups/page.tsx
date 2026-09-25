@@ -3,6 +3,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { UserGroupIcon, Add01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import { getHomeSnapshot, type HomeCircle } from "@/lib/home";
+import { collectPositionLabel } from "@/lib/rotation";
 import { RevealLi } from "../../Reveal";
 
 export const metadata = { title: "Circles" };
@@ -56,16 +57,20 @@ function countLine(circles: HomeCircle[]): string | null {
   return [`${circles.length} total`, ...parts].join(" · ");
 }
 
-// Where am I in it. "Your turn" is the ajo word for it: a bare count reads
-// as circle progress, but this number is the member's own place in the
-// rotation — "you collect first" for 1 of 2.
+// Where am I in it. The position label carries its own total ("… of 3"), but
+// the member count beside it is a different number — `rotationTotal` is
+// scheduled turns, `memberCount` is the active roster — so both stay.
 // Null while unscheduled: the footer already carries "N members joined",
 // so a member line here would just repeat it.
 function memberLine(circle: HomeCircle): string | null {
   if (circle.awaitingSchedule) return null;
   const members = `${circle.memberCount} member${circle.memberCount === 1 ? "" : "s"}`;
-  if (circle.myRoundNumber !== null) {
-    return `${members} · Your turn: ${circle.myRoundNumber} of ${circle.rotationTotal}`;
+  const position = collectPositionLabel(
+    circle.myRoundNumber,
+    circle.rotationTotal,
+  );
+  if (position) {
+    return `${members} · ${position}`;
   }
   if (circle.rotationTotal > 0) {
     return `${members} · ${circle.rotationTotal} turns`;

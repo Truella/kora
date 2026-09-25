@@ -62,6 +62,21 @@ Deno.serve(async (req) => {
       .single();
     if (!member) return json({ error: "Not an active member" }, 403);
 
+    // Only the current turn is payable: the first open cycle of the
+    // group. UI buttons already hide for later turns; this refuses
+    // crafted requests too.
+    const { data: openCycle } = await admin
+      .from("cycles")
+      .select("id")
+      .eq("group_id", cycle.group_id)
+      .neq("status", "completed")
+      .order("cycle_number", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (!openCycle || openCycle.id !== cycleId) {
+      return json({ error: "This turn is not open for payment" }, 409);
+    }
+
     // Reuse a pending row (payment retry); refuse if already settled —
     // paid or late both mean the money arrived, never charge twice.
     const { data: existing } = await admin

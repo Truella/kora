@@ -23,6 +23,7 @@ import {
 } from "./TurnViews";
 import { getLedgerEvents } from "@/lib/ledger";
 import { utcDateOnly, formatCycleDate, formatCycleDateShort } from "@/lib/money";
+import { collectPositionLabel } from "@/lib/rotation";
 
 export const metadata = { title: "Circle" };
 
@@ -287,8 +288,10 @@ export default async function GroupDetailPage({
   // A contribution row only exists once Pay starts, so "no row" counts as
   // unpaid — the nudge must fire before the first payment too. Late rows
   // are settled money (the webhook wrote them on verified payment), so
-  // they leave the nudge lists alone.
+  // they leave the nudge lists alone. Only the current turn is payable,
+  // so only it can nudge — later turns open when it settles.
   const unpaidCycles = (cycles ?? []).filter((c) => {
+    if (c.id !== currentCycle?.id) return false;
     if (!enrolledIn(c)) return false;
     const mine = byCycle.get(c.id) as { status?: string } | undefined;
     return !mine || (mine.status !== "paid" && mine.status !== "late");
@@ -345,8 +348,8 @@ export default async function GroupDetailPage({
     ? await getLedgerEvents(supabase, id)
     : { due: [], history: [] };
 
-  // Active roster — feeds "Your turn: X of Y", the payout-gate member
-  // count, and the rotation size. Read-only: RLS "view members of your
+  // Active roster — feeds the caller's collector position, the payout-gate
+  // member count, and the rotation size. Read-only: RLS "view members of your
   // groups" scopes to fellow members. Full profiles live on /members.
   type CircleMemberRow = {
     id: string;
@@ -364,8 +367,9 @@ export default async function GroupDetailPage({
     : { data: [] };
   const circleRows = (circleMembers ?? []) as CircleMemberRow[];
 
-  // "Your turn: X of Y" — the caller's own slot in the rotation, shown in
-  // the hero header. Null positions hide the line rather than guessing.
+  // The caller's own slot in the rotation, shown in the hero header. Null
+  // positions hide the line rather than guessing — `collectPositionLabel`
+  // also drops it when the slot falls outside the roster.
   const myCircleRow = user
     ? circleRows.find((m) => m.user_id === user.id)
     : undefined;
@@ -438,8 +442,6 @@ export default async function GroupDetailPage({
     const contribution = byCycle.get(cycle.id);
     const enrolled = enrolledIn(cycle);
     const status = enrolled ? contribution?.status ?? "pending" : "skipped";
-    const needsPay =
-      !!member && enrolled && status !== "paid" && status !== "late";
     const recipient = recipientNames.get(cycle.recipient_member_id) ?? null;
     // "You" when the caller is the collector — with the past-turn list gone,
     // this row is the only place a future turn says it is yours to receive.
@@ -465,9 +467,14 @@ export default async function GroupDetailPage({
         : paymentSentence;
     // The one fact only the caller can know: what this turn asks of them.
     // Every upcoming row has one, which is why the line is unconditional.
+    // Rows never offer Pay — only the current turn (hero + event card) is
+    // payable, so an unpaid future turn says when it opens instead.
     // The `skipped` branch is defensive — an upcoming turn's due date is
     // always after the join date, so it should be unreachable, and paying
     // into a turn you were never in is a worse lie than an extra sentence.
+    const opener = currentCycle
+      ? ` · pay opens after Turn ${currentCycle.cycle_number}`
+      : "";
     const yourLine =
       status === "skipped"
         ? "You joined after this turn"
@@ -475,7 +482,7 @@ export default async function GroupDetailPage({
           ? `You paid ${amountLabel}`
           : status === "late"
             ? `You paid ${amountLabel} late`
-            : `You owe ${amountLabel}`;
+            : `You owe ${amountLabel}${opener}`;
     return (
       <TurnRow
         key={cycle.id}
@@ -483,16 +490,6 @@ export default async function GroupDetailPage({
         turnNumber={cycle.cycle_number}
         meta={meta}
         shareLine={yourLine}
-        action={
-          needsPay ? (
-            <PayButton
-              cycleId={cycle.id}
-              groupId={group.id}
-              amountLabel={amountLabel}
-              variant="compact"
-            />
-          ) : undefined
-        }
       />
     );
   };
@@ -577,7 +574,7 @@ export default async function GroupDetailPage({
             !myCurrentSettled && (
               <EventCard
                 tone="gold"
-                eyebrow="Your turn to pay"
+                eyebrow="Contribution due"
                 title={
                   <>
                     Your {amountLabel} share · Turn{" "}
@@ -636,11 +633,10 @@ export default async function GroupDetailPage({
                   />
                 )
               }
-              positionLine={
-                myTurnPosition !== null && rotationTotal > 0
-                  ? `Your turn: ${myTurnPosition} of ${rotationTotal}`
-                  : null
-              }
+              positionLine={collectPositionLabel(
+                myTurnPosition,
+                rotationTotal,
+              )}
               contributionAmount={amountLabel}
               contributionState={
                 myCurrentStatus === "skipped" ? (
@@ -672,7 +668,7 @@ export default async function GroupDetailPage({
                   </p>
                 )
               }
-              receiverLabel={isMyTurn ? "Your turn" : "Receiver"}
+              receiverLabel={isMyTurn ? "Your payout" : "Receiver"}
               receiverAmount={currentPot ?? amountLabel}
               receiverHighlight={isMyTurn}
               receiverSub={
