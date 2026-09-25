@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { UserGroupIcon } from "@hugeicons/core-free-icons";
+import {
+  Activity01Icon,
+  Book02Icon,
+  UserGroupIcon,
+  UserMultipleIcon,
+} from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import PayButton from "./PayButton";
 import PayoutAction from "./PayoutAction";
@@ -534,11 +539,13 @@ export default async function GroupDetailPage({
   });
   const membersPanel =
     member && circleRows.length > 0 ? (
-      <MembersPanel
-        count={circleRows.length}
-        note="New members join by member vote"
-        rows={memberRows}
-      />
+      <div id="members" className={ANCHOR_MT}>
+        <MembersPanel
+          count={circleRows.length}
+          note="New members join by member vote"
+          rows={memberRows}
+        />
+      </div>
     ) : null;
 
   // Compressed turn rows for history + upcoming, via the shared TurnRow.
@@ -660,9 +667,6 @@ export default async function GroupDetailPage({
               </span>
             </p>
           </div>
-          {member && user && (
-            <InviteMenu groupId={group.id} inviterId={user.id} />
-          )}
         </div>
       </div>
 
@@ -820,6 +824,57 @@ export default async function GroupDetailPage({
             />
           </div>
 
+          {/* Quick actions — one row of four: ledger book, members,
+              invite, recent activity. Sits right after the current-turn
+              hero, before the upcoming/previous turn lists. */}
+          <nav
+            aria-label="Quick actions"
+            className="grid grid-cols-4 gap-2"
+          >
+            <Link
+              href={`/groups/${group.id}/ledger`}
+              className="flex flex-col items-center gap-1.5 rounded-[14px] border-[0.5px] border-border bg-surface p-3 text-center transition-colors hover:bg-black/[0.02]"
+            >
+              <HugeiconsIcon
+                icon={Book02Icon}
+                size={24}
+                className="text-primary"
+              />
+              <span className="text-xs font-semibold text-text-primary">
+                Ledger
+              </span>
+            </Link>
+            <Link
+              href={`/groups/${group.id}/members`}
+              className="flex flex-col items-center gap-1.5 rounded-[14px] border-[0.5px] border-border bg-surface p-3 text-center transition-colors hover:bg-black/[0.02]"
+            >
+              <HugeiconsIcon
+                icon={UserMultipleIcon}
+                size={24}
+                className="text-primary"
+              />
+              <span className="text-xs font-semibold text-text-primary">
+                Members
+              </span>
+            </Link>
+            {member && user && (
+              <InviteMenu groupId={group.id} inviterId={user.id} grid />
+            )}
+            <a
+              href="#activity"
+              className="flex flex-col items-center gap-1.5 rounded-[14px] border-[0.5px] border-border bg-surface p-3 text-center transition-colors hover:bg-black/[0.02]"
+            >
+              <HugeiconsIcon
+                icon={Activity01Icon}
+                size={24}
+                className="text-primary"
+              />
+              <span className="text-xs font-semibold text-text-primary">
+                Activity
+              </span>
+            </a>
+          </nav>
+
           {upcomingCycles.length > 0 && (
             <section className="flex flex-col gap-2">
               <h2 className="font-display text-lg font-semibold tracking-tight text-text-primary">
@@ -861,7 +916,7 @@ export default async function GroupDetailPage({
       {membersPanel}
 
       {member && (
-        <section className="flex flex-col gap-3">
+        <section id="activity" className={`${ANCHOR_MT} flex flex-col gap-3`}>
           <LedgerFeed
             initialDue={ledger.due}
             initialHistory={ledger.history}

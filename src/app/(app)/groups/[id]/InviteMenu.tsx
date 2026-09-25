@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Add01Icon,
+  UserAdd01Icon,
   Link01Icon,
   Tick01Icon,
   UserMultipleIcon,
@@ -22,9 +22,11 @@ import InviteByPhone from "./InviteByPhone";
 export default function InviteMenu({
   groupId,
   inviterId,
+  grid = false,
 }: {
   groupId: string;
   inviterId: string;
+  grid?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [sheet, setSheet] = useState(false);
@@ -69,16 +71,32 @@ export default function InviteMenu({
 
   return (
     <>
-      <div className="relative shrink-0">
+      <div className={grid ? "relative w-full" : "relative shrink-0"}>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-haspopup="menu"
-          className="inline-flex items-center gap-2 rounded-[10px] border-[0.5px] border-border bg-white px-4 py-2 text-sm font-semibold text-text-primary"
+          className={
+            grid
+              ? "flex w-full flex-col items-center gap-1.5 rounded-[14px] border-[0.5px] border-border bg-surface p-3 text-center transition-colors hover:bg-black/[0.02]"
+              : "inline-flex items-center gap-2 rounded-[10px] border-[0.5px] border-border bg-white px-4 py-2 text-sm font-semibold text-text-primary"
+          }
         >
-          <HugeiconsIcon icon={Add01Icon} size={16} />
-          Invite
+          <HugeiconsIcon
+            icon={UserAdd01Icon}
+            size={grid ? 24 : 16}
+            className="text-primary"
+          />
+          <span
+            className={
+              grid
+                ? "text-xs font-semibold text-text-primary"
+                : "text-sm font-semibold text-text-primary"
+            }
+          >
+            Invite
+          </span>
         </button>
 
         <AnimatePresence>
