@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { useLedgerLive } from "@/lib/use-ledger-live";
 
 export type LedgerCellStatus = "paid" | "late" | "pending" | "overdue" | "skipped";
@@ -122,9 +124,9 @@ export default function LedgerBook({
       <div className="ledger-no-print mb-3 flex items-center justify-between gap-3">
         <Link
           href={`/groups/${groupId}`}
-          className="rounded-[10px] border-[0.5px] border-border bg-white px-3 py-1.5 text-sm font-semibold text-text-primary"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-text-secondary hover:text-text-primary"
         >
-          ← Back to circle
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={16} /> Back to circle
         </Link>
         <button
           type="button"

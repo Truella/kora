@@ -230,11 +230,6 @@ export default async function GroupDetailPage({
     sortedCycles.find((c) => c.status !== "completed") ??
     sortedCycles[sortedCycles.length - 1] ??
     null;
-  const pastCycles = currentCycle
-    ? sortedCycles
-        .filter((c) => c.cycle_number < currentCycle.cycle_number)
-        .reverse()
-    : [];
   const upcomingCycles = currentCycle
     ? sortedCycles.filter((c) => c.cycle_number > currentCycle.cycle_number)
     : [];
@@ -428,67 +423,68 @@ export default async function GroupDetailPage({
   // Before that the row says what's missing instead of offering a dead tap.
   const payoutReady = expectedCount > 0 && settledCount >= expectedCount;
 
-  // Compressed turn rows for history + upcoming, via the shared TurnRow.
-  // Upcoming rows keep a compact Pay affordance — a share can fall due
-  // while an earlier turn still awaits its payout, and the hero only
-  // covers the current turn.
-  const renderTurnRow = (
-    cycle: (typeof sortedCycles)[number],
-    kind: "past" | "upcoming",
-  ) => {
+  // Compressed rows for the upcoming turns, via the shared TurnRow. A share
+  // can fall due while an earlier turn still awaits its payout, and the hero
+  // only covers the current turn — so upcoming turns keep their own row and
+  // their own Pay affordance.
+  //
+  // Completed turns are deliberately absent. `LedgerFeed` at the foot of this
+  // page (plus /activity and the home activity strip) already carries every
+  // settled contribution and payout with its turn number and date; the old
+  // "Previous turns" list was a second copy of that ledger, saying the same
+  // facts in a layout that read worse. UI-only removal — completed cycles and
+  // payouts are still stored and still reachable through those feeds.
+  const renderUpcomingRow = (cycle: (typeof sortedCycles)[number]) => {
     const contribution = byCycle.get(cycle.id);
     const enrolled = enrolledIn(cycle);
     const status = enrolled ? contribution?.status ?? "pending" : "skipped";
     const needsPay =
       !!member && enrolled && status !== "paid" && status !== "late";
-    const payout = payoutByCycle.get(cycle.id) as
-      | { status?: string }
-      | undefined;
-    const payoutStatus = payout?.status ?? "pending";
     const recipient = recipientNames.get(cycle.recipient_member_id) ?? null;
+    // "You" when the caller is the collector — with the past-turn list gone,
+    // this row is the only place a future turn says it is yours to receive.
+    const receiver =
+      member && cycle.recipient_member_id === member.id ? "You" : recipient;
     const pot = potFor(cycle.id);
     const shares = sharesFor(cycle.id);
-    const done = kind === "past";
     const date = formatCycleDate(cycle.due_date);
     const collectionSentence =
       shares === null
         ? null
-        : `${shares} ${shares === 1 ? "person" : "people"} ${done ? "paid" : "will pay"} ${amountLabel}${shares > 1 ? " each" : ""}.`;
+        : `${shares} ${shares === 1 ? "person" : "people"} will pay ${amountLabel}${shares > 1 ? " each" : ""}.`;
     const paymentSentence = !pot
-      ? recipient
-        ? `${recipient} ${done ? "received" : "will receive"} the collected money on ${date}.`
-        : `The collected money ${done ? "was" : "will be"} sent on ${date}.`
-      : recipient
-        ? `${recipient} ${done ? "received" : "will receive"} ${pot} on ${date}.`
-        : `${pot} ${done ? "was" : "will be"} paid on ${date}.`;
+      ? receiver
+        ? `${receiver} will receive the collected money on ${date}.`
+        : `The collected money will be sent on ${date}.`
+      : receiver
+        ? `${receiver} will receive ${pot} on ${date}.`
+        : `${pot} will be paid on ${date}.`;
     const meta =
       collectionSentence && paymentSentence
         ? `${collectionSentence} ${paymentSentence}`
         : paymentSentence;
+    // The one fact only the caller can know: what this turn asks of them.
+    // Every upcoming row has one, which is why the line is unconditional.
+    // The `skipped` branch is defensive — an upcoming turn's due date is
+    // always after the join date, so it should be unreachable, and paying
+    // into a turn you were never in is a worse lie than an extra sentence.
+    const yourLine =
+      status === "skipped"
+        ? "You joined after this turn"
+        : status === "paid"
+          ? `You paid ${amountLabel}`
+          : status === "late"
+            ? `You paid ${amountLabel} late`
+            : `You owe ${amountLabel}`;
     return (
       <TurnRow
         key={cycle.id}
         anchorId={`cycle-${cycle.id}`}
         turnNumber={cycle.cycle_number}
         meta={meta}
-        done={done}
-        shareLine={
-          <>
-            {status === "skipped"
-              ? "Not yours. It ran before you joined"
-              : status === "paid"
-                ? "Your share ✓"
-                : status === "late"
-                  ? "Your share ✓ late"
-                  : "Your share · Pending"}
-            {" · "}
-            {payoutStatus === "completed"
-              ? "Payout ✓"
-              : `Payout ${payoutStatus}`}
-          </>
-        }
+        shareLine={yourLine}
         action={
-          kind === "upcoming" && needsPay ? (
+          needsPay ? (
             <PayButton
               cycleId={cycle.id}
               groupId={group.id}
@@ -760,20 +756,7 @@ export default async function GroupDetailPage({
                 Upcoming turns
               </h2>
               <ul className="flex flex-col gap-2">
-                {upcomingCycles.map((cycle) =>
-                  renderTurnRow(cycle, "upcoming"),
-                )}
-              </ul>
-            </section>
-          )}
-
-          {pastCycles.length > 0 && (
-            <section className="flex flex-col gap-2">
-              <h2 className="font-display text-lg font-semibold tracking-tight text-text-primary">
-                Previous turns
-              </h2>
-              <ul className="flex flex-col gap-2">
-                {pastCycles.map((cycle) => renderTurnRow(cycle, "past"))}
+                {upcomingCycles.map((cycle) => renderUpcomingRow(cycle))}
               </ul>
             </section>
           )}

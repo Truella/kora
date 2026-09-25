@@ -125,9 +125,9 @@ export default function LedgerFeed({
         <>
           {shownDue.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="font-display text-lg font-semibold text-text-primary">
+              <h3 className="font-mono text-[11px] font-medium uppercase tracking-widest text-text-secondary">
                 Due & upcoming
-              </h2>
+              </h3>
               <ul className="flex flex-col gap-2">
                 {shownDue.map((e) => (
                   <LedgerRow key={e.id} event={e} showGroup={!groupId} />
@@ -138,9 +138,9 @@ export default function LedgerFeed({
 
           {shownHistory.length > 0 && (
             <section className="flex flex-col gap-2">
-              <h2 className="font-display text-lg font-semibold text-text-primary">
+              <h3 className="font-mono text-[11px] font-medium uppercase tracking-widest text-text-secondary">
                 History
-              </h2>
+              </h3>
               <ul className="flex flex-col gap-2">
                 {shownHistory.map((e) => (
                   <LedgerRow key={e.id} event={e} showGroup={!groupId} />
