@@ -113,7 +113,7 @@ export type HomeActivity = {
   amountLabel: string;
   groupName: string;
   dayLabel: string;
-  // "Round 3" — turns a ledger line into an event in the rotation. Free: the
+  // "Turn 3" — turns a ledger line into an event in the rotation. Free: the
   // cycle is already resolved for every activity row.
   contextLabel: string | null;
 };
@@ -216,6 +216,7 @@ const SETTLED_STATUSES: string[] = ["paid", "late"];
 
 export async function getHomeSnapshot(
   supabase: SupabaseClient,
+  opts: { circleLimit?: number } = {},
 ): Promise<HomeSnapshot> {
   const {
     data: { user },
@@ -823,7 +824,7 @@ export async function getHomeSnapshot(
       amountLabel: formatMoney(c.amount, group.currency),
       groupName: group.name,
       dayLabel: settledDayLabel(c.paid_at, offset, today),
-      contextLabel: `Round ${cycle.cycle_number}`,
+      contextLabel: `Turn ${cycle.cycle_number}`,
       sortKey: new Date(c.paid_at).getTime(),
     });
   }
@@ -843,7 +844,7 @@ export async function getHomeSnapshot(
       amountLabel: formatMoney(p.amount, group.currency),
       groupName: group.name,
       dayLabel: settledDayLabel(p.paid_at, offset, today),
-      contextLabel: `Round ${cycle.cycle_number}`,
+      contextLabel: `Turn ${cycle.cycle_number}`,
       sortKey: new Date(p.paid_at).getTime(),
     });
   }
@@ -868,7 +869,9 @@ export async function getHomeSnapshot(
     paymentProgress,
     attention,
     invites,
-    circles: circles.slice(0, 4),
+    // Home shows the top-ranked few; the /groups directory passes
+    // circleLimit: Infinity for the full list (circlesTotal stays whole).
+    circles: circles.slice(0, opts.circleLimit ?? 4),
     circlesTotal: groups.length,
     activity: recent,
   };

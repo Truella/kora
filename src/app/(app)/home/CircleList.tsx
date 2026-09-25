@@ -55,7 +55,7 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
       >
         <div className="flex items-start justify-between gap-3 pr-11">
           <div className="min-w-0">
-            <h3 className="truncate font-display text-lg font-semibold tracking-tight text-text-primary">
+            <h3 className="truncate font-display text-lg font-semibold capitalize tracking-tight text-text-primary">
               {circle.name}
             </h3>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -137,7 +137,7 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
           <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
             <div className="min-w-0">
               <p className="text-[11px] font-semibold tabular-nums text-text-primary">
-                Round {circle.myRoundNumber} of {circle.rotationTotal}
+                Your turn: {circle.myRoundNumber} of {circle.rotationTotal}
               </p>
               <p className="mt-0.5 text-xs text-text-secondary">
                 {circle.memberCount} member
@@ -192,13 +192,13 @@ const CADENCE: Record<string, string> = {
 
 // Explicit circle states. Forming is pre-launch (the card also says "Waiting
 // for schedule"), but it still gets a badge so no circle ever renders
-// stateless: Forming amber, Active green, Paused amber, Completed neutral.
+// stateless: Forming amber, Active green, Paused danger, Completed neutral.
 const STATUS_BADGE: Partial<
   Record<HomeCircle["status"], { label: string; className: string }>
 > = {
   forming: { label: "Forming", className: "bg-[#F8EDD9] text-[#8A5F14]" },
   active: { label: "Active", className: "bg-[#E0ECE9] text-primary" },
-  paused: { label: "Paused", className: "bg-[#F8EDD9] text-[#8A5F14]" },
+  paused: { label: "Paused", className: "bg-[#F3E1E0] text-[#8A2A21]" },
   completed: {
     label: "Completed",
     className: "bg-black/[0.04] text-text-secondary",

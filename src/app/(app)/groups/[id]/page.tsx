@@ -44,7 +44,7 @@ const STATUS_LABEL: Record<string, string> = {
 const STATUS_BADGE: Record<string, string> = {
   forming: "bg-[#F8EDD9] text-[#8A5F14]",
   active: "bg-[#E0ECE9] text-[#1E5A4E]",
-  paused: "bg-[#F8EDD9] text-[#8A5F14]",
+  paused: "bg-[#F3E1E0] text-[#8A2A21]",
   completed: "bg-black/[0.04] text-text-secondary",
 };
 

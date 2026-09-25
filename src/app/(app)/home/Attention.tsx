@@ -54,7 +54,7 @@ export default function Attention({ snapshot }: { snapshot: HomeSnapshot }) {
                       : `Due ${item.dueLabel}`}
                   </span>
                   <span className="mt-0.5 block truncate text-xs text-[#8A2A21]/75">
-                    {item.groupName} · Round {item.cycleNumber}
+                    {item.groupName} · Turn {item.cycleNumber}
                   </span>
                 </span>
                 <span className="shrink-0 font-display text-sm font-semibold tabular-nums text-[#8A2A21]">

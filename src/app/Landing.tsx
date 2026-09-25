@@ -100,19 +100,19 @@ function LedgerMock() {
   const rows = [
     {
       who: "Adaeze",
-      what: "Cycle 1 share",
+      what: "Turn 1 share",
       state: "Paid",
       cls: "bg-[#E0ECE9] text-[#1E5A4E]",
     },
     {
       who: "Chidi",
-      what: "Cycle 1 share",
+      what: "Turn 1 share",
       state: "Paid late",
       cls: "bg-[#F3E1E0] text-[#8A2A21]",
     },
     {
       who: "Funke",
-      what: "Cycle 2 share",
+      what: "Turn 2 share",
       state: "Due Fri",
       cls: "bg-[#F8EDD9] text-[#8A5F14]",
     },

@@ -151,9 +151,9 @@ export async function getLedgerEvents(
       actor: names.get(c.member_id) ?? "A member",
       detail: settled
         ? c.status === "late"
-          ? `Cycle ${c.cycles.cycle_number} · paid late ${fmtDate(c.paid_at)}`
-          : `Cycle ${c.cycles.cycle_number} · paid ${fmtDate(c.paid_at)}`
-        : `Cycle ${c.cycles.cycle_number} · due ${fmtDate(c.cycles.due_date)}`,
+          ? `Turn ${c.cycles.cycle_number} · paid late ${fmtDate(c.paid_at)}`
+          : `Turn ${c.cycles.cycle_number} · paid ${fmtDate(c.paid_at)}`
+        : `Turn ${c.cycles.cycle_number} · due ${fmtDate(c.cycles.due_date)}`,
       paidAt: c.paid_at,
       dueDate: c.cycles.due_date,
     };
@@ -173,8 +173,8 @@ export async function getLedgerEvents(
       actor: names.get(p.recipient_member_id) ?? "A member",
       detail:
         p.status === "pending"
-          ? `Payout · Cycle ${p.cycles.cycle_number} · scheduled`
-          : `Payout · Cycle ${p.cycles.cycle_number} · ${p.status} ${fmtDate(p.paid_at)}`,
+          ? `Payout · Turn ${p.cycles.cycle_number} · scheduled`
+          : `Payout · Turn ${p.cycles.cycle_number} · ${p.status} ${fmtDate(p.paid_at)}`,
       paidAt: p.paid_at,
       dueDate: p.cycles.due_date,
     };
