@@ -77,14 +77,14 @@ export default async function JoinPage({
       </h1>
       <p className="mt-2 max-w-xs text-sm leading-6 text-text-secondary">
         Someone shared this circle with you. Only people with this link can
-        ask to join — and the group votes every new member in.
+        ask to join, and the group votes every new member in.
       </p>
 
       <div className="mt-5 w-full max-w-xs">
         {!user ? (
           <div className="flex flex-col gap-3">
             <p className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm leading-6 text-[#8A5F14]">
-              Sign in to request to join — your invite is saved and you&apos;ll
+              Sign in to request to join. Your invite is saved and you&apos;ll
               land back here.
             </p>
             <Link
@@ -108,14 +108,14 @@ export default async function JoinPage({
           </div>
         ) : myStatus === "pending" ? (
           <p className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm leading-6 text-[#8A5F14]">
-            Request sent — the circle is still voting. Someone from the
+            Request sent. The circle is still voting. Someone from the
             group will tell you the outcome.
           </p>
         ) : myStatus === "rejected" ? (
           <div className="flex flex-col gap-3">
             <p className="rounded-[10px] bg-[#F3E1E0] px-4 py-3 text-sm leading-6 text-[#8A2A21]">
               The circle voted not to admit you this time. If that was a
-              mistake, you can ask once more — it starts a fresh vote.
+              mistake, you can ask once more. It starts a fresh vote.
             </p>
             <JoinRequestButton groupId={id} invitedBy={invitedBy} />
           </div>

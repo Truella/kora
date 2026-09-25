@@ -8,8 +8,16 @@ import ConfirmingBanner from "./ConfirmingBanner";
 import InviteMenu from "./InviteMenu";
 import VoteButtons from "./VoteButtons";
 import ScheduleGenerator from "./ScheduleGenerator";
-import { RevealLi } from "../../../Reveal";
 import LedgerFeed from "../../activity/LedgerFeed";
+import {
+  TurnHero,
+  EventCard,
+  MembersPanel,
+  TurnRow,
+  DueChip,
+  SettledChip,
+  type MemberRow,
+} from "./TurnViews";
 import { getLedgerEvents } from "@/lib/ledger";
 import { utcDateOnly, formatCycleDate, formatCycleDateShort } from "@/lib/money";
 
@@ -473,130 +481,70 @@ export default async function GroupDetailPage({
   // The confirm button only exists once the payout can actually complete.
   // Before that the row says what's missing instead of offering a dead tap.
   const payoutReady = expectedCount > 0 && settledCount >= expectedCount;
-  const currentShares = currentCycle ? sharesFor(currentCycle.id) : null;
-  const currentSharesLabel =
-    currentShares !== null
-      ? ` · ${currentShares} share${currentShares === 1 ? "" : "s"}`
-      : "";
 
-  // Members ride beside the hero on desktop, below it on mobile — and below
-  // the waiting card pre-schedule (without per-turn states, which don't
-  // exist yet). No "See all": circles are small, the full rotation fits.
-  // Trust stays as the cached number; the on-time/late breakdown behind it
-  // was cut from this surface.
+  // Member rows for the shared MembersPanel — the demo feeds the same
+  // component with mocks. Trust stays as the cached number; the
+  // on-time/late breakdown behind it was cut from this surface.
+  const memberRows: MemberRow[] = circleRows.map((m, i) => {
+    const name = profileNames.get(m.user_id) ?? `····${m.user_id.slice(-4)}`;
+    const isFounder = m.user_id === group.created_by;
+    const inviter = m.invited_by ? profileNames.get(m.invited_by) : null;
+    const role = isFounder
+      ? "Founder"
+      : m.invited_by
+        ? `Invited by ${inviter ?? "a member"}`
+        : "Joined via link";
+    const turnState = currentCycle
+      ? (settledByMember.get(m.id) ?? "pending")
+      : null;
+    // "Share …" on purpose: the Turn number beside it is the receive
+    // slot, so a bare "Pending" would read ambiguously.
+    const state =
+      turnState === "paid"
+        ? "Share paid"
+        : turnState === "late"
+          ? "Share late"
+          : turnState
+            ? "Share pending"
+            : null;
+    const wash =
+      turnState === "paid"
+        ? "bg-[#E0ECE9] text-[#1E5A4E]"
+        : turnState === "late"
+          ? "bg-[#F3E1E0] text-[#8A2A21]"
+          : turnState
+            ? "bg-[#F8EDD9] text-[#8A5F14]"
+            : "bg-black/[0.04] text-text-secondary";
+    const score = Number(m.trust_score_cache);
+    return {
+      id: m.id,
+      initial: (name.trim().charAt(0) || "·").toUpperCase(),
+      wash,
+      name,
+      you: !!user && m.user_id === user.id,
+      next: m.id === nextRecipientId,
+      role,
+      turnPos: `Turn ${m.payout_position ?? i + 1}`,
+      state,
+      // No settled share yet → "New", not a perfect 100 unearned.
+      trust: settledMemberIds.has(m.id)
+        ? `Trust ${Number.isFinite(score) ? score : 100}`
+        : "Trust · New",
+    };
+  });
   const membersPanel =
     member && circleRows.length > 0 ? (
-      <section className="overflow-hidden rounded-[20px] border-[0.5px] border-border bg-surface">
-        <div className="px-4 pb-1 pt-4">
-          <h2 className="font-display text-base font-semibold tracking-tight text-text-primary">
-            Members · {circleRows.length}
-          </h2>
-          <p className="mt-0.5 text-[11px] text-text-secondary">
-            New members join by member vote
-          </p>
-        </div>
-        <ul className="flex flex-col px-2 pb-2">
-          {circleRows.map((m, i) => {
-            const name =
-              profileNames.get(m.user_id) ?? `····${m.user_id.slice(-4)}`;
-            const isFounder = m.user_id === group.created_by;
-            const isYou = !!user && m.user_id === user.id;
-            const isNext = m.id === nextRecipientId;
-            const inviter = m.invited_by
-              ? profileNames.get(m.invited_by)
-              : null;
-            const role = isFounder
-              ? "Founder"
-              : m.invited_by
-                ? `Invited by ${inviter ?? "a member"}`
-                : "Joined via link";
-            const turnState = currentCycle
-              ? (settledByMember.get(m.id) ?? "pending")
-              : null;
-            // "Share …" on purpose: the Turn number beside it is the receive
-            // slot, so a bare "Pending" would read ambiguously.
-            const stateCopy =
-              turnState === "paid"
-                ? "Share paid"
-                : turnState === "late"
-                  ? "Share late"
-                  : turnState
-                    ? "Share pending"
-                    : null;
-            const avatarWash =
-              turnState === "paid"
-                ? "bg-[#E0ECE9] text-[#1E5A4E]"
-                : turnState === "late"
-                  ? "bg-[#F3E1E0] text-[#8A2A21]"
-                  : turnState
-                    ? "bg-[#F8EDD9] text-[#8A5F14]"
-                    : "bg-black/[0.04] text-text-secondary";
-            const score = Number(m.trust_score_cache);
-            // No settled share yet → "New", not a perfect 100 unearned.
-            const trustLabel = settledMemberIds.has(m.id)
-              ? `Trust ${Number.isFinite(score) ? score : 100}`
-              : "Trust · New";
-            const pos = m.payout_position ?? i + 1;
-            return (
-              <li
-                key={m.id}
-                className="flex items-center gap-3 rounded-[12px] px-2 py-2"
-              >
-                <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold ${avatarWash}`}
-                >
-                  {(name.trim().charAt(0) || "·").toUpperCase()}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-text-primary">
-                    {name}
-                    {isYou ? (
-                      <span className="font-normal text-text-secondary">
-                        {" "}
-                        · You
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                    {isNext ? (
-                      <span className="ml-1.5 rounded-full bg-[#F8EDD9] px-2 py-px text-[10px] font-semibold text-[#8A5F14]">
-                        Next
-                      </span>
-                    ) : (
-                      ""
-                    )}
-                  </p>
-                  <p className="truncate font-mono text-[11px] text-text-secondary">
-                    {role}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-mono text-[11px] tabular-nums text-text-secondary">
-                    Turn {pos}
-                  </p>
-                  {stateCopy ? (
-                    <p className="font-mono text-[11px] text-text-secondary">
-                      {stateCopy}
-                    </p>
-                  ) : (
-                    ""
-                  )}
-                  <p className="font-mono text-[11px] tabular-nums text-text-secondary">
-                    {trustLabel}
-                  </p>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+      <MembersPanel
+        count={circleRows.length}
+        note="New members join by member vote"
+        rows={memberRows}
+      />
     ) : null;
 
-  // Compressed turn rows for history + upcoming: slot, pot, my share,
-  // payout state. Keeps the `cycle-<id>` anchor so /home attention
-  // deep-links land. Upcoming rows keep a compact Pay affordance — a share
-  // can fall due while an earlier turn still awaits its payout, and the
-  // hero only covers the current turn.
+  // Compressed turn rows for history + upcoming, via the shared TurnRow.
+  // Upcoming rows keep a compact Pay affordance — a share can fall due
+  // while an earlier turn still awaits its payout, and the hero only
+  // covers the current turn.
   const renderTurnRow = (
     cycle: (typeof sortedCycles)[number],
     kind: "past" | "upcoming",
@@ -614,54 +562,54 @@ export default async function GroupDetailPage({
     const pot = potFor(cycle.id);
     const shares = sharesFor(cycle.id);
     const done = kind === "past";
+    const date = formatCycleDate(cycle.due_date);
+    const collectionSentence =
+      shares === null
+        ? null
+        : `${shares} ${shares === 1 ? "person" : "people"} ${done ? "paid" : "will pay"} ${amountLabel}${shares > 1 ? " each" : ""}.`;
+    const paymentSentence = !pot
+      ? recipient
+        ? `${recipient} ${done ? "received" : "will receive"} the collected money on ${date}.`
+        : `The collected money ${done ? "was" : "will be"} sent on ${date}.`
+      : recipient
+        ? `${recipient} ${done ? "received" : "will receive"} ${pot} on ${date}.`
+        : `${pot} ${done ? "was" : "will be"} paid on ${date}.`;
+    const meta =
+      collectionSentence && paymentSentence
+        ? `${collectionSentence} ${paymentSentence}`
+        : paymentSentence;
     return (
-      <RevealLi
-        key={cycle.id}
-        id={`cycle-${cycle.id}`}
-        delay={0.05}
-        className={`${ANCHOR_MT} flex flex-col gap-2 rounded-[14px] border-[0.5px] border-border bg-surface p-4`}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="font-display text-base font-semibold text-text-primary">
-              Turn {cycle.cycle_number}
-            </p>
-            <p className="mt-0.5 text-xs tabular-nums leading-5 text-text-secondary">
-              {pot
-                ? `Pot ${pot}${shares !== null ? ` · ${shares} share${shares === 1 ? "" : "s"}` : ""} · `
-                : ""}
-              Due {formatCycleDate(cycle.due_date)}
-              {recipient ? ` · ${recipient} receives` : ""}
-            </p>
-          </div>
-          <span
-            className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${done ? "bg-[#E0ECE9] text-[#1E5A4E]" : "bg-[#F8EDD9] text-[#8A5F14]"}`}
-          >
-            {done ? "✓ Complete" : "Upcoming"}
-          </span>
-        </div>
-        <div className="border-t border-border pt-2.5 text-xs leading-5 text-text-secondary">
-          <p>
+      <TurnRow
+        anchorId={`cycle-${cycle.id}`}
+        turnNumber={cycle.cycle_number}
+        meta={meta}
+        done={done}
+        shareLine={
+          <>
             {status === "skipped"
-              ? "Not yours — ran before you joined"
+              ? "Not yours. It ran before you joined"
               : status === "paid"
                 ? "Your share ✓"
                 : status === "late"
                   ? "Your share ✓ late"
                   : "Your share · Pending"}
             {" · "}
-            {payoutStatus === "completed" ? "Payout ✓" : `Payout ${payoutStatus}`}
-          </p>
-        </div>
-        {kind === "upcoming" && needsPay && (
-          <PayButton
-            cycleId={cycle.id}
-            groupId={group.id}
-            amountLabel={amountLabel}
-            variant="compact"
-          />
-        )}
-      </RevealLi>
+            {payoutStatus === "completed"
+              ? "Payout ✓"
+              : `Payout ${payoutStatus}`}
+          </>
+        }
+        action={
+          kind === "upcoming" && needsPay ? (
+            <PayButton
+              cycleId={cycle.id}
+              groupId={group.id}
+              amountLabel={amountLabel}
+              variant="compact"
+            />
+          ) : undefined
+        }
+      />
     );
   };
 
@@ -671,10 +619,10 @@ export default async function GroupDetailPage({
 
       {member && overdue.length > 0 && (
         <div className="rounded-[10px] bg-[#F3E1E0] px-4 py-3 text-sm text-[#8A2A21]">
-          {overdue.length} contribution{overdue.length === 1 ? "" : "s"}
-          overdue — Turn {overdue[0].cycle_number} was due{" "}
-          {formatCycleDate(overdue[0].due_date)}. Pay now to protect your
-          trust score.
+          {overdue.length} contribution{overdue.length === 1 ? "" : "s"}{" "}
+          overdue. Turn {overdue[0].cycle_number} was due{" "}
+          {formatCycleDate(overdue[0].due_date)}. Pay now, late payments
+          lower your trust score.
         </div>
       )}
       {member && dueSoon.length > 0 && (
@@ -682,7 +630,7 @@ export default async function GroupDetailPage({
           {amountLabel} due {formatCycleDate(dueSoon[0].due_date)} (Turn{""}
           {dueSoon[0].cycle_number})
           {dueSoon.length > 1
-            ? ` — plus ${dueSoon.length - 1} more within 3 days`
+            ? `, plus ${dueSoon.length - 1} more within 3 days`
             : ""}
           .
         </div>
@@ -731,7 +679,7 @@ export default async function GroupDetailPage({
                 Waiting for schedule
               </p>
               <p className="mt-1 text-sm leading-6 text-text-secondary">
-                The payout rotation has not been generated yet — the organizer
+                The payout rotation has not been generated yet. The organizer
                 starts it once membership settles.
               </p>
             </div>
@@ -747,169 +695,128 @@ export default async function GroupDetailPage({
             currentCycle.status !== "completed" &&
             enrolledCurrent &&
             !myCurrentSettled && (
-              <section className="flex flex-col gap-3 rounded-[20px] border-[0.5px] border-border bg-[#F8EDD9]/45 p-5">
-                <div className="min-w-0">
-                  <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-[#8A5F14]">
-                    Your turn to pay
-                  </p>
-                  <p className="mt-1 font-display text-lg font-semibold tracking-tight text-text-primary">
-                    Your {amountLabel} share · Turn {currentCycle.cycle_number}
-                  </p>
-                  <p className="mt-0.5 text-xs leading-5 text-text-secondary">
-                    Due {formatCycleDate(currentCycle.due_date)} — pay now to
-                    protect your trust score.
-                  </p>
-                </div>
-                <PayButton
-                  cycleId={currentCycle.id}
-                  groupId={group.id}
-                  amountLabel={amountLabel}
-                />
-              </section>
+              <EventCard
+                tone="gold"
+                eyebrow="Your turn to pay"
+                title={
+                  <>
+                    Your {amountLabel} share · Turn{" "}
+                    {currentCycle.cycle_number}
+                  </>
+                }
+                sub={
+                  <>
+                    Due {formatCycleDate(currentCycle.due_date)}. Pay now,
+                    late payments lower your trust score.
+                  </>
+                }
+                action={
+                  <PayButton
+                    cycleId={currentCycle.id}
+                    groupId={group.id}
+                    amountLabel={amountLabel}
+                  />
+                }
+              />
             )}
           {member &&
             currentPayoutStatus === "pending" &&
             payoutReady &&
             isMyTurn && (
-              <section className="flex flex-col gap-3 rounded-[20px] border-[0.5px] border-border bg-[#E0ECE9]/45 p-5">
-                <div className="min-w-0">
-                  <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-[#1E5A4E]">
-                    Your payout is ready
-                  </p>
-                  <p className="mt-1 font-display text-lg font-semibold tracking-tight text-text-primary">
-                    Pot {currentPot ?? amountLabel}
-                    {currentSharesLabel} · Turn {currentCycle.cycle_number}
-                  </p>
-                  <p className="mt-0.5 text-xs leading-5 text-text-secondary">
-                    Every share is in — confirming releases the pot and
-                    settles the turn.
-                  </p>
-                </div>
-                <div className="flex justify-end">
-                  <PayoutAction
-                    cycleId={currentCycle.id}
-                    payoutStatus={currentPayoutStatus}
-                  />
-                </div>
-              </section>
+              <EventCard
+                tone="teal"
+                eyebrow="Everyone has paid"
+                title={
+                  <>
+                    Turn {currentCycle.cycle_number}: {currentPot ?? "The money"}{" "}
+                    is ready for you.
+                  </>
+                }
+                sub="Everyone has paid. Confirm that you collected the money to complete this turn."
+                action={
+                  <div className="flex justify-end">
+                    <PayoutAction
+                      cycleId={currentCycle.id}
+                      payoutStatus={currentPayoutStatus}
+                    />
+                  </div>
+                }
+              />
             )}
           <div className="flex flex-col gap-4">
-            <section
-              id={`cycle-${currentCycle.id}`}
-              className={`${ANCHOR_MT} relative overflow-hidden rounded-[20px] bg-[radial-gradient(circle_at_88%_8%,rgba(191,154,78,0.26),transparent_34%),linear-gradient(135deg,#0B2624_0%,#14524F_125%)] p-5 text-white shadow-[0_18px_42px_rgba(11,38,36,0.16)] sm:p-6`}
-            >
-              <div
-                aria-hidden
-                className="absolute -right-16 -top-20 h-52 w-52 rounded-full border border-white/10"
-              />
-              <div
-                aria-hidden
-                className="absolute -right-7 -top-10 h-32 w-32 rounded-full border border-white/10"
-              />
-              <div className="relative">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="font-display text-lg font-semibold tracking-tight text-white">
-                  Turn {currentCycle.cycle_number}
-                </h2>
-                  {currentCycle.status === "completed" ? (
-                    <span className="inline-flex shrink-0 items-center rounded-full bg-[#E0ECE9] px-2.5 py-0.5 text-[11px] font-semibold text-[#1E5A4E]">
-                      ✓ Settled
-                    </span>
-                  ) : (
-                    <span className="inline-flex shrink-0 items-center rounded-full bg-[#F8EDD9] px-2.5 py-0.5 text-[11px] font-semibold text-[#8A5F14]">
-                      Due {formatCycleDate(currentCycle.due_date)}
-                    </span>
-                  )}
-                </div>
-                {myTurnPosition !== null && rotationTotal > 0 && (
-                  <p className="mt-1 text-xs font-semibold tabular-nums text-white/65">
-                    Your turn: {myTurnPosition} of {rotationTotal}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div className="min-w-0">
-                  <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-white/60">
-                    Your contribution
-                  </p>
-                  <p className="mt-1 font-display text-2xl font-semibold tabular-nums tracking-tight text-white">
-                    {amountLabel}
-                  </p>
-                  <div className="mt-2">
-                    {myCurrentStatus === "skipped" ? (
-                      <p className="text-xs leading-5 text-white/65">
-                        Ran before you joined — not yours to pay.
-                      </p>
-                    ) : myCurrentSettled ? (
-                      myCurrentStatus === "late" ? (
-                        <p className="text-xs font-medium text-[#F2B8B5]">
-                          Paid late — the money arrived after the due date, so
-                          trust took a hit.
-                        </p>
-                      ) : (
-                        <p className="text-xs font-medium text-white/90">
-                          ✓ Paid
-                          {myCurrentContribution?.paid_at
-                            ? ` ${formatCycleDateShort(myCurrentContribution.paid_at)}`
-                            : ""}
-                        </p>
-                      )
-                    ) : member && enrolledCurrent ? (
-                      <p className="text-xs leading-5 text-white/70">
-                        Pending · due {formatCycleDate(currentCycle.due_date)}{" "}
-                        — pay from the card above.
-                      </p>
-                    ) : (
-                      <p className="text-xs text-white/65">
-                        Due {formatCycleDate(currentCycle.due_date)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div
-                  className={`min-w-0 rounded-[12px] p-3.5 ${isMyTurn ? "bg-[#E2C98F]/15" : "bg-white/10"}`}
-                >
-                  <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-white/60">
-                    {isMyTurn ? "Your turn" : "Receiver"}
-                  </p>
-                  <p
-                    className={`mt-1 font-display text-2xl font-semibold tabular-nums tracking-tight ${isMyTurn ? "text-[#E2C98F]" : "text-white"}`}
-                  >
-                    {currentPot ?? amountLabel}
-                  </p>
-                  <p className="mt-2 text-xs leading-5 text-white/70">
-                    {currentPayoutStatus === "completed"
-                      ? isMyTurn
-                        ? `✓ Received ${currentPayout?.paid_at ? formatCycleDateShort(currentPayout.paid_at) : formatCycleDate(currentCycle.due_date)}`
-                        : currentRecipient
-                          ? `${currentRecipient} received`
-                          : "Disbursed"
-                      : currentPayoutStatus === "failed"
-                        ? "Payout failed — contact the organizer"
-                        : isMyTurn
-                          ? `You receive · ${formatCycleDate(currentCycle.due_date)}`
-                          : currentRecipient
-                            ? `${currentRecipient} receives · ${formatCycleDate(currentCycle.due_date)}`
-                            : `Due ${formatCycleDate(currentCycle.due_date)}`}
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5">
-                <p className="text-xs tabular-nums text-white/65">
-                  {settledCount} / {expectedCount} contributions received
-                </p>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/15">
-                  <div
-                    className="h-full rounded-full bg-[#E2C98F]"
-                    style={{
-                      width: `${expectedCount > 0 ? Math.min(100, Math.round((settledCount / expectedCount) * 100)) : 0}%`,
-                    }}
+            <TurnHero
+              anchorId={`cycle-${currentCycle.id}`}
+              turnNumber={currentCycle.cycle_number}
+              chip={
+                currentCycle.status === "completed" ? (
+                  <SettledChip label="✓ Settled" />
+                ) : (
+                  <DueChip
+                    label={`Due ${formatCycleDate(currentCycle.due_date)}`}
                   />
-                </div>
-              </div>
-            </section>
+                )
+              }
+              positionLine={
+                myTurnPosition !== null && rotationTotal > 0
+                  ? `Your turn: ${myTurnPosition} of ${rotationTotal}`
+                  : null
+              }
+              contributionAmount={amountLabel}
+              contributionState={
+                myCurrentStatus === "skipped" ? (
+                  <p className="text-xs leading-5 text-white/65">
+                    Ran before you joined. Not yours to pay.
+                  </p>
+                ) : myCurrentSettled ? (
+                  myCurrentStatus === "late" ? (
+                    <p className="text-xs font-medium text-[#F2B8B5]">
+                      Paid late. It arrived after the due date, so your
+                      trust score dropped.
+                    </p>
+                  ) : (
+                    <p className="text-xs font-medium text-white/90">
+                      ✓ Paid
+                      {myCurrentContribution?.paid_at
+                        ? ` ${formatCycleDateShort(myCurrentContribution.paid_at)}`
+                        : ""}
+                    </p>
+                  )
+                ) : member && enrolledCurrent ? (
+                  <p className="text-xs leading-5 text-white/70">
+                    Pending · due {formatCycleDate(currentCycle.due_date)}.
+                    Pay from the card above.
+                  </p>
+                ) : (
+                  <p className="text-xs text-white/65">
+                    Due {formatCycleDate(currentCycle.due_date)}
+                  </p>
+                )
+              }
+              receiverLabel={isMyTurn ? "Your turn" : "Receiver"}
+              receiverAmount={currentPot ?? amountLabel}
+              receiverHighlight={isMyTurn}
+              receiverSub={
+                currentPayoutStatus === "completed" ? (
+                  isMyTurn ? (
+                    `✓ Received ${currentPayout?.paid_at ? formatCycleDateShort(currentPayout.paid_at) : formatCycleDate(currentCycle.due_date)}`
+                  ) : currentRecipient ? (
+                    `${currentRecipient} received`
+                  ) : (
+                    "Disbursed"
+                  )
+                ) : currentPayoutStatus === "failed" ? (
+                  "Payout failed. Contact the organizer"
+                ) : isMyTurn ? (
+                  `You receive · ${formatCycleDate(currentCycle.due_date)}`
+                ) : currentRecipient ? (
+                  `${currentRecipient} receives · ${formatCycleDate(currentCycle.due_date)}`
+                ) : (
+                  `Due ${formatCycleDate(currentCycle.due_date)}`
+                )
+              }
+              settled={settledCount}
+              expected={expectedCount}
+            />
           </div>
 
           {upcomingCycles.length > 0 && (
