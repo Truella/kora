@@ -120,13 +120,11 @@ export default function InviteByPhone({
           : "flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4"
       }
     >
-      <div>
       {!bare && (
         <h2 className="font-display text-base font-semibold text-text-primary">
           Invite by phone number
         </h2>
       )}
-      </div>
 
       {state === "sent" ? (
         <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
@@ -155,10 +153,10 @@ export default function InviteByPhone({
           That number already belongs to this circle.
         </p>
       ) : (
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-start gap-2">
             <div className="flex w-28 shrink-0 flex-col gap-1.5">
-              <span className="text-sm font-medium text-text-primary">
+              <span className="truncate text-[13px] font-medium text-text-secondary">
                 Country
               </span>
               <Dropdown
@@ -171,10 +169,14 @@ export default function InviteByPhone({
                 label="Country"
                 tone="white"
                 dropUp
+                className="h-[52px]"
               />
             </div>
             <label className="flex min-w-0 flex-1 flex-col gap-1.5">
-              <span className="text-sm font-medium text-text-primary">
+              <span
+                className="truncate text-[13px] font-medium text-text-secondary"
+                title={`Phone · ${COUNTRIES.find((c) => c.key === country)?.label}`}
+              >
                 Phone · {COUNTRIES.find((c) => c.key === country)?.label}
               </span>
               <input
@@ -185,7 +187,7 @@ export default function InviteByPhone({
                 autoComplete="tel"
                 inputMode="tel"
                 maxLength={MAX_PHONE_LEN}
-                className="rounded-[10px] border-[0.5px] border-border bg-white px-4 py-3 text-[16px] text-text-primary outline-none placeholder:text-text-secondary/60 focus:border-primary"
+                className="h-[52px] rounded-[10px] border-[0.5px] border-border bg-white px-4 text-[16px] text-text-primary outline-none placeholder:text-text-secondary/60 focus:border-primary"
               />
             </label>
           </div>
@@ -204,7 +206,7 @@ export default function InviteByPhone({
             onClick={send}
             disabled={state === "sending"}
             whileTap={{ scale: 0.97 }}
-            className="rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
+            className="h-[52px] rounded-[10px] bg-primary px-6 text-sm font-semibold text-white hover:bg-primary-hover disabled:opacity-60"
           >
             {state === "sending" ? "Sending…" : "Send invite"}
           </motion.button>

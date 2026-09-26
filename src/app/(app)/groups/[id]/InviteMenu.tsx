@@ -174,17 +174,17 @@ export default function InviteMenu({
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 400, damping: 40 }}
-              className="relative w-full max-w-lg rounded-t-[20px] bg-bg px-4 pb-8 pt-2 sm:rounded-[20px] sm:p-6 min-h-[380px]"
+              className="relative w-full max-w-md rounded-t-[20px] bg-surface px-5 pb-5 pt-3 shadow-xl sm:rounded-[20px] sm:p-6"
             >
-              <span className="mx-auto mb-3 block h-1 w-10 rounded-full bg-border" />
-              <div className="mb-3 flex items-center justify-between">
+              <span className="mx-auto mb-4 block h-1 w-10 rounded-full bg-border" />
+              <div className="mb-4 flex items-center justify-between gap-3">
                 <p className="font-display text-lg font-semibold text-text-primary">
                   Invite by phone
                 </p>
                 <button
                   type="button"
                   onClick={() => setSheet(false)}
-                  className="rounded-[10px] border-[0.5px] border-border bg-white px-3 py-1.5 text-sm font-semibold text-text-primary"
+                  className="shrink-0 rounded-[10px] bg-black/[0.04] px-3 py-1.5 text-sm font-semibold text-text-primary transition-colors hover:bg-black/[0.08]"
                 >
                   Close
                 </button>
