@@ -6,8 +6,11 @@
 // (contribution_amount x active members). First run flips the group
 // forming -> active. Reruns are append-only: members added later by vote
 // get cycles numbered after the existing max; existing rows are never
-// rewritten. Money rows are written with the service role — RLS blocks
-// clients from inserting cycles/payouts by design.
+// rewritten. Since the on_member_admitted trigger (migration
+// 20260926130000) appends a voted-in member's turn at approval time, reruns
+// are now a repair path — pre-trigger unscheduled members, or a lost race —
+// not a step the organizer owes. Money rows are written with the service
+// role — RLS blocks clients from inserting cycles/payouts by design.
 
 import "@supabase/functions-js/edge-runtime.d.ts";
 import { createAdminClient } from "../_shared/supabase.ts";

@@ -386,6 +386,29 @@ restart feature owns that flow — `tally_join_votes` (migration
 `20260926120000_complete_circle_when_done.sql`) records votes on completed
 circles but leaves the request pending and inserts no member.
 
+### 3e. Give a voted-in member their turn immediately
+
+```sql
+create trigger on_member_admitted
+  after insert on public.group_members
+  for each row execute function public.append_turn_on_admission();
+```
+
+Admission used to be half the story: `tally_join_votes` inserted the member
+at payout_position = max + 1, and the organizer had to re-run
+generate-schedule to append that member's cycle — until then the newcomer
+paid into every turn but had no turn of their own. The trigger closes the
+loop in the same transaction: when the rotation has already started (cycles
+exist) in an active/paused circle, the new member gets one upcoming cycle at
+max + 1, due one step after the last turn (weekly +7 days, monthly +1 month),
+plus its pending payout at the pooled pot (contribution_amount x active
+members). Forming circles are skipped — the first generator run already
+includes everyone — as are members who already have a turn, and the group row
+is locked so two approvals landing together cannot share a cycle_number. A
+lost race against a concurrent sync admits the member anyway and leaves the
+turn to the sync repair path; generate-schedule itself is unchanged (migration
+`20260926130000_auto_turn_on_admission.sql`).
+
 > Note: `contributions.status` and `payouts.*` should only ever be written by an Edge Function using the service role key, after verifying the Paystack/Flutterwave webhook — never trust a client-reported "I paid." RLS below blocks direct client writes to these tables entirely.
 
 ---

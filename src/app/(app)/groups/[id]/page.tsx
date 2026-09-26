@@ -219,6 +219,9 @@ export default async function GroupDetailPage({
   const scheduledCount = new Set(
     (cycles ?? []).map((c) => c.recipient_member_id),
   ).size;
+  // Repair fallback, not a step the organizer owes: voted-in members get
+  // their turn appended at approval time (on_member_admitted trigger), so
+  // this only fires for pre-trigger members or a lost admission/sync race.
   const showSync =
     !!member &&
     !!user &&
