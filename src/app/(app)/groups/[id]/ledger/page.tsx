@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatCycleDate, formatMoney, utcDateOnly } from "@/lib/money";
+import CircleHeader from "../CircleHeader";
 import LedgerBook, {
   type LedgerBookCell,
   type LedgerBookMemberTotal,
@@ -236,6 +237,13 @@ export default async function LedgerPage({
 
   return (
     <main className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
+      <CircleHeader
+        group={group}
+        memberCount={orderedMembers.length}
+        inviterId={user?.id ?? null}
+        showInvite={group.status !== "completed"}
+        active="ledger"
+      />
       <LedgerBook
         groupId={group.id}
         groupName={group.name}

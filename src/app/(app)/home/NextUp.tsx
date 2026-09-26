@@ -152,7 +152,7 @@ function nextUpContent(snapshot: HomeSnapshot): NextUpContent | null {
       // the honest thing to show until a real payout row exists.
       value: "Up to date",
       title: atRest.name,
-      meta: collectTurnLabel(atRest.myRoundNumber) ?? "No contribution due right now",
+      meta: collectTurnLabel(atRest.myRoundNumber, atRest.currentTurnNumber) ?? "No contribution due right now",
       href: atRest.href,
       cta: "View circle",
       icon: Clock01Icon,

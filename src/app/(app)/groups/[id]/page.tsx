@@ -1,24 +1,16 @@
 import Link from "next/link";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Activity01Icon,
-  Book02Icon,
-  UserGroupIcon,
-  UserMultipleIcon,
-} from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import PayButton from "./PayButton";
 import PayoutAction from "./PayoutAction";
 import ConfirmingBanner from "./ConfirmingBanner";
-import InviteMenu from "./InviteMenu";
 import VoteButtons from "./VoteButtons";
+import CircleHeader from "./CircleHeader";
 import ScheduleGenerator from "./ScheduleGenerator";
 import LedgerFeed from "../../activity/LedgerFeed";
 import {
   TurnHero,
   EventCard,
   TurnRow,
-  ActionTile,
   DueChip,
   SettledChip,
 } from "./TurnViews";
@@ -33,30 +25,6 @@ const SYMBOLS: Record<string, string> = {
   GHS: "GH₵",
   KES: "KSh",
   UGX: "USh",
-};
-
-// Explicit circle states, shared with the home card + circles list.
-const STATUS_LABEL: Record<string, string> = {
-  forming: "Forming",
-  active: "Active",
-  paused: "Paused",
-  completed: "Completed",
-};
-
-const STATUS_BADGE: Record<string, string> = {
-  forming: "bg-[#F8EDD9] text-[#8A5F14]",
-  active: "bg-[#E0ECE9] text-[#1E5A4E]",
-  paused: "bg-[#F3E1E0] text-[#8A2A21]",
-  completed: "bg-black/[0.04] text-text-secondary",
-};
-
-// Same state-tinted identity mark as the circles directory — one mark
-// everywhere, no new hues.
-const IDENTITY_WASH: Record<string, string> = {
-  forming: "bg-[#F8EDD9] text-[#8A5F14]",
-  active: "bg-primary/10 text-primary",
-  paused: "bg-[#F3E1E0] text-[#8A2A21]",
-  completed: "bg-black/[0.04] text-text-secondary",
 };
 
 // Anchors the /home attention queue deep-links to. The scroll margin keeps the
@@ -550,31 +518,17 @@ export default async function GroupDetailPage({
         </div>
       )}
 
-      <div>
-        <div className="flex items-center gap-3">
-          <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] ${IDENTITY_WASH[group.status] ?? IDENTITY_WASH.active}`}
-          >
-            <HugeiconsIcon icon={UserGroupIcon} size={18} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate font-display text-xl font-semibold capitalize tracking-tight text-text-primary">
-              {group.name}
-            </h1>
-            <p className="mt-1 flex flex-wrap items-center gap-2 font-display text-xs font-semibold tabular-nums text-text-secondary">
-              {amountLabel} {group.frequency} ·{" "}
-              {(activeCount ?? rotationTotal) === 1
-                ? "1 member"
-                : `${activeCount ?? rotationTotal} members`}
-              <span
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_BADGE[group.status] ?? STATUS_BADGE.active}`}
-              >
-                {STATUS_LABEL[group.status] ?? group.status}
-              </span>
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Merged header: identity row + section tabs (Overview / Ledger /
+          Members / Invite / Activity). The old standalone quick-action grid
+          lives here now, so it persists across overview, ledger and members
+          instead of existing on one screen only. */}
+      <CircleHeader
+        group={group}
+        memberCount={activeCount ?? rotationTotal}
+        inviterId={user?.id ?? null}
+        showInvite={!!member && !!user && !isCompleted}
+        active="overview"
+      />
 
       {!cycles || cycles.length === 0 ? (
         <>
@@ -752,33 +706,6 @@ export default async function GroupDetailPage({
               expected={expectedCount}
             />
           </div>
-
-          {/* Quick actions — ledger, members, invite, recent activity. The
-              invite tile hides on a finished circle (three tiles, so three
-              columns — a 4-col grid would leave a dead cell). */}
-          <nav
-            aria-label="Quick actions"
-            className={`grid gap-2 ${isCompleted ? "grid-cols-3" : "grid-cols-4"}`}
-          >
-            <ActionTile
-              href={`/groups/${group.id}/ledger`}
-              icon={<HugeiconsIcon icon={Book02Icon} size={24} />}
-              label="Ledger"
-            />
-            <ActionTile
-              href={`/groups/${group.id}/members`}
-              icon={<HugeiconsIcon icon={UserMultipleIcon} size={24} />}
-              label="Members"
-            />
-            {member && user && !isCompleted && (
-              <InviteMenu groupId={group.id} inviterId={user.id} grid />
-            )}
-            <ActionTile
-              href="#activity"
-              icon={<HugeiconsIcon icon={Activity01Icon} size={24} />}
-              label="Activity"
-            />
-          </nav>
 
           {upcomingCycles.length > 0 && (
             <section className="flex flex-col gap-2">
