@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
+  ChevronLeftIcon,
   ChevronRightIcon,
   Download04Icon,
   Tick01Icon,
@@ -20,7 +21,6 @@ export type LedgerPageRow = {
   contributionLabel: string | null;
   payoutLabel: string | null;
   status: LedgerRowStatus;
-  remarks: string;
 };
 
 export type LedgerCyclePage = {
@@ -80,9 +80,18 @@ function MoneyCell({ value }: { value: string | null }) {
 // One ruled paper page: turn header, the turn table, a little filler
 // ruling, totals footer. The page hugs its content — at full width a fixed
 // tall page would be mostly empty ruling.
-function CyclePage({ page }: { page: LedgerCyclePage }) {
+function CyclePage({
+  page,
+  onPrev,
+  onNext,
+}: {
+  page: LedgerCyclePage;
+  // Sequential turn navigation. Absent in print, where every page renders.
+  onPrev?: () => void;
+  onNext?: () => void;
+}) {
   return (
-    <section className="flex min-h-[300px] flex-col rounded-[12px] bg-[#FBF8F1] px-3 py-4 sm:px-5">
+    <section className="flex min-h-[260px] flex-col rounded-[12px] border border-[#BF9A4E]/60 bg-[#FBF8F1] px-3 py-4 sm:px-5">
       <header className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-text-primary">
@@ -92,9 +101,33 @@ function CyclePage({ page }: { page: LedgerCyclePage }) {
             {page.rangeLabel}
           </p>
         </div>
-        <p className="-rotate-3 border-b-2 border-text-secondary/50 font-handwriting text-[22px] leading-tight text-text-secondary">
-          {page.turnLabel}
-        </p>
+        <div className="flex shrink-0 items-center gap-1">
+          <p className="-rotate-3 border-b-2 border-text-secondary/50 font-handwriting text-[22px] leading-tight text-text-secondary">
+            {page.turnLabel}
+          </p>
+          {(onPrev || onNext) && (
+            <span className="ledger-no-print ml-1 inline-flex items-center">
+              <button
+                type="button"
+                onClick={onPrev}
+                disabled={!onPrev}
+                aria-label="Previous turn"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-black/[0.05] disabled:opacity-30"
+              >
+                <HugeiconsIcon icon={ChevronLeftIcon} size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={onNext}
+                disabled={!onNext}
+                aria-label="Next turn"
+                className="flex h-7 w-7 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-black/[0.05] disabled:opacity-30"
+              >
+                <HugeiconsIcon icon={ChevronRightIcon} size={16} />
+              </button>
+            </span>
+          )}
+        </div>
       </header>
 
       <table className="mt-3 w-full border-collapse text-[11px] sm:text-xs">
@@ -112,11 +145,8 @@ function CyclePage({ page }: { page: LedgerCyclePage }) {
             <th className="border-b border-border px-1 pb-1.5 text-right font-medium">
               Payout
             </th>
-            <th className="border-b border-border px-1 pb-1.5 text-left font-medium">
-              Status
-            </th>
             <th className="border-b border-border pb-1.5 pl-1 text-left font-medium">
-              Remarks
+              Status
             </th>
           </tr>
         </thead>
@@ -124,7 +154,7 @@ function CyclePage({ page }: { page: LedgerCyclePage }) {
           {page.rows.map((row) => (
             <tr
               key={row.key}
-              className="h-9 border-b border-text-primary/[0.07]"
+              className="h-8 border-b border-text-primary/[0.07]"
             >
               <td className="whitespace-nowrap py-1 pr-1 text-text-secondary">
                 {row.dateLabel}
@@ -141,24 +171,21 @@ function CyclePage({ page }: { page: LedgerCyclePage }) {
               <td className="whitespace-nowrap px-1 py-1 text-right">
                 <MoneyCell value={row.payoutLabel} />
               </td>
-              <td className="whitespace-nowrap px-1 py-1">
+              <td className="whitespace-nowrap py-1 pl-1">
                 <StatusMark status={row.status} />
-              </td>
-              <td className="truncate py-1 pl-1 text-text-secondary">
-                {row.remarks}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* Filler ruling: same 36px rhythm as the rows above. */}
+      {/* Filler ruling: same 32px rhythm as the rows above. */}
       <div
         aria-hidden
         className="flex-1"
         style={{
           backgroundImage:
-            "repeating-linear-gradient(to bottom, transparent 0 35px, rgba(22,32,29,0.07) 35px 36px)",
+            "repeating-linear-gradient(to bottom, transparent 0 31px, rgba(22,32,29,0.07) 31px 32px)",
         }}
       />
 
@@ -170,7 +197,7 @@ function CyclePage({ page }: { page: LedgerCyclePage }) {
           </strong>
         </span>
         <span className={page.paidOutDimmed ? "opacity-60" : ""}>
-          Total paid out{" "}
+          {page.paidOutDimmed ? "Payout scheduled " : "Total paid out "}
           <strong className="font-display font-semibold tabular-nums text-text-primary">
             {page.paidOutLabel}
           </strong>
@@ -295,7 +322,7 @@ export default function LedgerBook({
         </div>
       </div>
 
-      <div className="ledger-no-print mb-4 flex flex-wrap items-end justify-between gap-3 print:hidden">
+      <div className="ledger-no-print mb-3 flex flex-wrap items-end justify-between gap-3 print:hidden">
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
             Ledger
@@ -320,7 +347,7 @@ export default function LedgerBook({
             onClick={handlePrint}
             aria-label="Download or print ledger"
             title="Download or print"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] border-[0.5px] border-border bg-white text-text-primary transition-colors hover:bg-black/[0.04]"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-surface text-text-secondary shadow-[0_2px_8px_rgba(11,38,36,0.04)] transition-colors hover:bg-black/[0.04] hover:text-text-primary"
           >
             <HugeiconsIcon icon={Download04Icon} size={20} />
           </button>
@@ -343,7 +370,17 @@ export default function LedgerBook({
               transition={{ duration: 0.18 }}
               className="ledger-no-print w-full scroll-mt-4 rounded-[20px] bg-hero-bg p-2 shadow-lg sm:p-2.5 print:hidden"
             >
-              <CyclePage page={current} />
+              <CyclePage
+                page={current}
+                onPrev={
+                  start > 0 ? () => setStart(start - 1) : undefined
+                }
+                onNext={
+                  start < pages.length - 1
+                    ? () => setStart(start + 1)
+                    : undefined
+                }
+              />
             </motion.div>
 
             {others.length > 0 && (
