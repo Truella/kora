@@ -45,7 +45,10 @@ function CircleCard({ circle }: { circle: HomeCircle }) {
   // Gated on the label itself rather than the raw field, so an unstatable
   // position hides the whole block rather than leaving an empty cell beside a
   // dangling "· date".
-  const positionLabel = collectTurnLabel(circle.myRoundNumber);
+  const positionLabel = collectTurnLabel(
+    circle.myRoundNumber,
+    circle.currentTurnNumber,
+  );
   const showPosition =
     !circle.awaitingSchedule && !isPaused && !isCompleted && !!positionLabel;
 

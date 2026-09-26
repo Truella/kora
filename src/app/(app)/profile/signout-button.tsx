@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Logout02Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignOutButton() {
@@ -20,8 +22,9 @@ export default function SignOutButton() {
     <button
       onClick={signOut}
       disabled={signingOut}
-      className="w-full rounded-[10px] border-[0.5px] border-border bg-white py-[13px] text-sm font-semibold text-text-primary disabled:opacity-60"
+      className="inline-flex w-full items-center justify-center gap-1.5 rounded-[10px] border-[0.5px] border-border bg-surface py-[13px] text-sm font-semibold text-text-primary transition-colors hover:bg-black/[0.02] disabled:opacity-60"
     >
+      <HugeiconsIcon icon={Logout02Icon} size={17} />
       {signingOut ? "Signing out…" : "Sign out"}
     </button>
   );

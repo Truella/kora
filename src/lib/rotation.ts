@@ -31,11 +31,33 @@
  * guess. A position is used as-is even if it sits outside the current active
  * roster, because a departed member's slot is still a real slot: the members
  * panel prints the same number as `Collects turn N`, so the two agree.
+ *
+ * Tense follows the rotation: when `currentTurn` names the turn in flight,
+ * a position behind it already paid out, so it reads past ("You've collected
+ * on turn 1"); the current and future turns read present ("You collect on
+ * turn 2"). `currentSettled` covers the all-settled edge where the hero
+ * shows the last turn with a Settled state — position equals current but the
+ * money already moved. Omit both when there is no turn in flight (unscheduled
+ * circles) and the line stays present tense.
  */
 export function collectTurnLabel(
   position: number | null | undefined,
+  currentTurn?: number | null | undefined,
+  currentSettled?: boolean,
 ): string | null {
   if (position == null) return null;
   if (!Number.isInteger(position) || position < 1) return null;
+  if (
+    typeof currentTurn === "number" &&
+    Number.isInteger(currentTurn) &&
+    currentTurn >= 1
+  ) {
+    if (
+      position < currentTurn ||
+      (position === currentTurn && currentSettled === true)
+    ) {
+      return `You've collected on turn ${position}`;
+    }
+  }
   return `You collect on turn ${position}`;
 }
