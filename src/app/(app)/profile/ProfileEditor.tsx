@@ -6,23 +6,23 @@ import { createClient } from "@/lib/supabase/client";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import AvatarUploader from "./AvatarUploader";
 
-// Display/edit split for the profile tab. Display is the default —
-// identity, verification, and trust are always visible. Photo + name
-// editing lives behind the toggle so the tab reads as a profile first
-// and a form only on demand.
-export default function ProfileEditor({
+// Form half of the profile hero. Display (avatar, name, stats) lives in
+// ProfileHero, which owns the editing toggle — this component only handles
+// the photo/name/email fields and reports close requests upward.
+export default function ProfileEditorForm({
   userId,
   currentName,
   currentAvatarUrl,
   currentEmail,
+  onClose,
 }: {
   userId: string;
   currentName: string;
   currentAvatarUrl: string | null;
   currentEmail: string | null;
+  onClose: () => void;
 }) {
   const router = useRouter();
-  const [editing, setEditing] = useState(false);
   const [name, setName] = useState(currentName);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -98,20 +98,10 @@ export default function ProfileEditor({
     }
   }
 
-  if (!editing) {
-    return (
-      <button
-        type="button"
-        onClick={() => setEditing(true)}
-        className="rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-2.5 text-sm font-semibold text-text-primary transition-colors hover:bg-black/[0.02]"
-      >
-        Edit profile
-      </button>
-    );
-  }
-
+  // Inset form — renders inside the identity card, so no outer card chrome
+  // of its own, just a divider and the fields.
   return (
-    <section className="flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4">
+    <div className="mt-4 flex flex-col gap-3 border-t border-border pt-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-display text-base font-semibold text-text-primary">
           Edit profile
@@ -119,7 +109,7 @@ export default function ProfileEditor({
         <button
           type="button"
           onClick={() => {
-            setEditing(false);
+            onClose();
             setName(currentName);
             setError(null);
           }}
@@ -207,6 +197,6 @@ export default function ProfileEditor({
           </>
         )}
       </div>
-    </section>
+    </div>
   );
 }
