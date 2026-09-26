@@ -101,10 +101,10 @@ export default function CircleHeader({
             any breakpoint. */}
         {(trailing || (showInvite && inviterId)) && (
           <div className="flex shrink-0 items-center gap-2 sm:hidden">
-            {trailing}
             {showInvite && inviterId && (
               <InviteMenu groupId={group.id} inviterId={inviterId} />
             )}
+            {trailing}
           </div>
         )}
       </div>
@@ -115,10 +115,10 @@ export default function CircleHeader({
         <CircleTabs groupId={group.id} active={active} />
         {(trailing || (showInvite && inviterId)) && (
           <div className="hidden shrink-0 items-center gap-2 sm:flex">
-            {trailing}
             {showInvite && inviterId && (
               <InviteMenu groupId={group.id} inviterId={inviterId} />
             )}
+            {trailing}
           </div>
         )}
       </div>

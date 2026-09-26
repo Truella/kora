@@ -54,7 +54,7 @@ export default function LedgerGrid({
 }) {
   return (
     <div className="ledger-scroll max-h-[480px] overflow-auto border border-border">
-        <table className="ledger-table w-full min-w-[720px] border-collapse text-xs">
+        <table className="ledger-table w-full min-w-[720px] border-separate border-spacing-0 text-xs">
           <thead>
             <tr>
               <th className="sticky top-0 left-0 z-20 min-w-[132px] border-r border-b-2 border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary">
@@ -63,19 +63,19 @@ export default function LedgerGrid({
               {members.map((m) => (
                 <th
                   key={m.id}
-                  className="sticky top-0 z-20 max-w-[150px] truncate border-b-2 border-l border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary"
+                  className="sticky top-0 z-20 max-w-[150px] truncate border-b-2 border-r border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary"
                   title={m.name}
                 >
                   {m.name}
                 </th>
               ))}
-              <th className="sticky top-0 z-20 border-b-2 border-l border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary">
+              <th className="sticky top-0 z-20 border-b-2 border-r border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary">
                 Receiver
               </th>
-              <th className="sticky top-0 z-20 border-b-2 border-l border-border bg-surface px-3 py-2.5 text-right font-display text-[11px] font-semibold text-text-primary">
+              <th className="sticky top-0 z-20 border-b-2 border-r border-border bg-surface px-3 py-2.5 text-right font-display text-[11px] font-semibold text-text-primary">
                 Collected
               </th>
-              <th className="sticky top-0 z-20 border-b-2 border-l border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary">
+              <th className="sticky top-0 z-20 border-b-2 border-r border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary">
                 Payout
               </th>
             </tr>
@@ -94,21 +94,21 @@ export default function LedgerGrid({
                 {p.cells.map((c) => (
                   <td
                     key={c.memberId}
-                    className="border-b border-l border-border px-2 py-3.5 text-center align-middle"
+                    className="border-b border-r border-border px-2 py-3.5 text-center align-middle"
                   >
                     <GridCell cell={c} />
                   </td>
                 ))}
-                <td className="max-w-[110px] truncate border-b border-l border-border px-3 py-3.5 text-text-primary">
+                <td className="max-w-[110px] truncate border-b border-r border-border px-3 py-3.5 text-text-primary">
                   {p.recipientName}
                 </td>
-                <td className="border-b border-l border-border px-3 py-3.5 text-right whitespace-nowrap tabular-nums text-text-primary">
+                <td className="border-b border-r border-border px-3 py-3.5 text-right whitespace-nowrap tabular-nums text-text-primary">
                   {p.collectedLabel}
                   <span className="block font-mono text-[10px] text-text-secondary">
                     of {p.expectedLabel}
                   </span>
                 </td>
-                <td className="border-b border-l border-border px-3 py-3.5 whitespace-nowrap capitalize text-text-secondary">
+                <td className="border-b border-r border-border px-3 py-3.5 whitespace-nowrap capitalize text-text-secondary">
                   {p.payoutStatus}
                 </td>
               </tr>
@@ -120,17 +120,17 @@ export default function LedgerGrid({
                 Total paid
               </td>
               {memberTotals.map((t) => (
-                <td key={t.memberId} className="sticky bottom-0 z-10 border-t border-l border-border bg-bg px-2 py-3 align-top">
+                <td key={t.memberId} className="sticky bottom-0 z-10 border-t border-r border-border bg-bg px-2 py-3 align-top">
                   <p className="text-center text-[13px] font-semibold tabular-nums whitespace-nowrap text-text-primary">
                     {t.totalPaidLabel} / {expectedPerMemberLabel}
                   </p>
                 </td>
               ))}
-              <td className="border-t border-l border-border px-3 py-3" />
-              <td className="border-t border-l border-border px-3 py-3 text-right text-[13px] font-semibold tabular-nums text-text-primary">
+              <td className="border-t border-r border-border px-3 py-3" />
+              <td className="border-t border-r border-border px-3 py-3 text-right text-[13px] font-semibold tabular-nums text-text-primary">
                 {rotationCollectedLabel}
               </td>
-              <td className="border-t border-l border-border px-3 py-3" />
+              <td className="border-t border-r border-border px-3 py-3" />
             </tr>
           </tfoot>
         </table>
