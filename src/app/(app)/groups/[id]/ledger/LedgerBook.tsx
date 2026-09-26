@@ -347,7 +347,7 @@ export default function LedgerBook({
             onClick={handlePrint}
             aria-label="Download or print ledger"
             title="Download or print"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] border-[0.5px] border-border bg-white text-text-primary transition-colors hover:bg-black/[0.04]"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] bg-surface text-text-secondary shadow-[0_2px_8px_rgba(11,38,36,0.04)] transition-colors hover:bg-black/[0.04] hover:text-text-primary"
           >
             <HugeiconsIcon icon={Download04Icon} size={20} />
           </button>
