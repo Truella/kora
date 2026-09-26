@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import { MembersPanel, type MemberRow } from "../TurnViews";
+import CircleHeader from "../CircleHeader";
 
 export const metadata = { title: "Members" };
 
@@ -19,7 +18,9 @@ export default async function MembersPage({
 
   const { data: group } = await supabase
     .from("groups")
-    .select("id, name, created_by")
+    .select(
+      "id, name, contribution_amount, currency, frequency, status, created_by",
+    )
     .eq("id", id)
     .maybeSingle();
 
@@ -186,20 +187,13 @@ export default async function MembersPage({
 
   return (
     <main className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
-      <div>
-        <Link
-          href={`/groups/${group.id}`}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-text-secondary hover:text-text-primary"
-        >
-          <HugeiconsIcon icon={ArrowLeft01Icon} size={16} /> Back to circle
-        </Link>
-        <h1 className="mt-3 font-display text-2xl font-semibold capitalize tracking-tight text-text-primary">
-          {group.name}
-        </h1>
-        <p className="mt-1 font-mono text-xs text-text-secondary">
-          {circleRows.length === 1 ? "1 member" : `${circleRows.length} members`}
-        </p>
-      </div>
+      <CircleHeader
+        group={group}
+        memberCount={circleRows.length}
+        inviterId={user?.id ?? null}
+        showInvite={group.status !== "completed"}
+        active="members"
+      />
 
       {circleRows.length > 0 ? (
         <MembersPanel count={circleRows.length} rows={memberRows} />

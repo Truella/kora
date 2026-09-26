@@ -6,37 +6,37 @@ lane — no overlap between "confirm/approve" and "warning/overdue."
 
 ## Palette
 
-| Token | Hex | Role |
-|---|---|---|
-| `primary` | `#14524F` | All money-moving CTAs: confirm contribution, approve vote, primary buttons |
-| `primary-hover` | `#0E3B39` | Hover/active/pressed state of primary buttons only |
-| `accent` | `#BF9A4E` | Small warm accents only — trust-score badges, labels on dark cards, streak/value icons. Never a large fill or CTA |
-| `hero-bg` | `#0B2624` | Single highest-attention card per screen (payout amount, balance summary). Keep it rare |
-| `bg` | `#F2F4F2` | Cool neutral page/app background; keeps white product surfaces distinct without returning to a cream cast |
-| `surface` | `#FFFFFF` | Any card or list row sitting on the page background |
-| `border` | `#DDE3DF` | 0.5px hairline borders on surface cards |
-| `text-primary` | `#16201D` | Headings, primary body text |
-| `text-secondary` | `#5B645E` | Meta text: timestamps, subtext (or `text-primary` at 50–60% opacity) |
-| `success` | `#2E7D6E` | Confirmed contributions, positive ledger amounts, "voted approve". Status/text only — never a button fill |
-| `warning` | `#D9992E` | "Due soon" states, upcoming deadlines |
-| `danger` | `#B23A2E` | Overdue, declined votes, failed payments. The *only* warm-red hue in the system |
+| Token            | Hex       | Role                                                                                                              |
+| ---------------- | --------- | ----------------------------------------------------------------------------------------------------------------- |
+| `primary`        | `#14524F` | All money-moving CTAs: confirm contribution, approve vote, primary buttons                                        |
+| `primary-hover`  | `#0E3B39` | Hover/active/pressed state of primary buttons only                                                                |
+| `accent`         | `#BF9A4E` | Small warm accents only — trust-score badges, labels on dark cards, streak/value icons. Never a large fill or CTA |
+| `hero-bg`        | `#0B2624` | Single highest-attention card per screen (payout amount, balance summary). Keep it rare                           |
+| `bg`             | `#F2F4F2` | Cool neutral page/app background; keeps white product surfaces distinct without returning to a cream cast         |
+| `surface`        | `#FFFFFF` | Any card or list row sitting on the page background                                                               |
+| `border`         | `#DDE3DF` | 0.5px hairline borders on surface cards                                                                           |
+| `text-primary`   | `#16201D` | Headings, primary body text                                                                                       |
+| `text-secondary` | `#5B645E` | Meta text: timestamps, subtext (or `text-primary` at 50–60% opacity)                                              |
+| `success`        | `#2E7D6E` | Confirmed contributions, positive ledger amounts, "voted approve". Status/text only — never a button fill         |
+| `warning`        | `#D9992E` | "Due soon" states, upcoming deadlines                                                                             |
+| `danger`         | `#B23A2E` | Overdue, declined votes, failed payments. The _only_ warm-red hue in the system                                   |
 
 Badge tints (pill backgrounds, ~15–20% tint + darker same-hue text):
 
-| Badge | Background | Text |
-|---|---|---|
-| Trust (gold) | `#F3EDDF` | `#7A6028` |
-| Paid / approve (success) | `#E0ECE9` | `#1E5A4E` |
-| Due soon (warning) | `#F8EDD9` | `#8A5F14` |
-| Overdue / declined (danger) | `#F3E1E0` | `#8A2A21` |
+| Badge                       | Background | Text      |
+| --------------------------- | ---------- | --------- |
+| Trust (gold)                | `#F3EDDF`  | `#7A6028` |
+| Paid / approve (success)    | `#E0ECE9`  | `#1E5A4E` |
+| Due soon (warning)          | `#F8EDD9`  | `#8A5F14` |
+| Overdue / declined (danger) | `#F3E1E0`  | `#8A2A21` |
 
 ## Type
 
-| Role | Typeface | Used for |
-|---|---|---|
-| Headings + money | **Sora** | Screen titles, group names, and every money figure (semibold) — never mono for amounts |
-| Body / UI | **Hind** | Forms, nav, buttons, general body text |
-| Micro-labels | **Roboto Mono** | Technical metadata only — eyebrows, hex codes, vote tallies. Never amounts |
+| Role             | Typeface        | Used for                                                                               |
+| ---------------- | --------------- | -------------------------------------------------------------------------------------- |
+| Headings + money | **Sora**        | Screen titles, group names, and every money figure (semibold) — never mono for amounts |
+| Body / UI        | **Hind**        | Forms, nav, buttons, general body text                                                 |
+| Micro-labels     | **Roboto Mono** | Technical metadata only — eyebrows, hex codes, vote tallies. Never amounts             |
 
 ## Shape
 
