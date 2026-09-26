@@ -22,6 +22,7 @@ export default function Dropdown<T extends string>({
   label,
   tone = "surface",
   dropUp = false,
+  className = "",
 }: {
   value: T;
   onChange: (value: T) => void;
@@ -30,6 +31,9 @@ export default function Dropdown<T extends string>({
   tone?: "surface" | "white";
   // Bottom sheets have no room below: open upward instead of downward.
   dropUp?: boolean;
+  // Extra classes for the trigger button (e.g. a fixed height so it lines
+  // up with a neighbouring input).
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const listId = useId();
@@ -54,7 +58,7 @@ export default function Dropdown<T extends string>({
         aria-label={label}
         className={`flex w-full items-center justify-between gap-2 rounded-[10px] border-[0.5px] border-border px-3 py-3 text-[16px] outline-none transition-colors focus:border-primary ${
           tone === "white" ? "bg-white" : "bg-surface"
-        } ${open ? "border-primary" : ""}`}
+        } ${open ? "border-primary" : ""} ${className}`}
       >
         <span className="truncate font-medium text-text-primary">
           {selected?.label ?? value}
