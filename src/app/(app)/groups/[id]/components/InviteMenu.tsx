@@ -79,7 +79,7 @@ export default function InviteMenu({
         >
           <span className="flex items-center gap-1.5 text-[13px] font-medium whitespace-nowrap text-text-secondary transition-colors group-hover:text-text-primary">
             <HugeiconsIcon icon={UserAdd01Icon} size={16} />
-            Invite
+            <span className="hidden sm:inline">Invite</span>
           </span>
         </button>
 

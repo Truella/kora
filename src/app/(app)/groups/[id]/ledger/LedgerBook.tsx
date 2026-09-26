@@ -48,7 +48,7 @@ export type LedgerBookSummary = {
 const CELL_STYLE: Record<LedgerCellStatus, string> = {
   paid: "bg-[#E0ECE9] text-[#1E5A4E]",
   late: "bg-[#F8EDD9] text-[#8A5F14]",
-  pending: "bg-black/[0.04] text-text-secondary",
+  pending: "bg-[#E4E5E3] text-[#5B645E]",
   overdue: "bg-[#F3E1E0] text-[#8A2A21]",
   skipped: "bg-transparent text-text-secondary/50",
 };
@@ -64,23 +64,24 @@ const CELL_LABEL: Record<LedgerCellStatus, string> = {
 // Whether the turn's receiver actually got the pot — sits under the due
 // date in the sticky period cell so every row answers it in one glance.
 // The ★ on a pill only names who receives; this says if it happened.
+// Light pills, so they read on the dark sheet and on paper alike.
 function PayoutMark({ status }: { status: string }) {
   if (status === "completed") {
     return (
-      <p className="mt-0.5 font-mono text-[10px] font-medium whitespace-nowrap text-success">
+      <p className="mt-1 inline-flex items-center rounded-full bg-[#E0ECE9] px-2 py-px font-mono text-[10px] font-medium whitespace-nowrap text-[#1E5A4E]">
         ✓ Paid out
       </p>
     );
   }
   if (status === "failed") {
     return (
-      <p className="mt-0.5 font-mono text-[10px] font-medium whitespace-nowrap text-danger">
-        Payout failed
+      <p className="mt-1 inline-flex items-center rounded-full bg-[#F3E1E0] px-2 py-px font-mono text-[10px] font-medium whitespace-nowrap text-[#8A2A21]">
+        Failed
       </p>
     );
   }
   return (
-    <p className="mt-0.5 font-mono text-[10px] whitespace-nowrap text-text-secondary/70">
+    <p className="mt-0.5 font-mono text-[10px] whitespace-nowrap text-(--led-sub)">
       Payout pending
     </p>
   );
@@ -117,7 +118,8 @@ export default function LedgerBook({
 
   return (
     <div className="ledger-sheet">
-      <style>{`.ledger-scroll { scrollbar-width: thin; scrollbar-color: #14524F #F2F4F2; }
+      <style>{`.ledger-sheet { --led-bg: #0B2624; --led-ink: #FFFFFF; --led-sub: rgba(255,255,255,0.62); --led-line: rgba(255,255,255,0.12); --led-foot: rgba(255,255,255,0.06); --led-sticky: #0B2624; }
+.ledger-scroll { scrollbar-width: thin; scrollbar-color: #14524F #F2F4F2; }
 .ledger-scroll::-webkit-scrollbar { height: 8px; }
 .ledger-scroll::-webkit-scrollbar-track { background: #F2F4F2; border-radius: 999px; }
 .ledger-scroll::-webkit-scrollbar-thumb { background: #14524F; border-radius: 999px; border: 2px solid #F2F4F2; }
@@ -127,7 +129,7 @@ export default function LedgerBook({
   body { background: #fff !important; }
   main { max-width: none !important; padding: 0 !important; }
   .ledger-no-print { display: none !important; }
-  .ledger-sheet { box-shadow: none !important; border: none !important; border-radius: 0 !important; padding: 0 !important; }
+  .ledger-sheet { box-shadow: none !important; border: none !important; border-radius: 0 !important; padding: 0 !important; --led-bg: #ffffff; --led-ink: #16201d; --led-sub: #5b645e; --led-line: #dde3df; --led-foot: #F2F4F2; --led-sticky: #ffffff; }
   .ledger-scroll { overflow: visible !important; }
   .ledger-table { font-size: 10px !important; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -135,7 +137,7 @@ export default function LedgerBook({
 }`}</style>
 
       {/* Print keeps the full title block; on screen the CircleHeader above
-          already names the circle, so only the toolbar row renders. */}
+          already names the circle, so the sheet starts at the stats. */}
       <div className="hidden print:block">
         <p className="font-mono text-[11px] font-medium uppercase tracking-widest text-text-secondary">
           Contribution ledger
@@ -159,7 +161,9 @@ export default function LedgerBook({
           ].map(([label, value]) => (
             <div
               key={label}
-              className="rounded-[12px] border-[0.5px] border-border bg-surface px-3 py-2.5"
+              // Payouts done lives on desktop only — on mobile the four
+              // money cards form a clean 2×2 grid.
+              className={`rounded-[12px] border-[0.5px] border-border bg-surface px-3 py-2.5 ${label === "Payouts done" ? "hidden sm:block" : ""}`}
             >
               <dt className="font-mono text-[10px] uppercase tracking-widest text-text-secondary">
                 {label}
@@ -172,83 +176,87 @@ export default function LedgerBook({
         </dl>
       )}
 
-      <div className="rounded-[20px] border-[0.5px] border-border bg-surface p-5 sm:p-6">
-        {empty ? (
+      {empty ? (
+        <div className="rounded-[20px] border-[0.5px] border-border bg-surface p-5 sm:p-6">
           <p className="rounded-[10px] bg-black/[0.04] px-4 py-3 text-sm text-text-secondary">
             No rotation yet — the ledger book appears once the organizer
             generates the payout schedule.
           </p>
-        ) : (
+        </div>
+      ) : (
+        <div className="rounded-[20px] bg-(--led-bg) p-2 sm:p-3">
           <div className="ledger-scroll overflow-x-auto pb-2">
-              <table className="ledger-table w-full min-w-[560px] border-collapse text-xs">
-                <thead>
-                  <tr>
-                    <th className="sticky left-0 min-w-[132px] border border-border bg-surface px-3 py-2 text-left font-display text-[11px] font-semibold text-text-primary">
-                      Period
+            <table className="ledger-table w-full min-w-[560px] border-collapse text-xs">
+              <thead>
+                <tr>
+                  <th className="sticky left-0 min-w-[132px] border-b border-(--led-line) bg-(--led-sticky) px-3 py-2.5 text-left font-display text-[11px] font-semibold text-(--led-ink)">
+                    Period
+                  </th>
+                  {members.map((m) => (
+                    <th
+                      key={m.id}
+                      className="max-w-[150px] truncate border-b border-(--led-line) px-3 py-2.5 text-left font-display text-[11px] font-semibold text-(--led-ink)"
+                      title={m.name}
+                    >
+                      {m.name}
                     </th>
-                    {members.map((m) => (
-                      <th
-                        key={m.id}
-                        className="max-w-[150px] truncate border border-border bg-surface px-3 py-2 text-left font-display text-[11px] font-semibold text-text-primary"
-                        title={m.name}
-                      >
-                        {m.name}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {periods.map((p) => (
-                    <tr key={p.cycleNumber}>
-                      <td className="sticky left-0 border border-border bg-surface px-3 py-2">
-                        <p className="font-semibold text-text-primary">
-                          {p.periodLabel}
-                        </p>
-                        <p className="font-mono text-[10px] whitespace-nowrap text-text-secondary">
-                          {p.dueLabel}
-                        </p>
-                        <PayoutMark status={p.payoutStatus} />
-                      </td>
-                      {p.cells.map((c) => (
-                        <td
-                          key={c.memberId}
-                          className="border border-border px-2 py-2 text-center"
-                        >
-                          <span
-                            className={`inline-flex min-w-[76px] items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${CELL_STYLE[c.status]}`}
-                          >
-                            {CELL_LABEL[c.status]}
-                            {c.isRecipient ? " ★" : ""}
-                          </span>
-                        </td>
-                      ))}
-                    </tr>
                   ))}
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td className="sticky left-0 border border-border bg-bg px-3 py-2 font-display text-[11px] font-semibold text-text-primary">
-                      Total paid
+                </tr>
+              </thead>
+              <tbody>
+                {periods.map((p) => (
+                  <tr key={p.cycleNumber}>
+                    <td className="sticky left-0 border-b border-(--led-line) bg-(--led-sticky) px-3 py-2.5">
+                      <p className="text-[13px] font-semibold text-(--led-ink)">
+                        {p.periodLabel}
+                      </p>
+                      <p className="mt-0.5 font-mono text-[10px] whitespace-nowrap text-(--led-sub)">
+                        {p.dueLabel}
+                      </p>
+                      <PayoutMark status={p.payoutStatus} />
                     </td>
-                    {memberTotals.map((t) => (
+                    {p.cells.map((c) => (
                       <td
-                        key={t.memberId}
-                        className="border border-border bg-bg px-3 py-2 text-center tabular-nums text-text-primary"
+                        key={c.memberId}
+                        className="border-b border-(--led-line) px-2 py-2.5 text-center align-middle"
                       >
-                        <span className="font-semibold">{t.totalPaidLabel}</span>
-                        <span className="block font-mono text-[10px] text-text-secondary">
-                          {t.paid}✓{t.late > 0 ? ` ${t.late} late` : ""}
-                          {t.overdue > 0 ? ` ${t.overdue} overdue` : ""}
-                          {t.pending > 0 ? ` ${t.pending} pending` : ""}
+                        <span
+                          className={`inline-flex min-w-[76px] items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${CELL_STYLE[c.status]}`}
+                        >
+                          {CELL_LABEL[c.status]}
+                          {c.isRecipient ? " ★" : ""}
                         </span>
                       </td>
                     ))}
                   </tr>
-                </tfoot>
-              </table>
-            </div>
-        )}
-      </div>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td className="sticky left-0 bg-(--led-sticky) px-3 py-3 align-top text-[13px] font-semibold text-(--led-ink)">
+                    Total paid
+                  </td>
+                  {memberTotals.map((t) => (
+                    <td
+                      key={t.memberId}
+                      className="bg-(--led-foot) px-2 py-3 align-top"
+                    >
+                      <p className="text-center text-[13px] font-semibold tabular-nums text-(--led-ink)">
+                        {t.totalPaidLabel}
+                      </p>
+                      <p className="mt-0.5 text-center font-mono text-[10px] text-(--led-sub)">
+                        {t.paid}✓{t.late > 0 ? ` ${t.late} late` : ""}
+                        {t.overdue > 0 ? ` ${t.overdue} overdue` : ""}
+                        {t.pending > 0 ? ` ${t.pending} pending` : ""}
+                      </p>
+                    </td>
+                  ))}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      )}
 
       {!empty && (
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-text-secondary">

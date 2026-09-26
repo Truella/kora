@@ -65,6 +65,20 @@ export default function CircleHeader({
   const symbol = SYMBOLS[group.currency] ?? group.currency;
   const amountLabel = `${symbol}${Number(group.contribution_amount).toLocaleString()}`;
 
+  // One element, two placements: under the name on desktop, full-width
+  // below the title row on mobile (where the actions sit beside the name).
+  const meta = (
+    <>
+      {amountLabel} {group.frequency} ·{" "}
+      {memberCount === 1 ? "1 member" : `${memberCount} members`}
+      <span
+        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_BADGE[group.status] ?? STATUS_BADGE.active}`}
+      >
+        {STATUS_LABEL[group.status] ?? group.status}
+      </span>
+    </>
+  );
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
@@ -77,14 +91,8 @@ export default function CircleHeader({
           <h1 className="truncate font-display text-xl font-semibold capitalize tracking-tight text-text-primary">
             {group.name}
           </h1>
-          <p className="mt-1 flex flex-wrap items-center gap-2 font-display text-xs font-semibold tabular-nums text-text-secondary">
-            {amountLabel} {group.frequency} ·{" "}
-            {memberCount === 1 ? "1 member" : `${memberCount} members`}
-            <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_BADGE[group.status] ?? STATUS_BADGE.active}`}
-            >
-              {STATUS_LABEL[group.status] ?? group.status}
-            </span>
+          <p className="mt-1 hidden flex-wrap items-center gap-2 font-display text-xs font-semibold tabular-nums text-text-secondary sm:flex">
+            {meta}
           </p>
         </div>
         {/* Mobile only: actions dock into the identity row so the tab row
@@ -100,6 +108,9 @@ export default function CircleHeader({
           </div>
         )}
       </div>
+      <p className="flex flex-wrap items-center gap-2 pl-12 font-display text-xs font-semibold tabular-nums text-text-secondary sm:hidden">
+        {meta}
+      </p>
       <div className="flex items-center justify-between gap-2">
         <CircleTabs groupId={group.id} active={active} />
         {(trailing || (showInvite && inviterId)) && (
