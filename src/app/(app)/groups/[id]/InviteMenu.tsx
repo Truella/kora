@@ -10,16 +10,6 @@ import {
   UserMultipleIcon,
 } from "@hugeicons/core-free-icons";
 import InviteByPhone from "./InviteByPhone";
-// Shares the grid tile's hover/focus treatment with its three siblings. A
-// `<button>`, not an `<a>`, so it reuses the class rather than the component.
-import { ACTION_TILE } from "./TurnViews";
-
-// Tab-bar styling for the merged circle header: same pill geometry as the
-// sibling Links in CircleTabs (no border, no tile chrome). The dropdown
-// panel is `fixed` on mobile so the tab bar's horizontal scroll container
-// cannot clip it, and a plain absolute dropdown from `sm` up.
-const TAB_BUTTON =
-  "flex shrink-0 items-center gap-1.5 rounded-[12px] px-3 py-2 text-[13px] font-medium whitespace-nowrap text-text-secondary transition-colors hover:bg-black/[0.04] hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 
 // The single entry point for inviting. One CTA opens a custom dropdown with
 // the two paths side by side: anonymous link (works before an account
@@ -32,13 +22,9 @@ const TAB_BUTTON =
 export default function InviteMenu({
   groupId,
   inviterId,
-  grid = false,
-  tab = false,
 }: {
   groupId: string;
   inviterId: string;
-  grid?: boolean;
-  tab?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [sheet, setSheet] = useState(false);
@@ -83,32 +69,16 @@ export default function InviteMenu({
 
   return (
     <>
-      <div className={grid ? "relative w-full" : "relative shrink-0"}>
+      <div className="relative shrink-0">
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-haspopup="menu"
-          className={
-            grid
-              ? ACTION_TILE
-              : "inline-flex items-center gap-2 rounded-[10px] border-[0.5px] border-border bg-white px-4 py-2 text-sm font-semibold text-text-primary"
-          }
+          className="inline-flex shrink-0 items-center gap-2 self-stretch rounded-[14px] bg-surface px-4 text-sm font-semibold text-text-primary shadow-[0_2px_8px_rgba(11,38,36,0.04)] transition-colors hover:bg-black/[0.04]"
         >
-          <HugeiconsIcon
-            icon={UserAdd01Icon}
-            size={grid ? 24 : 16}
-            className="text-primary"
-          />
-          <span
-            className={
-              grid
-                ? "text-xs font-semibold text-text-primary"
-                : "text-sm font-semibold text-text-primary"
-            }
-          >
-            Invite
-          </span>
+          <HugeiconsIcon icon={UserAdd01Icon} size={16} className="text-primary" />
+          <span className="text-sm font-semibold text-text-primary">Invite</span>
         </button>
 
         <AnimatePresence>
