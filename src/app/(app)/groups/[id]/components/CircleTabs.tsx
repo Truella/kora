@@ -80,6 +80,7 @@ export default function CircleTabs({
             >
               <TabsTabPrimitive
                 value={tab.value}
+                nativeButton={false}
                 render={
                   <Link
                     href={tab.href(groupId)}

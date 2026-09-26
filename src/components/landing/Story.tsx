@@ -15,23 +15,23 @@ import Reveal from "@/components/Reveal";
 const VALUE = [
   {
     icon: UserGroupIcon,
-    title: "Everyone has a say.",
-    body: "Invite someone and let the group decide. New members go to a vote. Membership stays with people already saving together.",
+    title: "Everyone gets a say.",
+    body: "Invite someone, then let the circle decide. New members join only after the group approves them.",
   },
   {
     icon: Activity01Icon,
     title: "Everyone sees the same record.",
-    body: "Every contribution and payout lands in a shared ledger. No screenshots, notebooks, or someone's memory.",
+    body: "Contributions, payouts, and the circle's activity live in one shared record.",
   },
   {
     icon: Wallet01Icon,
-    title: "Your money follows the schedule.",
-    body: "Set the contribution and payout order once. Members know what they owe, when it is due, whose turn comes next.",
+    title: "The order is clear from day one.",
+    body: "Set contributions and payout order once. Everyone knows what they owe, when it is due, and who receives next.",
   },
   {
     icon: ShieldCheckIcon,
-    title: "Keep the circle moving.",
-    body: "Automatic reminders keep members on schedule and reduce the delays that push everyone's payout back.",
+    title: "Everyone stays on schedule.",
+    body: "Automatic reminders keep contributions moving so one missed payment doesn't hold up the circle.",
   },
 ];
 
@@ -92,8 +92,11 @@ export default function Story({ createHref }: { createHref: string }) {
 
       <section className="mx-auto w-full max-w-5xl px-4 py-14">
         <Reveal>
-          <h2 className="font-display text-3xl font-semibold tracking-tight text-text-primary">
-            Built around the circle, not the collector.
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-secondary">
+            Why Kora
+          </p>
+          <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight text-text-primary">
+            Saving together, without the usual uncertainty.
           </h2>
         </Reveal>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
