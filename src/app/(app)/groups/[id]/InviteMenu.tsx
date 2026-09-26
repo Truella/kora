@@ -75,10 +75,12 @@ export default function InviteMenu({
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-haspopup="menu"
-          className="inline-flex shrink-0 items-center gap-2 self-stretch rounded-[14px] bg-surface px-4 text-sm font-semibold text-text-primary shadow-[0_2px_8px_rgba(11,38,36,0.04)] transition-colors hover:bg-black/[0.04]"
+          className="group shrink-0 self-center rounded-[10px] bg-surface px-5 py-2.5 shadow-[0_2px_8px_rgba(11,38,36,0.04)] transition-colors hover:bg-black/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         >
-          <HugeiconsIcon icon={UserAdd01Icon} size={16} className="text-primary" />
-          <span className="text-sm font-semibold text-text-primary">Invite</span>
+          <span className="flex items-center gap-1.5 text-[13px] font-medium whitespace-nowrap text-text-secondary transition-colors group-hover:text-text-primary">
+            <HugeiconsIcon icon={UserAdd01Icon} size={16} />
+            Invite
+          </span>
         </button>
 
         <AnimatePresence>
