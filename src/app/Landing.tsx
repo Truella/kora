@@ -12,6 +12,9 @@ import {
   ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
 import Reveal from "./Reveal";
+import ledgerShot from "../../public/images/landing/ledger_lg.webp";
+import homeShot from "../../public/images/landing/home_lg.webp";
+import ledgerGridShot from "../../public/images/landing/ledger_lg_.webp";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
@@ -95,61 +98,52 @@ function Nav({ signedIn }: { signedIn: boolean }) {
   );
 }
 
-// A pocket-size mock of the shared record — the product shot is the UI.
-function LedgerMock() {
-  const rows = [
-    {
-      who: "Adaeze",
-      what: "Turn 1 share",
-      state: "Paid",
-      cls: "bg-[#E0ECE9] text-[#1E5A4E]",
-    },
-    {
-      who: "Chidi",
-      what: "Turn 1 share",
-      state: "Paid late",
-      cls: "bg-[#F3E1E0] text-[#8A2A21]",
-    },
-    {
-      who: "Funke",
-      what: "Turn 2 share",
-      state: "Due Fri",
-      cls: "bg-[#F8EDD9] text-[#8A5F14]",
-    },
-  ] as const;
+// Product shots for the hero: the row is fixed-height and overflow-hidden
+// so all three bottoms line up flush. The whole side cards are pushed
+// down for the stagger and their excess is cropped at the row's bottom
+// edge. One gradient fade across the row bottom melts the cut edges into
+// the page; every other edge stays crisp. Side cards get cropped at the
+// screen edges.
+function HeroShots() {
+  const frame =
+    "relative shrink-0 overflow-hidden rounded-t-[16px] shadow-[0_-6px_16px_-10px_rgba(11,38,36,0.2),-6px_0_16px_-10px_rgba(11,38,36,0.2),6px_0_16px_-10px_rgba(11,38,36,0.2)]";
+  const shot = "h-full w-full object-cover";
   return (
-    <div className="rounded-[14px] border-[0.5px] border-border bg-surface p-4 shadow-[0_16px_40px_-24px_rgba(11,38,36,0.35)]">
-      <div className="flex items-center justify-between">
-        <p className="font-display text-lg font-semibold text-text-primary">
-          Market Circle ledger
-        </p>
-        <span className="rounded-full bg-[#F3EDDF] px-3 py-1 font-display text-xs font-semibold text-[#7A6028]">
-          ₦10,000 pot
-        </span>
+    <div className="w-full overflow-hidden px-4 pb-14 pt-6 md:px-0">
+      <div className="relative flex h-[300px] items-start justify-center gap-5 overflow-hidden lg:h-[420px]">
+        <div
+          className={`${frame} hidden h-[300px] w-[300px] translate-y-10 md:block lg:h-[420px] lg:w-[440px]`}
+        >
+          <Image
+            src={homeShot}
+            alt="Kora home dashboard screenshot"
+            className={`${shot} object-right-top`}
+          />
+        </div>
+        <div
+          className={`${frame} h-[300px] w-full max-w-[560px] lg:h-[420px] lg:max-w-[640px]`}
+        >
+          <Image
+            src={ledgerShot}
+            alt="Kora contribution ledger screenshot"
+            className={`${shot} object-top`}
+            priority
+          />
+        </div>
+        <div
+          className={`${frame} hidden h-[300px] w-[300px] translate-y-10 md:block lg:h-[420px] lg:w-[440px]`}
+        >
+          <Image
+            src={ledgerGridShot}
+            alt="Kora ledger grid close-up screenshot"
+            className={`${shot} object-left-top`}
+          />
+        </div>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-bg to-transparent"
+        />
       </div>
-      <ul className="mt-3 flex flex-col gap-2">
-        {rows.map((r) => (
-          <li
-            key={`${r.who}-${r.what}`}
-            className="flex items-center justify-between gap-3 rounded-[10px] border-[0.5px] border-border bg-surface px-3 py-2.5"
-          >
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-text-primary">
-                {r.who}
-              </p>
-              <p className="font-mono text-xs text-text-secondary">{r.what}</p>
-            </div>
-            <span
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${r.cls}`}
-            >
-              {r.state}
-            </span>
-          </li>
-        ))}
-      </ul>
-      <p className="mt-3 font-mono text-xs text-text-secondary">
-        Trust 100 · Trust 50 · everyone sees this
-      </p>
     </div>
   );
 }
@@ -215,42 +209,35 @@ export default function Landing() {
     <div className="flex flex-1 flex-col bg-bg">
       <Nav signedIn={signedIn} />
 
-      {/* Hero */}
-      <header className="mx-auto flex w-full max-w-5xl flex-col gap-8 px-4 pb-14 pt-10 lg:flex-row lg:items-center lg:pt-16">
-        <Reveal className="flex-1">
+      {/* Hero — single centered stack: eyebrow, headline, subheading,
+          one pill CTA, then the three staggered product shots full-bleed. */}
+      <header className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pb-14 pt-10 text-center lg:pt-16">
+        <Reveal className="flex flex-col items-center">
           <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-text-secondary">
             Digital ajo · esusu · chama
           </p>
           <h1 className="mt-3 font-display text-4xl font-semibold leading-[1.05] tracking-tight text-text-primary lg:text-6xl">
-            Save together. Keep everyone in the loop.
+            <span className="block">Save together.</span>
+            <span className="block">Keep everyone in the loop.</span>
           </h1>
-          <p className="mt-4 max-w-md text-base leading-7 text-text-secondary">
+          <p className="mt-4 max-w-xl text-base leading-7 text-text-secondary">
             A digital savings circle for people who already trust each other.
             Set your contribution schedule, keep every payment visible, and let
             the group decide who joins.
           </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <motion.span whileTap={{ scale: 0.97 }} className="inline-flex">
-              <Link
-                href={createHref}
-                className="inline-flex items-center gap-2 rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
-              >
-                Create a circle
-                <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
-              </Link>
-            </motion.span>
+          <motion.span whileTap={{ scale: 0.97 }} className="mt-6 inline-flex">
             <Link
-              href="#how-it-works"
-              className="rounded-[10px] border-[0.5px] border-border bg-white px-6 py-[13px] text-sm font-semibold text-text-primary"
+              href={createHref}
+              className="rounded-full bg-primary px-8 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
             >
-              See how it works
+              Create a circle
             </Link>
-          </div>
-        </Reveal>
-        <Reveal delay={0.1} className="flex-1">
-          <LedgerMock />
+          </motion.span>
         </Reveal>
       </header>
+      <Reveal delay={0.1}>
+        <HeroShots />
+      </Reveal>
 
       {/* Problem */}
       <section className="bg-surface">
