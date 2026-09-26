@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Sora, Hind, Roboto_Mono } from "next/font/google";
+import { Sora, Hind, Roboto_Mono, Caveat } from "next/font/google";
 import ServiceWorkerRegister from "./sw-register";
 import "./globals.css";
 
@@ -21,6 +21,14 @@ const robotoMono = Roboto_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-mono",
+  display: "swap",
+});
+
+// Handwriting accent only — the ledger's "Turn 1/4" marginalia. Nowhere else.
+const caveat = Caveat({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-handwriting",
   display: "swap",
 });
 
@@ -71,7 +79,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sora.variable} ${hind.variable} ${robotoMono.variable} h-full antialiased`}
+      className={`${sora.variable} ${hind.variable} ${robotoMono.variable} ${caveat.variable} h-full antialiased`}
     >
       <body className="min-h-dvh bg-bg font-sans text-text-primary">
         <ServiceWorkerRegister />

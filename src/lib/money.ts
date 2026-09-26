@@ -106,6 +106,23 @@ export function formatCycleDateShort(value: string): string {
   return `${c.d} ${MONTHS[c.m - 1].slice(0, 3)}`;
 }
 
+/**
+ * "22 – 29 Sep 2025" — a cycle's window for the ledger book. Start is the
+ * previous cycle's due date + 1 day (cycle 1 falls back to a period-length
+ * step back); only the label lives here, the arithmetic stays with the
+ * caller. Same pinned calendar fields as every other date in this file.
+ */
+export function formatCycleRange(start: string, end: string): string {
+  const s = parseDateOnly(start);
+  const e = parseDateOnly(end);
+  if (!s || !e) return "—";
+  const sm = MONTHS[s.m - 1].slice(0, 3);
+  const em = MONTHS[e.m - 1].slice(0, 3);
+  if (s.y === e.y && s.m === e.m) return `${s.d} – ${e.d} ${em} ${e.y}`;
+  if (s.y === e.y) return `${s.d} ${sm} – ${e.d} ${em} ${e.y}`;
+  return `${s.d} ${sm} ${s.y} – ${e.d} ${em} ${e.y}`;
+}
+
 export function monthName(calendar: CalendarDate): string {
   return MONTHS[calendar.m - 1];
 }
