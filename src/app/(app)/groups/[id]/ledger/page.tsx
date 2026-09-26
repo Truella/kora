@@ -245,6 +245,12 @@ export default async function LedgerPage({
     (c) => payoutByCycle.get(c.id) === "completed",
   ).length;
 
+  // The turn in flight: earliest cycle whose payout hasn't completed.
+  // Null once the rotation is fully disbursed.
+  const currentCycleNumber =
+    sortedCycles.find((c) => payoutByCycle.get(c.id) !== "completed")
+      ?.cycle_number ?? null;
+
   return (
     <main className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       <CircleHeader
@@ -286,6 +292,7 @@ export default async function LedgerPage({
         }))}
         periods={periods}
         memberTotals={memberTotals}
+        currentCycleNumber={currentCycleNumber}
         empty={periods.length === 0}
       />
     </main>

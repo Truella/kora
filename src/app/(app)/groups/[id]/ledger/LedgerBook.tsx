@@ -81,7 +81,7 @@ function PayoutMark({ status }: { status: string }) {
     );
   }
   return (
-    <p className="mt-0.5 font-mono text-[10px] whitespace-nowrap text-(--led-sub)">
+    <p className="mt-0.5 font-mono text-[10px] whitespace-nowrap text-text-secondary/70">
       Payout pending
     </p>
   );
@@ -96,6 +96,7 @@ export default function LedgerBook({
   members,
   periods,
   memberTotals,
+  currentCycleNumber,
   empty,
 }: {
   groupId: string;
@@ -106,6 +107,7 @@ export default function LedgerBook({
   members: LedgerBookMember[];
   periods: LedgerBookPeriod[];
   memberTotals: LedgerBookMemberTotal[];
+  currentCycleNumber: number | null;
   empty: boolean;
 }) {
   // Live book: any INSERT/UPDATE on contributions/payouts/cycles refreshes
@@ -118,8 +120,7 @@ export default function LedgerBook({
 
   return (
     <div className="ledger-sheet">
-      <style>{`.ledger-sheet { --led-bg: #0B2624; --led-ink: #FFFFFF; --led-sub: rgba(255,255,255,0.62); --led-line: rgba(255,255,255,0.12); --led-foot: rgba(255,255,255,0.06); --led-sticky: #0B2624; }
-.ledger-scroll { scrollbar-width: thin; scrollbar-color: #14524F #F2F4F2; }
+      <style>{`.ledger-scroll { scrollbar-width: thin; scrollbar-color: #14524F #F2F4F2; }
 .ledger-scroll::-webkit-scrollbar { height: 8px; }
 .ledger-scroll::-webkit-scrollbar-track { background: #F2F4F2; border-radius: 999px; }
 .ledger-scroll::-webkit-scrollbar-thumb { background: #14524F; border-radius: 999px; border: 2px solid #F2F4F2; }
@@ -129,7 +130,7 @@ export default function LedgerBook({
   body { background: #fff !important; }
   main { max-width: none !important; padding: 0 !important; }
   .ledger-no-print { display: none !important; }
-  .ledger-sheet { box-shadow: none !important; border: none !important; border-radius: 0 !important; padding: 0 !important; --led-bg: #ffffff; --led-ink: #16201d; --led-sub: #5b645e; --led-line: #dde3df; --led-foot: #F2F4F2; --led-sticky: #ffffff; }
+  .ledger-sheet { box-shadow: none !important; border: none !important; border-radius: 0 !important; padding: 0 !important; }
   .ledger-scroll { overflow: visible !important; }
   .ledger-table { font-size: 10px !important; }
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -184,18 +185,18 @@ export default function LedgerBook({
           </p>
         </div>
       ) : (
-        <div className="rounded-[20px] bg-(--led-bg) p-2 sm:p-3">
+        <div className="rounded-[20px] border-[0.5px] border-border bg-surface p-3 sm:p-4">
           <div className="ledger-scroll overflow-x-auto pb-2">
             <table className="ledger-table w-full min-w-[560px] border-collapse text-xs">
               <thead>
                 <tr>
-                  <th className="sticky left-0 min-w-[132px] border-b border-(--led-line) bg-(--led-sticky) px-3 py-2.5 text-left font-display text-[11px] font-semibold text-(--led-ink)">
+                  <th className="sticky left-0 min-w-[132px] border-b border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary">
                     Period
                   </th>
                   {members.map((m) => (
                     <th
                       key={m.id}
-                      className="max-w-[150px] truncate border-b border-(--led-line) px-3 py-2.5 text-left font-display text-[11px] font-semibold text-(--led-ink)"
+                      className="max-w-[150px] truncate border-b border-border px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary"
                       title={m.name}
                     >
                       {m.name}
@@ -206,11 +207,16 @@ export default function LedgerBook({
               <tbody>
                 {periods.map((p) => (
                   <tr key={p.cycleNumber}>
-                    <td className="sticky left-0 border-b border-(--led-line) bg-(--led-sticky) px-3 py-2.5">
-                      <p className="text-[13px] font-semibold text-(--led-ink)">
+                    <td className="sticky left-0 border-b border-border bg-surface px-3 py-2.5">
+                      <p className="flex items-center gap-1.5 text-[13px] font-semibold text-text-primary">
                         {p.periodLabel}
+                        {p.cycleNumber === currentCycleNumber && (
+                          <span className="rounded-full bg-[#F8EDD9] px-2 py-px font-mono text-[9px] font-medium uppercase tracking-wider text-[#8A5F14]">
+                            Current turn
+                          </span>
+                        )}
                       </p>
-                      <p className="mt-0.5 font-mono text-[10px] whitespace-nowrap text-(--led-sub)">
+                      <p className="mt-0.5 font-mono text-[10px] whitespace-nowrap text-text-secondary">
                         {p.dueLabel}
                       </p>
                       <PayoutMark status={p.payoutStatus} />
@@ -218,7 +224,7 @@ export default function LedgerBook({
                     {p.cells.map((c) => (
                       <td
                         key={c.memberId}
-                        className="border-b border-(--led-line) px-2 py-2.5 text-center align-middle"
+                        className="border-b border-border px-2 py-2.5 text-center align-middle"
                       >
                         <span
                           className={`inline-flex min-w-[76px] items-center justify-center rounded-full px-2.5 py-1 text-[11px] font-semibold ${CELL_STYLE[c.status]}`}
@@ -232,19 +238,16 @@ export default function LedgerBook({
                 ))}
               </tbody>
               <tfoot>
-                <tr>
-                  <td className="sticky left-0 bg-(--led-sticky) px-3 py-3 align-top text-[13px] font-semibold text-(--led-ink)">
+                <tr className="bg-bg">
+                  <td className="sticky left-0 bg-bg px-3 py-3 align-top text-[13px] font-semibold text-text-primary">
                     Total paid
                   </td>
                   {memberTotals.map((t) => (
-                    <td
-                      key={t.memberId}
-                      className="bg-(--led-foot) px-2 py-3 align-top"
-                    >
-                      <p className="text-center text-[13px] font-semibold tabular-nums text-(--led-ink)">
+                    <td key={t.memberId} className="px-2 py-3 align-top">
+                      <p className="text-center text-[13px] font-semibold tabular-nums text-text-primary">
                         {t.totalPaidLabel}
                       </p>
-                      <p className="mt-0.5 text-center font-mono text-[10px] text-(--led-sub)">
+                      <p className="mt-0.5 text-center font-mono text-[10px] text-text-secondary">
                         {t.paid}✓{t.late > 0 ? ` ${t.late} late` : ""}
                         {t.overdue > 0 ? ` ${t.overdue} overdue` : ""}
                         {t.pending > 0 ? ` ${t.pending} pending` : ""}
