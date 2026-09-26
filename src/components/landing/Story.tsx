@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   UserGroupIcon,
@@ -15,23 +15,23 @@ import Reveal from "@/components/Reveal";
 const VALUE = [
   {
     icon: UserGroupIcon,
-    title: "Everyone has a say.",
-    body: "Invite someone and let the group decide. New members go to a vote. Membership stays with people already saving together.",
+    title: "Everyone gets a say.",
+    body: "Invite someone, then let the circle decide. New members join only after the group approves them.",
   },
   {
     icon: Activity01Icon,
     title: "Everyone sees the same record.",
-    body: "Every contribution and payout lands in a shared ledger. No screenshots, notebooks, or someone's memory.",
+    body: "Contributions, payouts, and the circle's activity live in one shared record.",
   },
   {
     icon: Wallet01Icon,
-    title: "Your money follows the schedule.",
-    body: "Set the contribution and payout order once. Members know what they owe, when it is due, whose turn comes next.",
+    title: "The order is clear from day one.",
+    body: "Set contributions and payout order once. Everyone knows what they owe, when it is due, and who receives next.",
   },
   {
     icon: ShieldCheckIcon,
-    title: "Keep the circle moving.",
-    body: "Automatic reminders keep members on schedule and reduce the delays that push everyone's payout back.",
+    title: "Everyone stays on schedule.",
+    body: "Automatic reminders keep contributions moving so one missed payment doesn't hold up the circle.",
   },
 ];
 
@@ -64,27 +64,32 @@ const STEPS = [
 ];
 
 export default function Story({ createHref }: { createHref: string }) {
+  const reduceMotion = useReducedMotion();
   return (
     <>
       <section className="bg-surface">
         <div className="mx-auto w-full max-w-5xl px-4 py-14">
           <Reveal>
-            <h2 className="max-w-xl font-display text-3xl font-semibold tracking-tight text-text-primary">
-              Ajo works because people trust each other.
+            <h2 className="max-w-xl font-display text-3xl font-semibold tracking-tight text-primary">
+              What is Kora?
             </h2>
             <p className="mt-2 font-display text-xl text-text-secondary">
-              The hard part is keeping that trust intact when money starts
-              moving.
+              Kora is a digital savings circle for people who know and trust
+              each other.
             </p>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-text-secondary">
-              Who has paid? Who is next? Did everyone get their turn? Who keeps
-              the records? When one person has to track everything, small
-              mistakes can quickly become bigger problems. We give the whole
-              circle one shared place to keep track.
+              Running a savings circle means keeping track of contributions,
+              managing the payout order, and making sure everyone&apos;s money
+              reaches the right person at the right time. When all of that
+              depends on one person, a missed payment, unclear record, or
+              misplaced contribution can affect the whole group.
             </p>
-            <p className="mt-4 max-w-2xl font-display text-lg font-semibold text-text-primary">
-              Every payment. Every payout. Every member. One record everyone can
-              see.
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-text-secondary">
+              Kora gives the circle a shared system to run on. Members vote on
+              who joins, contributions and payouts follow an agreed schedule,
+              and every transaction is recorded in a ledger everyone can see.
+              The organizer sets up and manages the circle without having to
+              hold everyone&apos;s money.
             </p>
           </Reveal>
         </div>
@@ -92,8 +97,11 @@ export default function Story({ createHref }: { createHref: string }) {
 
       <section className="mx-auto w-full max-w-5xl px-4 py-14">
         <Reveal>
-          <h2 className="font-display text-3xl font-semibold tracking-tight text-text-primary">
-            Built around the circle, not the collector.
+          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-secondary">
+            Why Kora
+          </p>
+          <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight text-text-primary">
+            Saving together, without the usual uncertainty.
           </h2>
         </Reveal>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -196,23 +204,65 @@ export default function Story({ createHref }: { createHref: string }) {
               From invitation to payout
             </h2>
           </Reveal>
-          <ol className="mt-6 flex flex-col gap-3">
+          <ol className="mt-6 flex flex-col">
             {STEPS.map((s, i) => (
-              <Reveal key={s.n} delay={Math.min(i * 0.05, 0.2)}>
-                <li className="flex gap-4 rounded-[14px] border-[0.5px] border-border bg-surface p-4">
-                  <span className="font-mono text-sm font-bold text-text-secondary">
+              <motion.li
+                key={s.n}
+                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{
+                  duration: 0.35,
+                  delay: Math.min(i * 0.12, 0.48),
+                }}
+                className="relative flex gap-4"
+              >
+                <span aria-hidden className="flex flex-col items-center">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary font-mono text-xs font-bold text-white">
                     {s.n}
                   </span>
-                  <div>
-                    <p className="font-display text-lg font-semibold text-text-primary">
-                      {s.title}
-                    </p>
-                    <p className="mt-0.5 text-sm leading-6 text-text-secondary">
-                      {s.body}
-                    </p>
-                  </div>
-                </li>
-              </Reveal>
+                  {i < STEPS.length - 1 && (
+                    <motion.svg
+                      viewBox="0 0 36 100"
+                      preserveAspectRatio="none"
+                      aria-hidden
+                      initial={{ opacity: reduceMotion ? 1 : 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{ duration: 0.2 }}
+                      className="mt-2 min-h-6 w-9 flex-1"
+                    >
+                      <motion.path
+                        d="M18 2 C 30 30, 6 65, 18 98"
+                        fill="none"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        vectorEffect="non-scaling-stroke"
+                        className="stroke-primary/25"
+                        initial={{ pathLength: reduceMotion ? 1 : 0 }}
+                        whileInView={{ pathLength: 1 }}
+                        viewport={{ once: true, margin: "-40px" }}
+                        transition={{
+                          duration: 0.6,
+                          delay: Math.min(i * 0.12, 0.48) + 0.15,
+                        }}
+                      />
+                    </motion.svg>
+                  )}
+                </span>
+                <div
+                  className={`flex-1 rounded-[14px] border-[0.5px] border-border bg-surface p-4 ${
+                    i < STEPS.length - 1 ? "mb-6" : ""
+                  }`}
+                >
+                  <p className="font-display text-lg font-semibold text-text-primary">
+                    {s.title}
+                  </p>
+                  <p className="mt-0.5 text-sm leading-6 text-text-secondary">
+                    {s.body}
+                  </p>
+                </div>
+              </motion.li>
             ))}
           </ol>
         </div>

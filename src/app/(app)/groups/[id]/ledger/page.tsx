@@ -39,23 +39,27 @@ export default async function LedgerPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: group } = await supabase
-    .from("groups")
-    .select(
-      "id, name, contribution_amount, currency, frequency, status, created_by",
-    )
-    .eq("id", id)
-    .maybeSingle();
-
-  const { data: member } = user
-    ? await supabase
-        .from("group_members")
-        .select("id")
-        .eq("group_id", id)
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .maybeSingle()
-    : { data: null };
+  // Wave 1 — group + membership need nothing but the route id.
+  const [groupRes, memberRes] = await Promise.all([
+    supabase
+      .from("groups")
+      .select(
+        "id, name, contribution_amount, currency, frequency, status, created_by",
+      )
+      .eq("id", id)
+      .maybeSingle(),
+    user
+      ? supabase
+          .from("group_members")
+          .select("id")
+          .eq("group_id", id)
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  const group = groupRes.data;
+  const member = memberRes.data;
 
   if (!group || !member) {
     return (
@@ -83,11 +87,22 @@ export default async function LedgerPage({
   const periodWord = "Turn";
   const today = new Date().toISOString().slice(0, 10);
 
-  const { data: cycles } = await supabase
-    .from("cycles")
-    .select("id, cycle_number, due_date, status, recipient_member_id")
-    .eq("group_id", id)
-    .order("cycle_number", { ascending: true });
+  // Wave 2 — rotation + roster need only the group id.
+  const [cyclesRes, rosterRes] = await Promise.all([
+    supabase
+      .from("cycles")
+      .select("id, cycle_number, due_date, status, recipient_member_id")
+      .eq("group_id", id)
+      .order("cycle_number", { ascending: true }),
+    supabase
+      .from("group_members")
+      .select("id, user_id, payout_position, joined_at")
+      .eq("group_id", id)
+      .eq("status", "active")
+      .order("payout_position", { ascending: true }),
+  ]);
+  const cycles = cyclesRes.data;
+  const circleMembers = rosterRes.data;
 
   const sortedCycles = [...(cycles ?? [])].sort(
     (a, b) => a.cycle_number - b.cycle_number,
@@ -99,43 +114,42 @@ export default async function LedgerPage({
     payout_position: number | null;
     joined_at: string;
   };
-  const { data: circleMembers } = await supabase
-    .from("group_members")
-    .select("id, user_id, payout_position, joined_at")
-    .eq("group_id", id)
-    .eq("status", "active")
-    .order("payout_position", { ascending: true });
-
   const memberRows = (circleMembers ?? []) as MemberRow[];
   const orderedMembers = [...memberRows].sort(
     (a, b) => (a.payout_position ?? 0) - (b.payout_position ?? 0),
   );
 
   const needUserIds = [...new Set(orderedMembers.map((m) => m.user_id))];
-  let nameByUser = new Map<string, string>();
-  if (needUserIds.length > 0) {
-    const { data: profs } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", needUserIds);
-    nameByUser = new Map(
-      ((profs ?? []) as { id: string; full_name: string }[]).map((p) => [
-        p.id,
-        p.full_name,
-      ]),
-    );
-  }
+  const cycleIds = sortedCycles.map((c) => c.id);
+  // Wave 3 — names, shares, and disbursements need wave 2's roster and
+  // rotation, so they fly together.
+  const [{ data: profs }, { data: contributions }, { data: payouts }] =
+    await Promise.all([
+      needUserIds.length > 0
+        ? supabase.from("profiles").select("id, full_name").in("id", needUserIds)
+        : Promise.resolve({ data: [] }),
+      cycleIds.length > 0
+        ? supabase
+            .from("contributions")
+            .select("cycle_id, member_id, status")
+            .in("cycle_id", cycleIds)
+        : Promise.resolve({ data: [] }),
+      cycleIds.length > 0
+        ? supabase
+            .from("payouts")
+            .select("cycle_id, status")
+            .in("cycle_id", cycleIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+  const nameByUser = new Map(
+    ((profs ?? []) as { id: string; full_name: string }[]).map((p) => [
+      p.id,
+      p.full_name,
+    ]),
+  );
   const memberName = (m: MemberRow) =>
     nameByUser.get(m.user_id) ?? `····${m.user_id.slice(-4)}`;
 
-  const cycleIds = sortedCycles.map((c) => c.id);
-  const { data: contributions } =
-    cycleIds.length > 0
-      ? await supabase
-          .from("contributions")
-          .select("cycle_id, member_id, status")
-          .in("cycle_id", cycleIds)
-      : { data: [] };
   const contribByKey = new Map(
     ((contributions ?? []) as {
       cycle_id: string;
@@ -144,13 +158,6 @@ export default async function LedgerPage({
     }[]).map((c) => [`${c.cycle_id}:${c.member_id}`, c.status]),
   );
 
-  const { data: payouts } =
-    cycleIds.length > 0
-      ? await supabase
-          .from("payouts")
-          .select("cycle_id, status")
-          .in("cycle_id", cycleIds)
-      : { data: [] };
   const payoutByCycle = new Map(
     ((payouts ?? []) as { cycle_id: string; status: string }[]).map((p) => [
       p.cycle_id,
