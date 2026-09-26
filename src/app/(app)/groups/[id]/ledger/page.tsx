@@ -8,7 +8,7 @@ import {
   toDateOnly,
   utcDateOnly,
 } from "@/lib/money";
-import CircleHeader from "../CircleHeader";
+import CircleHeader from "../components/CircleHeader";
 import LedgerBook, {
   type LedgerCyclePage,
   type LedgerPageRow,

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getLedgerEvents } from "@/lib/ledger";
-import LedgerFeed from "./LedgerFeed";
+import LedgerFeed from "@/components/ledger/LedgerFeed";
 
 export const metadata = { title: "Activity" };
 

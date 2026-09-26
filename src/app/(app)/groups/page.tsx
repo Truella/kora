@@ -4,7 +4,7 @@ import { UserGroupIcon, Add01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
 import { getHomeSnapshot, type HomeCircle } from "@/lib/home";
 import { collectTurnLabel } from "@/lib/rotation";
-import { RevealLi } from "../../Reveal";
+import { RevealLi } from "@/components/Reveal";
 
 export const metadata = { title: "Circles" };
 

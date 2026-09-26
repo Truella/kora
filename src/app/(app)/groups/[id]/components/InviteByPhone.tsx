@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tick01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
-import Dropdown from "../../../Dropdown";
+import Dropdown from "@/components/Dropdown";
 import { sanitizePhoneInput, MAX_PHONE_LEN } from "@/lib/inputs";
 import {
   normalizeToE164,

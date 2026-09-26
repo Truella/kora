@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useLedgerLive } from "@/lib/use-ledger-live";
+import { useLedgerLive } from "@/hooks/use-ledger-live";
 import type { HomeSnapshot } from "@/lib/home";
 import Summary from "./Summary";
 import NextUp from "./NextUp";

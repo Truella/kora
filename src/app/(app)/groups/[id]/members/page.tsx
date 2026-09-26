@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { MembersPanel, type MemberRow } from "../TurnViews";
-import CircleHeader from "../CircleHeader";
+import { MembersPanel, type MemberRow } from "../components/TurnViews";
+import CircleHeader from "../components/CircleHeader";
 
 export const metadata = { title: "Members" };
 

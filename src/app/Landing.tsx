@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import Reveal from "./Reveal";
+import Reveal from "@/components/Reveal";
 import Nav, { CREATE_HREF } from "@/components/landing/Nav";
 import Hero from "@/components/landing/Hero";
 import HeroShots from "@/components/landing/HeroShots";

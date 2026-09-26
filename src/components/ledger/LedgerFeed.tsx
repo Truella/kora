@@ -6,7 +6,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Activity01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
 import { getLedgerEvents, type LedgerEvent } from "@/lib/ledger";
-import { useLedgerLive } from "@/lib/use-ledger-live";
+import { useLedgerLive } from "@/hooks/use-ledger-live";
 
 const BADGE: Record<string, string> = {
   pending: "bg-[#F8EDD9] text-[#8A5F14]",
