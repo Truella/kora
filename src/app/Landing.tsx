@@ -101,32 +101,33 @@ function Nav({ signedIn }: { signedIn: boolean }) {
 // Product shots for the hero: the row is fixed-height and overflow-hidden
 // so all three bottoms line up flush. The whole side cards are pushed
 // down for the stagger and their excess is cropped at the row's bottom
-// edge. One gradient fade across the row bottom melts the cut edges into
-// the page; every other edge stays crisp. Side cards get cropped at the
-// screen edges.
+// edge. The center box is aspect-matched to the screenshots (2414x1508),
+// so its content is never cropped — sides stay narrow/cover-cropped by
+// design, anchored toward their visible edge. One gradient fade across
+// the row bottom melts the cut edges into the page; every other edge
+// stays crisp. Side cards get cropped at the screen edges.
 function HeroShots() {
   const frame =
     "relative shrink-0 overflow-hidden rounded-t-[16px] shadow-[0_-6px_16px_-10px_rgba(11,38,36,0.2),-6px_0_16px_-10px_rgba(11,38,36,0.2),6px_0_16px_-10px_rgba(11,38,36,0.2)]";
-  const shot = "h-full w-full object-cover";
   return (
     <div className="w-full overflow-hidden px-4 pb-14 pt-6 md:px-0">
-      <div className="relative flex h-[300px] items-start justify-center gap-5 overflow-hidden lg:h-[420px]">
+      <div className="relative flex items-start justify-center gap-5 overflow-hidden md:h-[300px] lg:h-[420px]">
         <div
           className={`${frame} hidden h-[300px] w-[300px] translate-y-10 md:block lg:h-[420px] lg:w-[440px]`}
         >
           <Image
             src={homeShot}
             alt="Kora home dashboard screenshot"
-            className={`${shot} object-right-top`}
+            className="h-full w-full object-cover object-right-top"
           />
         </div>
         <div
-          className={`${frame} h-[300px] w-full max-w-[560px] lg:h-[420px] lg:max-w-[640px]`}
+          className={`${frame} w-full max-w-[480px] md:h-[300px] lg:h-[420px] lg:max-w-[672px]`}
         >
           <Image
             src={ledgerShot}
             alt="Kora contribution ledger screenshot"
-            className={`${shot} object-top`}
+            className="h-auto w-full md:h-full md:object-cover md:object-top"
             priority
           />
         </div>
@@ -136,7 +137,7 @@ function HeroShots() {
           <Image
             src={ledgerGridShot}
             alt="Kora ledger grid close-up screenshot"
-            className={`${shot} object-left-top`}
+            className="h-full w-full object-cover object-left-top"
           />
         </div>
         <div
