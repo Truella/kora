@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import Reveal from "./Reveal";
-import Nav, { CREATE_HREF } from "./landing/Nav";
-import Hero from "./landing/Hero";
-import HeroShots from "./landing/HeroShots";
-import Story from "./landing/Story";
+import Nav, { CREATE_HREF } from "@/components/landing/Nav";
+import Hero from "@/components/landing/Hero";
+import HeroShots from "@/components/landing/HeroShots";
+import Story from "@/components/landing/Story";
 
 function useSessionUser() {
   const [user, setUser] = useState<User | null | undefined>(undefined);

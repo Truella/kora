@@ -10,7 +10,7 @@ import {
   ShieldCheckIcon,
   ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
-import Reveal from "../Reveal";
+import Reveal from "@/app/Reveal";
 
 const VALUE = [
   {

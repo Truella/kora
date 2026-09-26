@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "motion/react";
-import Reveal from "../Reveal";
+import Reveal from "@/app/Reveal";
 
 export default function Hero({ createHref }: { createHref: string }) {
   return (

@@ -3,11 +3,6 @@
 import { motion, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 
-// Shared entrance for the Motion pass (Day 5A): a short fade-up on first
-// paint. Lists stagger via `delay` (callers cap it so long lists settle
-// fast). Live-updating surfaces (LedgerFeed) deliberately don't use this —
-// re-animating on every realtime refetch would jitter the tabular figures.
-// Reduced-motion users get opacity-only (no y-shift).
 function useEntrance(delay: number) {
   const reduce = useReducedMotion();
   return {

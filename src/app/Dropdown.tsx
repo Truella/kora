@@ -10,11 +10,6 @@ export type DropdownOption<T extends string> = {
   label: string;
 };
 
-// The one custom dropdown everything uses — native <select> renders
-// platform chrome that breaks the card aesthetic and truncates labels on
-// small screens. Controlled: the parent owns the value, this owns the
-// open state. Closes on outside tap and Escape; options are real buttons
-// so Tab still reaches them.
 export default function Dropdown<T extends string>({
   value,
   onChange,
