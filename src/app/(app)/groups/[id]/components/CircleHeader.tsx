@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserGroupIcon } from "@hugeicons/core-free-icons";
 import CircleTabs from "./CircleTabs";
@@ -37,12 +38,15 @@ const IDENTITY_WASH: Record<string, string> = {
 // Shared circle header: identity row (mark + name + amount · frequency ·
 // members + status pill) with the section tab bar merged underneath. Used by
 // overview, ledger and members so the tabs persist across all three views.
+// `trailing` renders extra header actions (e.g. the ledger export button)
+// beside Invite on the right of the tab row.
 export default function CircleHeader({
   group,
   memberCount,
   inviterId,
   showInvite,
   active,
+  trailing,
 }: {
   group: {
     id: string;
@@ -56,6 +60,7 @@ export default function CircleHeader({
   inviterId: string | null;
   showInvite: boolean;
   active: "overview" | "ledger" | "members";
+  trailing?: ReactNode;
 }) {
   const symbol = SYMBOLS[group.currency] ?? group.currency;
   const amountLabel = `${symbol}${Number(group.contribution_amount).toLocaleString()}`;
@@ -82,11 +87,28 @@ export default function CircleHeader({
             </span>
           </p>
         </div>
+        {/* Mobile only: actions dock into the identity row so the tab row
+            below has the full width for its three tabs. Desktop keeps them
+            beside the tabs (see below) — only one placement is visible at
+            any breakpoint. */}
+        {(trailing || (showInvite && inviterId)) && (
+          <div className="flex shrink-0 items-center gap-2 sm:hidden">
+            {trailing}
+            {showInvite && inviterId && (
+              <InviteMenu groupId={group.id} inviterId={inviterId} />
+            )}
+          </div>
+        )}
       </div>
       <div className="flex items-center justify-between gap-2">
         <CircleTabs groupId={group.id} active={active} />
-        {showInvite && inviterId && (
-          <InviteMenu groupId={group.id} inviterId={inviterId} />
+        {(trailing || (showInvite && inviterId)) && (
+          <div className="hidden shrink-0 items-center gap-2 sm:flex">
+            {trailing}
+            {showInvite && inviterId && (
+              <InviteMenu groupId={group.id} inviterId={inviterId} />
+            )}
+          </div>
         )}
       </div>
     </div>
