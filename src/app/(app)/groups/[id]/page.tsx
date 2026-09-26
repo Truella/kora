@@ -120,6 +120,13 @@ export default async function GroupDetailPage({
   const symbol = SYMBOLS[group.currency] ?? group.currency;
   const amountLabel = `${symbol}${Number(group.contribution_amount).toLocaleString()}`;
 
+  // Finished circles read differently everywhere below: a banner names the
+  // state outright, and the invite / sync / vote affordances go away — a
+  // circle that is over for now must not silently gain members, dues or
+  // turns. Restart-with-vote-in/out is the planned follow-up; until then
+  // this flag is the seam it will build on.
+  const isCompleted = group.status === "completed";
+
   const { data: member } = user
     ? await supabase
         .from("group_members")
@@ -215,6 +222,7 @@ export default async function GroupDetailPage({
   const showSync =
     !!member &&
     !!user &&
+    !isCompleted &&
     group.created_by === user.id &&
     !!cycles &&
     cycles.length > 0 &&
@@ -504,6 +512,22 @@ export default async function GroupDetailPage({
     <main className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-5 px-4 py-6 sm:px-6">
       {confirming && <ConfirmingBanner groupId={group.id} />}
 
+      {/* Close-out: every member lands here after the last turn, so the
+          state is named outright instead of inferred from missing buttons.
+          Success wash, never gold — gold is value/status, and this is the
+          terminal state, not an amount. */}
+      {isCompleted && (
+        <div className="rounded-[10px] bg-[#E0ECE9] px-4 py-3">
+          <p className="font-display text-sm font-semibold text-text-primary">
+            This circle is over — for now.
+          </p>
+          <p className="mt-0.5 text-sm leading-6 text-[#1E5A4E]">
+            Every turn has been collected. Nothing is due, and no new turns
+            will open. Your full history is in Recent activity below.
+          </p>
+        </div>
+      )}
+
       {member && overdue.length > 0 && (
         <div className="rounded-[10px] bg-[#F3E1E0] px-4 py-3 text-sm text-[#8A2A21]">
           {overdue.length} contribution{overdue.length === 1 ? "" : "s"}{" "}
@@ -551,23 +575,28 @@ export default async function GroupDetailPage({
 
       {!cycles || cycles.length === 0 ? (
         <>
-          {member && isCreator ? (
-            <ScheduleGenerator
-              groupId={group.id}
-              frequency={group.frequency}
-              memberCount={activeCount ?? 1}
-            />
-          ) : (
-            <div className="rounded-[14px] border-[0.5px] border-border bg-surface p-5 text-center">
-              <p className="font-display text-lg font-semibold text-text-primary">
-                Waiting for schedule
-              </p>
-              <p className="mt-1 text-sm leading-6 text-text-secondary">
-                The payout rotation has not been generated yet. The organizer
-                starts it once membership settles.
-              </p>
-            </div>
-          )}
+          {/* A finished circle with no schedule is an organizer-closed
+              edge (completed is writable via the creator update policy):
+              the banner above already names the state, so neither the
+              generator nor the waiting note renders here. */}
+          {!isCompleted &&
+            (member && isCreator ? (
+              <ScheduleGenerator
+                groupId={group.id}
+                frequency={group.frequency}
+                memberCount={activeCount ?? 1}
+              />
+            ) : (
+              <div className="rounded-[14px] border-[0.5px] border-border bg-surface p-5 text-center">
+                <p className="font-display text-lg font-semibold text-text-primary">
+                  Waiting for schedule
+                </p>
+                <p className="mt-1 text-sm leading-6 text-text-secondary">
+                  The payout rotation has not been generated yet. The organizer
+                  starts it once membership settles.
+                </p>
+              </div>
+            ))}
         </>
       ) : currentCycle ? (
         <>
@@ -717,12 +746,12 @@ export default async function GroupDetailPage({
             />
           </div>
 
-          {/* Quick actions — one row of four: ledger book, members,
-              invite, recent activity. Sits right after the current-turn
-              hero, before the upcoming/previous turn lists. */}
+          {/* Quick actions — ledger, members, invite, recent activity. The
+              invite tile hides on a finished circle (three tiles, so three
+              columns — a 4-col grid would leave a dead cell). */}
           <nav
             aria-label="Quick actions"
-            className="grid grid-cols-4 gap-2"
+            className={`grid gap-2 ${isCompleted ? "grid-cols-3" : "grid-cols-4"}`}
           >
             <ActionTile
               href={`/groups/${group.id}/ledger`}
@@ -734,7 +763,7 @@ export default async function GroupDetailPage({
               icon={<HugeiconsIcon icon={UserMultipleIcon} size={24} />}
               label="Members"
             />
-            {member && user && (
+            {member && user && !isCompleted && (
               <InviteMenu groupId={group.id} inviterId={user.id} grid />
             )}
             <ActionTile
@@ -787,6 +816,12 @@ export default async function GroupDetailPage({
           <h2 className="font-display text-lg font-semibold text-text-primary">
             Pending requests
           </h2>
+          {isCompleted ? (
+            <p className="rounded-[14px] border-[0.5px] border-border bg-surface p-4 text-xs leading-5 text-text-secondary">
+              The circle is over, so voting is paused. Nobody new can join a
+              finished circle — these requests stay pending.
+            </p>
+          ) : (
           <ul className="flex flex-col gap-3">
             {requests.map((request) => {
               const t = tally.get(request.id) ?? { approve: 0, reject: 0 };
@@ -823,6 +858,7 @@ export default async function GroupDetailPage({
               );
             })}
           </ul>
+          )}
         </section>
       )}
     </main>

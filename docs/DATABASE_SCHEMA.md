@@ -325,6 +325,67 @@ create trigger on_contribution_status_change
   execute function public.update_trust_score();
 ```
 
+### 3d. Close the circle when the last turn settles
+
+```sql
+create function public.complete_circle_when_done()
+returns trigger as $$
+declare
+  v_group_id uuid;
+  v_status text;
+  v_open int;
+begin
+  if new.status is distinct from 'completed' then
+    return new;
+  end if;
+  if old.status is not distinct from new.status then
+    return new;
+  end if;
+
+  v_group_id := new.group_id;
+
+  select status into v_status
+  from public.groups
+  where id = v_group_id
+  for update;
+
+  if v_status not in ('active', 'paused') then
+    return new;
+  end if;
+
+  select count(*) into v_open
+  from public.cycles
+  where group_id = v_group_id
+    and status is distinct from 'completed';
+
+  if v_open = 0 then
+    update public.groups
+    set status = 'completed'
+    where id = v_group_id;
+  end if;
+
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_cycle_completed
+  after update of status on public.cycles
+  for each row execute function public.complete_circle_when_done();
+```
+
+Nothing ever wrote `groups.status = 'completed'` before this: process-payout
+flipped the last cycle and stopped, so finished circles kept reading as
+active-with-nothing-due. The close-out lands in the same transaction as the
+final payout (no Edge Function change, no realtime publication change — the
+cycles UPDATE already drives the refetch), and every member's next read sees
+the finished state on home, the directory, the detail banner and NextUp.
+UPDATE-only on purpose: the generator inserts cycles as upcoming and seed
+inserts mix completed/upcoming rows in one statement, so an INSERT trigger
+would close circles half-seeded. A finished circle admits nobody until the
+restart feature owns that flow — `tally_join_votes` (migration
+`20260926120000_complete_circle_when_done.sql`) records votes on completed
+circles but leaves the request pending and inserts no member.
+
 > Note: `contributions.status` and `payouts.*` should only ever be written by an Edge Function using the service role key, after verifying the Paystack/Flutterwave webhook — never trust a client-reported "I paid." RLS below blocks direct client writes to these tables entirely.
 
 ---
