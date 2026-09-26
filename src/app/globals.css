@@ -20,10 +20,12 @@
   --color-warning: #d9992e;
   --color-danger: #b23a2e;
 
-  /* Fonts — Sora headings + money, Hind body, Roboto Mono micro-labels */
+  /* Fonts — Sora headings + money, Hind body, Roboto Mono micro-labels,
+     Caveat ledger marginalia only */
   --font-display: "Sora", system-ui, sans-serif;
   --font-sans: "Hind", system-ui, sans-serif;
   --font-mono: "Roboto Mono", ui-monospace, monospace;
+  --font-handwriting: "Caveat", cursive;
 
   /* Chrome metrics — the sticky app header's height at lg (34px of content
      + 12px padding, top and bottom). The desktop rail offsets its sticky
