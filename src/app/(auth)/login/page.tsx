@@ -4,9 +4,9 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
-import Dropdown from "../../Dropdown";
+import Dropdown from "@/components/Dropdown";
 import { sanitizePhoneInput, MAX_PHONE_LEN } from "@/lib/inputs";
-import AuthShell from "../../AuthShell";
+import AuthShell from "../AuthShell";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import {
   normalizeToE164,

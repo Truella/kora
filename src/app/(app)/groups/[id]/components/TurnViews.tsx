@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from "react";
 import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Alert02Icon, Tick01Icon } from "@hugeicons/core-free-icons";
-import { RevealLi } from "../../../Reveal";
+import { RevealLi } from "@/components/Reveal";
 
 // Presentational building blocks for the circle workspace. No data fetching
 // here: the detail page wires Supabase rows into these props. Action slots

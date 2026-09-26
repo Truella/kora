@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getHomeSnapshot } from "@/lib/home";
-import HomeLive from "./HomeLive";
+import HomeLive from "./components/HomeLive";
 
 export const metadata = {
   title: "Home | Kora",

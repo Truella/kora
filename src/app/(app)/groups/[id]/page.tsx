@@ -1,19 +1,19 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import PayButton from "./PayButton";
-import PayoutAction from "./PayoutAction";
-import ConfirmingBanner from "./ConfirmingBanner";
-import VoteButtons from "./VoteButtons";
-import CircleHeader from "./CircleHeader";
-import ScheduleGenerator from "./ScheduleGenerator";
-import LedgerFeed from "../../activity/LedgerFeed";
+import PayButton from "./components/PayButton";
+import PayoutAction from "./components/PayoutAction";
+import ConfirmingBanner from "./components/ConfirmingBanner";
+import VoteButtons from "./components/VoteButtons";
+import CircleHeader from "./components/CircleHeader";
+import ScheduleGenerator from "./components/ScheduleGenerator";
+import LedgerFeed from "@/components/ledger/LedgerFeed";
 import {
   TurnHero,
   EventCard,
   TurnRow,
   DueChip,
   SettledChip,
-} from "./TurnViews";
+} from "./components/TurnViews";
 import { getLedgerEvents } from "@/lib/ledger";
 import { utcDateOnly, formatCycleDate, formatCycleDateShort } from "@/lib/money";
 import { collectTurnLabel } from "@/lib/rotation";

@@ -9,7 +9,7 @@ import {
   Download04Icon,
   Tick01Icon,
 } from "@hugeicons/core-free-icons";
-import { useLedgerLive } from "@/lib/use-ledger-live";
+import { useLedgerLive } from "@/hooks/use-ledger-live";
 
 export type LedgerRowStatus = "paid" | "late" | "due" | "upcoming";
 

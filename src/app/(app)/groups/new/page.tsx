@@ -9,7 +9,7 @@ import {
   CheckmarkBadge01Icon,
 } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
-import Dropdown from "../../../Dropdown";
+import Dropdown from "@/components/Dropdown";
 import {
   sanitizeAmountInput,
   formatAmountDisplay,

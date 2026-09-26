@@ -2,9 +2,9 @@ import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserGroupIcon, ArrowRight01Icon, ShieldCheckIcon, Mail01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/server";
-import Reveal, { RevealLi } from "../../Reveal";
+import Reveal, { RevealLi } from "@/components/Reveal";
 import ProfileHero from "./ProfileHero";
-import SignOutButton from "./signout-button";
+import SignOutButton from "./SignOutButton";
 
 export const metadata = { title: "Profile" };
 

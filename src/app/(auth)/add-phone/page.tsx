@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
-import AuthShell from "../../AuthShell";
-import Dropdown from "../../Dropdown";
+import AuthShell from "../AuthShell";
+import Dropdown from "@/components/Dropdown";
 import { sanitizePhoneInput, MAX_PHONE_LEN } from "@/lib/inputs";
 import { friendlyAuthError } from "@/lib/auth-errors";
 import {
