@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { formatCycleDate, formatMoney, utcDateOnly } from "@/lib/money";
-import CircleHeader from "../CircleHeader";
+import {
+  formatCycleDate,
+  formatMoney,
+  parseDateOnly,
+  utcDateOnly,
+} from "@/lib/money";
+import CircleHeader from "../components/CircleHeader";
+import ExportButton from "./ExportButton";
 import LedgerBook, {
   type LedgerBookCell,
   type LedgerBookMemberTotal,
@@ -9,6 +15,18 @@ import LedgerBook, {
 } from "./LedgerBook";
 
 export const metadata = { title: "Ledger book" };
+
+const MONTH_ABBR = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+// "2026-09-26" → "26 Sep 2026" — the meta line reads as print, not storage.
+function formatPrintedLabel(dateOnly: string): string {
+  const c = parseDateOnly(dateOnly);
+  if (!c) return dateOnly;
+  return `${c.d} ${MONTH_ABBR[c.m - 1]} ${c.y}`;
+}
 
 export default async function LedgerPage({
   params,
@@ -60,7 +78,9 @@ export default async function LedgerPage({
 
   const shareAmount = Number(group.contribution_amount);
   const shareLabel = formatMoney(shareAmount, group.currency);
-  const periodWord = group.frequency === "monthly" ? "Month" : "Week";
+  // Periods read as turns, never calendar weeks — the rotation position is
+  // what matters, not the weekday it lands on.
+  const periodWord = "Turn";
   const today = new Date().toISOString().slice(0, 10);
 
   const { data: cycles } = await supabase
@@ -107,7 +127,6 @@ export default async function LedgerPage({
   }
   const memberName = (m: MemberRow) =>
     nameByUser.get(m.user_id) ?? `····${m.user_id.slice(-4)}`;
-  const memberById = new Map(orderedMembers.map((m) => [m.id, m]));
 
   const cycleIds = sortedCycles.map((c) => c.id);
   const { data: contributions } =
@@ -143,7 +162,6 @@ export default async function LedgerPage({
     utcDateOnly(m.joined_at) <= dueDate;
 
   const periods: LedgerBookPeriod[] = sortedCycles.map((cycle) => {
-    const recipient = memberById.get(cycle.recipient_member_id);
     const cells: LedgerBookCell[] = orderedMembers.map((m) => {
       const isRecipient = m.id === cycle.recipient_member_id;
       if (!enrolledIn(m, cycle.due_date)) {
@@ -166,22 +184,14 @@ export default async function LedgerPage({
     const settledCount = cells.filter(
       (c) => c.status === "paid" || c.status === "late",
     ).length;
-    const payoutStatus = payoutByCycle.get(cycle.id) ?? "pending";
 
     return {
       cycleNumber: cycle.cycle_number,
       periodLabel: `${periodWord} ${cycle.cycle_number}`,
       dueLabel: `Due ${formatCycleDate(cycle.due_date)}`,
-      recipientName: recipient ? memberName(recipient) : "—",
-      payoutStatus,
       expectedCount,
       settledCount,
-      collectedLabel: formatMoney(settledCount * shareAmount, group.currency),
-      expectedLabel: formatMoney(expectedCount * shareAmount, group.currency),
-      outstandingLabel: formatMoney(
-        (expectedCount - settledCount) * shareAmount,
-        group.currency,
-      ),
+      payoutStatus: payoutByCycle.get(cycle.id) ?? "pending",
       cells,
     };
   });
@@ -231,8 +241,8 @@ export default async function LedgerPage({
     (sum, p) => sum + p.settledCount * shareAmount,
     0,
   );
-  const payoutsDone = periods.filter(
-    (p) => p.payoutStatus === "completed",
+  const payoutsDone = sortedCycles.filter(
+    (c) => payoutByCycle.get(c.id) === "completed",
   ).length;
 
   return (
@@ -243,13 +253,13 @@ export default async function LedgerPage({
         inviterId={user?.id ?? null}
         showInvite={group.status !== "completed"}
         active="ledger"
+        trailing={<ExportButton disabled={periods.length === 0} />}
       />
       <LedgerBook
         groupId={group.id}
         groupName={group.name}
-        metaLine={`${group.frequency} · ${orderedMembers.length} members · ${periods.length} ${periodWord.toLowerCase()}s`}
-        shareLabel={shareLabel}
-        printedLabel={new Date().toISOString().slice(0, 10)}
+        metaLine={`${group.frequency} · ${orderedMembers.length} members · ${periods.length} ${periodWord.toLowerCase()}s · Share ${shareLabel}`}
+        printedLabel={formatPrintedLabel(today)}
         summary={{
           rotationExpectedLabel: formatMoney(rotationExpected, group.currency),
           rotationCollectedLabel: formatMoney(
