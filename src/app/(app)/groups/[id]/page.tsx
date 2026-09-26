@@ -690,7 +690,11 @@ export default async function GroupDetailPage({
                   />
                 )
               }
-              positionLine={collectTurnLabel(myTurnPosition)}
+              positionLine={collectTurnLabel(
+                myTurnPosition,
+                currentCycle.cycle_number,
+                currentCycle.status === "completed",
+              )}
               contributionAmount={amountLabel}
               contributionState={
                 myCurrentStatus === "skipped" ? (

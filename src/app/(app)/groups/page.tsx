@@ -65,7 +65,10 @@ function countLine(circles: HomeCircle[]): string | null {
 function memberLine(circle: HomeCircle): string | null {
   if (circle.awaitingSchedule) return null;
   const members = `${circle.memberCount} member${circle.memberCount === 1 ? "" : "s"}`;
-  const position = collectTurnLabel(circle.myRoundNumber);
+  const position = collectTurnLabel(
+    circle.myRoundNumber,
+    circle.currentTurnNumber,
+  );
   if (position) {
     return `${members} · ${position}`;
   }
