@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Home01Icon,
@@ -17,10 +17,11 @@ import { Highlight as TabsHighlight } from "@/components/animate-ui/primitives/e
 
 // Circle section switcher, built on the animate-ui base tabs (same
 // sliding-highlight primitive family as the app's other motion chrome).
-// Overview / Ledger / Members are real routes, so selecting a tab pushes
-// the route — the highlight follows the controlled `active` value each
-// page passes in. Styling is pure Kora tokens: the shadcn defaults
-// (`bg-muted`, `text-muted-foreground`, …) don't exist in this theme.
+// Overview / Ledger / Members are real routes, so each tab renders a
+// Next Link (prefetch + semantics for free) — the highlight follows the
+// controlled `active` value each page passes in. Styling is pure Kora
+// tokens: the shadcn defaults (`bg-muted`, `text-muted-foreground`, …)
+// don't exist in this theme.
 //
 // Invite lives outside the pill as a standalone button (an action, not a
 // section); the Recent activity strip stays on the overview untabbed.
@@ -54,16 +55,9 @@ export default function CircleTabs({
   groupId: string;
   active: TabValue;
 }) {
-  const router = useRouter();
-
   return (
     <TabsRoot
       value={active}
-      onValueChange={(next) => {
-        if (next === active) return;
-        const tab = TABS.find((t) => t.value === next);
-        if (tab) router.push(tab.href(groupId));
-      }}
       className="w-auto min-w-0 max-w-full"
     >
       {/* Parent mode: the backdrop is measured off the active item's real
@@ -86,7 +80,12 @@ export default function CircleTabs({
             >
               <TabsTabPrimitive
                 value={tab.value}
-                className="flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] font-medium whitespace-nowrap text-text-secondary transition-colors data-[active=true]:text-white hover:text-text-primary data-[active=true]:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                render={
+                  <Link
+                    href={tab.href(groupId)}
+                    className="flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] font-medium whitespace-nowrap text-text-secondary transition-colors data-[active=true]:text-white hover:text-text-primary data-[active=true]:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  />
+                }
               >
                 <HugeiconsIcon icon={tab.icon} size={16} />
                 {tab.label}

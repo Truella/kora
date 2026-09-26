@@ -1,12 +1,13 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 import PayButton from "./components/PayButton";
 import PayoutAction from "./components/PayoutAction";
 import ConfirmingBanner from "./components/ConfirmingBanner";
-import VoteButtons from "./components/VoteButtons";
 import CircleHeader from "./components/CircleHeader";
 import ScheduleGenerator from "./components/ScheduleGenerator";
-import LedgerFeed from "@/components/ledger/LedgerFeed";
+import CircleActivity from "./components/CircleActivity";
+import CircleRequests from "./components/CircleRequests";
 import {
   TurnHero,
   EventCard,
@@ -14,7 +15,6 @@ import {
   DueChip,
   SettledChip,
 } from "./components/TurnViews";
-import { getLedgerEvents } from "@/lib/ledger";
 import { utcDateOnly, formatCycleDate, formatCycleDateShort } from "@/lib/money";
 import { collectTurnLabel } from "@/lib/rotation";
 
@@ -26,10 +26,6 @@ const SYMBOLS: Record<string, string> = {
   KES: "KSh",
   UGX: "USh",
 };
-
-// Anchors the /home attention queue deep-links to. The scroll margin keeps the
-// sticky app header from covering the row it just scrolled to.
-const ANCHOR_MT = "scroll-mt-[calc(var(--app-header-h)+1rem)]";
 
 // Reminder windows, computed once per render outside the component body
 // so the purity lint stays quiet — values are plain date strings.
@@ -58,13 +54,34 @@ export default async function GroupDetailPage({
 
   // RLS ("view groups you belong to") returns a row only for members —
   // a missing row means not-found or not-a-member, same UI either way.
-  const { data: group } = await supabase
-    .from("groups")
-    .select(
-      "id, name, description, contribution_amount, currency, frequency, status, created_by",
-    )
-    .eq("id", id)
-    .maybeSingle();
+  // Wave 1 — group, membership, and rotation need nothing but the route
+  // id, so all three fly together.
+  const [groupRes, memberRes, cyclesRes] = await Promise.all([
+    supabase
+      .from("groups")
+      .select(
+        "id, name, description, contribution_amount, currency, frequency, status, created_by",
+      )
+      .eq("id", id)
+      .maybeSingle(),
+    user
+      ? supabase
+          .from("group_members")
+          .select("id, joined_at")
+          .eq("group_id", id)
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    supabase
+      .from("cycles")
+      .select("id, cycle_number, due_date, status, recipient_member_id")
+      .eq("group_id", id)
+      .order("cycle_number", { ascending: true }),
+  ]);
+  const group = groupRes.data;
+  const member = memberRes.data;
+  const cycles = cyclesRes.data;
 
   if (!group) {
     return (
@@ -95,110 +112,6 @@ export default async function GroupDetailPage({
   // this flag is the seam it will build on.
   const isCompleted = group.status === "completed";
 
-  const { data: member } = user
-    ? await supabase
-        .from("group_members")
-        .select("id, joined_at")
-        .eq("group_id", id)
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .maybeSingle()
-    : { data: null };
-
-  const { data: cycles } = await supabase
-    .from("cycles")
-    .select("id, cycle_number, due_date, status, recipient_member_id")
-    .eq("group_id", id)
-    .order("cycle_number", { ascending: true });
-
-  const { data: contributions } = member
-    ? await supabase
-        .from("contributions")
-        .select("id, cycle_id, status, paid_at")
-        .eq("member_id", member.id)
-    : { data: [] };
-
-  const byCycle = new Map(
-    (contributions ?? []).map((c) => [c.cycle_id, c]),
-  );
-
-  // Payout rows (schedule amounts + disbursement state) + recipient names
-  // for the rotation view. Same shared-group profile resolution as the
-  // ledger. Status drives the PayoutAction disbursement button.
-  const { data: payouts } =
-    member && cycles && cycles.length > 0
-      ? await supabase
-          .from("payouts")
-          .select("cycle_id, amount, recipient_member_id, status, paid_at")
-          .in(
-            "cycle_id",
-            cycles.map((c) => c.id),
-          )
-      : { data: [] };
-  const payoutByCycle = new Map(
-    (payouts ?? []).map((p) => [p.cycle_id, p]),
-  );
-
-  const recipientIds = [
-    ...new Set((cycles ?? []).map((c) => c.recipient_member_id)),
-  ];
-  let recipientNames = new Map<string, string>();
-  if (member && recipientIds.length > 0) {
-    const { data: rmembers } = await supabase
-      .from("group_members")
-      .select("id, user_id")
-      .in("id", recipientIds);
-    const rrows = (rmembers ?? []) as { id: string; user_id: string }[];
-    const userIds = [...new Set(rrows.map((m) => m.user_id))];
-    if (userIds.length > 0) {
-      const { data: rprofs } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .in("id", userIds);
-      const byUser = new Map(
-        ((rprofs ?? []) as { id: string; full_name: string }[]).map((p) => [
-          p.id,
-          p.full_name,
-        ]),
-      );
-      recipientNames = new Map(
-        rrows.map((m) => [
-          m.id,
-          byUser.get(m.user_id) ?? `····${m.user_id.slice(-4)}`,
-        ]),
-      );
-    }
-  }
-  const potFor = (cycleId: string): string | null => {
-    const row = payoutByCycle.get(cycleId);
-    if (!row) return null;
-    return `${symbol}${Number(row.amount).toLocaleString()}`;
-  };
-
-  // Active member count — feeds the generator card pre-schedule and the
-  // creator's sync affordance once the rotation exists.
-  const { count: activeCount } = member
-    ? await supabase
-        .from("group_members")
-        .select("id", { count: "exact", head: true })
-        .eq("group_id", id)
-        .eq("status", "active")
-    : { count: null };
-  const scheduledCount = new Set(
-    (cycles ?? []).map((c) => c.recipient_member_id),
-  ).size;
-  // Repair fallback, not a step the organizer owes: voted-in members get
-  // their turn appended at approval time (on_member_admitted trigger), so
-  // this only fires for pre-trigger members or a lost admission/sync race.
-  const showSync =
-    !!member &&
-    !!user &&
-    !isCompleted &&
-    group.created_by === user.id &&
-    !!cycles &&
-    cycles.length > 0 &&
-    (activeCount ?? 0) > scheduledCount;
-
   // Current turn = the first cycle still in flight, oldest first. All
   // settled → the hero shows the last one with a Settled state instead of
   // going empty. Everything before it is history, everything after is
@@ -215,16 +128,119 @@ export default async function GroupDetailPage({
     ? sortedCycles.filter((c) => c.cycle_number > currentCycle.cycle_number)
     : [];
 
-  // Per-member settlement for the current turn only — feeds the hero
-  // progress bar. One RLS-covered select; history rows show the caller's
-  // own share from byCycle instead.
-  const { data: currentContributions } =
+  const recipientIds = [
+    ...new Set((cycles ?? []).map((c) => c.recipient_member_id)),
+  ];
+
+  // Wave 2 — everything that needs only wave 1, in parallel.
+  const [
+    { data: contributions },
+    { data: payouts },
+    { data: recipientMembers },
+    { count: activeCount },
+    { data: currentContributions },
+    { data: circleMembers },
+  ] = await Promise.all([
+    member
+      ? supabase
+          .from("contributions")
+          .select("id, cycle_id, status, paid_at")
+          .eq("member_id", member.id)
+      : Promise.resolve({ data: [] }),
+    member && cycles && cycles.length > 0
+      ? supabase
+          .from("payouts")
+          .select("cycle_id, amount, recipient_member_id, status, paid_at")
+          .in(
+            "cycle_id",
+            cycles.map((c) => c.id),
+          )
+      : Promise.resolve({ data: [] }),
+    member && recipientIds.length > 0
+      ? supabase
+          .from("group_members")
+          .select("id, user_id")
+          .in("id", recipientIds)
+      : Promise.resolve({ data: [] }),
+    member
+      ? supabase
+          .from("group_members")
+          .select("id", { count: "exact", head: true })
+          .eq("group_id", id)
+          .eq("status", "active")
+      : Promise.resolve({ count: null }),
     member && currentCycle
-      ? await supabase
+      ? supabase
           .from("contributions")
           .select("member_id, status")
           .eq("cycle_id", currentCycle.id)
+      : Promise.resolve({ data: [] }),
+    member
+      ? supabase
+          .from("group_members")
+          .select("id, user_id, payout_position, joined_at")
+          .eq("group_id", id)
+          .eq("status", "active")
+          .order("payout_position", { ascending: true })
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const byCycle = new Map(
+    (contributions ?? []).map((c) => [c.cycle_id, c]),
+  );
+
+  // Payout rows (schedule amounts + disbursement state) + recipient names
+  // for the rotation view. Same shared-group profile resolution as the
+  // ledger. Status drives the PayoutAction disbursement button.
+  const payoutByCycle = new Map(
+    (payouts ?? []).map((p) => [p.cycle_id, p]),
+  );
+
+  const rrows = (recipientMembers ?? []) as { id: string; user_id: string }[];
+  const userIds = [...new Set(rrows.map((m) => m.user_id))];
+  // Wave 3 — profile names need wave 2's roster; the only serial hop left.
+  const { data: rprofs } =
+    userIds.length > 0
+      ? await supabase.from("profiles").select("id, full_name").in("id", userIds)
       : { data: [] };
+  const byUser = new Map(
+    ((rprofs ?? []) as { id: string; full_name: string }[]).map((p) => [
+      p.id,
+      p.full_name,
+    ]),
+  );
+  const recipientNames = new Map(
+    rrows.map((m) => [
+      m.id,
+      byUser.get(m.user_id) ?? `····${m.user_id.slice(-4)}`,
+    ]),
+  );
+  const potFor = (cycleId: string): string | null => {
+    const row = payoutByCycle.get(cycleId);
+    if (!row) return null;
+    return `${symbol}${Number(row.amount).toLocaleString()}`;
+  };
+
+  // Active member count — feeds the generator card pre-schedule and the
+  // creator's sync affordance once the rotation exists.
+  const scheduledCount = new Set(
+    (cycles ?? []).map((c) => c.recipient_member_id),
+  ).size;
+  // Repair fallback, not a step the organizer owes: voted-in members get
+  // their turn appended at approval time (on_member_admitted trigger), so
+  // this only fires for pre-trigger members or a lost admission/sync race.
+  const showSync =
+    !!member &&
+    !!user &&
+    !isCompleted &&
+    group.created_by === user.id &&
+    !!cycles &&
+    cycles.length > 0 &&
+    (activeCount ?? 0) > scheduledCount;
+
+  // Per-member settlement for the current turn only — feeds the hero
+  // progress bar. One RLS-covered select; history rows show the caller's
+  // own share from byCycle instead.
   const settledByMember = new Map(
     (
       (currentContributions ?? []) as {
@@ -282,51 +298,9 @@ export default async function GroupDetailPage({
       ? unpaidCycles.filter((c) => c.due_date <= soonCutoff)
       : [];
 
-  // Pending join requests + their votes. Names/phones arrive via the
-  // pending_applicants() RPC: applicants are not members yet, so the
-  // shared-group profiles policy hides them and only the RPC (scoped to
-  // active members of this circle) reveals who is asking in. Status flips
-  // come from the tally_join_votes trigger, never from the client.
-  type ApplicantRow = {
-    request_id: string;
-    applicant_name: string | null;
-    applicant_phone: string | null;
-    inviter_name: string | null;
-  };
-  const { data: applicantRows } = member
-    ? await supabase.rpc("pending_applicants", { p_group_id: id })
-    : { data: [] };
-  const requests = ((applicantRows ?? []) as ApplicantRow[]).map((r) => ({
-    id: r.request_id,
-    applicant_name: r.applicant_name,
-    applicant_phone: r.applicant_phone,
-    inviter_name: r.inviter_name,
-  }));
-
-  const { data: votes } =
-    member && requests && requests.length > 0
-      ? await supabase
-          .from("join_votes")
-          .select("join_request_id, vote")
-          .in(
-            "join_request_id",
-            requests.map((r) => r.id),
-          )
-      : { data: [] };
-
-  const tally = new Map<string, { approve: number; reject: number }>();
-  for (const v of votes ?? []) {
-    const t = tally.get(v.join_request_id) ?? { approve: 0, reject: 0 };
-    if (v.vote === "approve") t.approve += 1;
-    else t.reject += 1;
-    tally.set(v.join_request_id, t);
-  }
-
-  // Circle-scoped ledger for the "Recent activity" strip — same shared
-  // feed component as /activity, filtered to this group.
-  const ledger = member
-    ? await getLedgerEvents(supabase, id)
-    : { due: [], history: [] };
+  // Below-fold sections (Recent activity, Pending requests) fetch for
+  // themselves inside CircleActivity / CircleRequests and stream in
+  // behind Suspense — the hero above never waits on them.
 
   // Active roster — feeds the caller's collector position, the payout-gate
   // member count, and the rotation size. Read-only: RLS "view members of your
@@ -337,14 +311,6 @@ export default async function GroupDetailPage({
     payout_position: number | null;
     joined_at: string;
   };
-  const { data: circleMembers } = member
-    ? await supabase
-        .from("group_members")
-        .select("id, user_id, payout_position, joined_at")
-        .eq("group_id", id)
-        .eq("status", "active")
-        .order("payout_position", { ascending: true })
-    : { data: [] };
   const circleRows = (circleMembers ?? []) as CircleMemberRow[];
 
   // The caller's own slot in the rotation, shown in the hero header. Null
@@ -730,71 +696,35 @@ export default async function GroupDetailPage({
         />
       )}
 
-      {member && (
-        <section id="activity" className={`${ANCHOR_MT} flex flex-col gap-3`}>
-          <LedgerFeed
-            initialDue={ledger.due}
-            initialHistory={ledger.history}
-            groupId={id}
-            previewCount={5}
-            title="Recent activity"
-          />
-        </section>
-      )}
+      <Suspense
+        fallback={
+          <div aria-hidden className="flex flex-col gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-14 animate-pulse rounded-[14px] bg-black/[0.05]"
+              />
+            ))}
+          </div>
+        }
+      >
+        <CircleActivity groupId={id} memberId={member?.id ?? null} />
+      </Suspense>
 
-      {member && requests && requests.length > 0 && (
-        <section
-          id="pending-requests"
-          className={`${ANCHOR_MT} flex flex-col gap-3`}
-        >
-          <h2 className="font-display text-lg font-semibold text-text-primary">
-            Pending requests
-          </h2>
-          {isCompleted ? (
-            <p className="rounded-[14px] border-[0.5px] border-border bg-surface p-4 text-xs leading-5 text-text-secondary">
-              The circle is over, so voting is paused. Nobody new can join a
-              finished circle — these requests stay pending.
-            </p>
-          ) : (
-          <ul className="flex flex-col gap-3">
-            {requests.map((request) => {
-              const t = tally.get(request.id) ?? { approve: 0, reject: 0 };
-              return (
-                <li
-                  key={request.id}
-                  className="flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-text-primary">
-                        {request.applicant_name ?? "Applicant"}
-                      </p>
-                      {request.applicant_phone && (
-                        <p className="font-mono text-xs tabular-nums text-text-secondary">
-                          {request.applicant_phone}
-                        </p>
-                      )}
-                      <p className="text-xs text-text-secondary">
-                        {request.inviter_name
-                          ? `Invited by ${request.inviter_name}`
-                          : "Joined via link"}
-                      </p>
-                    </div>
-                    <p className="shrink-0 font-mono text-xs tabular-nums text-text-secondary">
-                      {t.approve} yes · {t.reject} no
-                    </p>
-                  </div>
-                  <VoteButtons
-                    joinRequestId={request.id}
-                    memberId={member.id}
-                  />
-                </li>
-              );
-            })}
-          </ul>
-          )}
-        </section>
-      )}
+      <Suspense
+        fallback={
+          <div
+            aria-hidden
+            className="h-32 animate-pulse rounded-[14px] bg-black/[0.05]"
+          />
+        }
+      >
+        <CircleRequests
+          groupId={id}
+          memberId={member?.id ?? null}
+          isCompleted={isCompleted}
+        />
+      </Suspense>
     </main>
   );
 }
