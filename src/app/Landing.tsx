@@ -113,7 +113,7 @@ function HeroShots() {
     <div className="w-full overflow-hidden px-4 pb-14 pt-6 md:px-0">
       <div className="relative flex items-start justify-center gap-5 overflow-hidden md:h-[300px] lg:h-[420px]">
         <div
-          className={`${frame} hidden h-[300px] w-[300px] translate-y-10 md:block lg:h-[420px] lg:w-[440px]`}
+          className={`${frame} hidden h-[300px] w-[300px] translate-y-14 md:block lg:h-[420px] lg:w-[440px]`}
         >
           <Image
             src={homeShot}
@@ -132,7 +132,7 @@ function HeroShots() {
           />
         </div>
         <div
-          className={`${frame} hidden h-[300px] w-[300px] translate-y-10 md:block lg:h-[420px] lg:w-[440px]`}
+          className={`${frame} hidden h-[300px] w-[300px] translate-y-14 md:block lg:h-[420px] lg:w-[440px]`}
         >
           <Image
             src={ledgerGridShot}
