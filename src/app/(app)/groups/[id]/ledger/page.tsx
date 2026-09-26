@@ -240,7 +240,6 @@ export default async function LedgerPage({
             : shareLabel,
         payoutLabel: null,
         status,
-        remarks: "—",
       });
     }
 
@@ -261,7 +260,6 @@ export default async function LedgerPage({
         : payoutFailed
           ? "due"
           : unpaidStatus(cycle.cycle_number),
-      remarks: payoutFailed ? "Payout failed" : "Payout",
     });
 
     return {
