@@ -1,18 +1,11 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import {
-  formatCycleDateShort,
-  formatCycleRange,
-  formatMoney,
-  parseDateOnly,
-  toDateOnly,
-  utcDateOnly,
-} from "@/lib/money";
-import CircleHeader from "../components/CircleHeader";
+import { formatCycleDate, formatMoney, utcDateOnly } from "@/lib/money";
+import CircleHeader from "../CircleHeader";
 import LedgerBook, {
-  type LedgerCyclePage,
-  type LedgerPageRow,
-  type LedgerRowStatus,
+  type LedgerBookCell,
+  type LedgerBookMemberTotal,
+  type LedgerBookPeriod,
 } from "./LedgerBook";
 
 export const metadata = { title: "Ledger book" };
@@ -67,6 +60,8 @@ export default async function LedgerPage({
 
   const shareAmount = Number(group.contribution_amount);
   const shareLabel = formatMoney(shareAmount, group.currency);
+  const periodWord = group.frequency === "monthly" ? "Month" : "Week";
+  const today = new Date().toISOString().slice(0, 10);
 
   const { data: cycles } = await supabase
     .from("cycles")
@@ -111,9 +106,7 @@ export default async function LedgerPage({
     );
   }
   const memberName = (m: MemberRow) =>
-    user && m.user_id === user.id
-      ? "You"
-      : (nameByUser.get(m.user_id) ?? `····${m.user_id.slice(-4)}`);
+    nameByUser.get(m.user_id) ?? `····${m.user_id.slice(-4)}`;
   const memberById = new Map(orderedMembers.map((m) => [m.id, m]));
 
   const cycleIds = sortedCycles.map((c) => c.id);
@@ -121,172 +114,129 @@ export default async function LedgerPage({
     cycleIds.length > 0
       ? await supabase
           .from("contributions")
-          .select("cycle_id, member_id, status, amount, paid_at")
+          .select("cycle_id, member_id, status")
           .in("cycle_id", cycleIds)
       : { data: [] };
-  type ContribInfo = { status: string; amount: number | string | null; paidAt: string | null };
   const contribByKey = new Map(
     ((contributions ?? []) as {
       cycle_id: string;
       member_id: string;
       status: string;
-      amount: number | string | null;
-      paid_at: string | null;
-    }[]).map((c) => [
-      `${c.cycle_id}:${c.member_id}`,
-      { status: c.status, amount: c.amount, paidAt: c.paid_at },
-    ] as [string, ContribInfo]),
+    }[]).map((c) => [`${c.cycle_id}:${c.member_id}`, c.status]),
   );
 
   const { data: payouts } =
     cycleIds.length > 0
       ? await supabase
           .from("payouts")
-          .select("cycle_id, status, amount, paid_at")
+          .select("cycle_id, status")
           .in("cycle_id", cycleIds)
       : { data: [] };
-  type PayoutInfo = { status: string; amount: number | string | null; paidAt: string | null };
   const payoutByCycle = new Map(
-    ((payouts ?? []) as {
-      cycle_id: string;
-      status: string;
-      amount: number | string | null;
-      paid_at: string | null;
-    }[]).map((p) => [
+    ((payouts ?? []) as { cycle_id: string; status: string }[]).map((p) => [
       p.cycle_id,
-      { status: p.status, amount: p.amount, paidAt: p.paid_at },
-    ] as [string, PayoutInfo]),
+      p.status,
+    ]),
   );
 
   const enrolledIn = (m: MemberRow, dueDate: string) =>
     utcDateOnly(m.joined_at) <= dueDate;
 
-  // Whole-day shifts on pinned calendar fields — never through an instant,
-  // so a date-only value cannot drift a day the way `new Date("…")` can.
-  function shiftDateOnly(value: string, days: number): string {
-    const c = parseDateOnly(value);
-    if (!c) return value;
-    const t = new Date(Date.UTC(c.y, c.m - 1, c.d) + days * 86_400_000);
-    return toDateOnly({
-      y: t.getUTCFullYear(),
-      m: t.getUTCMonth() + 1,
-      d: t.getUTCDate(),
-    });
-  }
-
-  // Cycle 1 has no previous due date to start from: step back one period —
-  // six days for a weekly rotation, the same calendar day last month
-  // (clamped, so 31 Mar opens on 28 Feb) for a monthly one.
-  const frequency = group.frequency;
-  function firstCycleStart(value: string): string {
-    if (frequency === "monthly") {
-      const c = parseDateOnly(value);
-      if (!c) return value;
-      const pm = c.m === 1 ? 12 : c.m - 1;
-      const py = c.m === 1 ? c.y - 1 : c.y;
-      const dim = new Date(Date.UTC(py, pm, 0)).getUTCDate();
-      return toDateOnly({ y: py, m: pm, d: Math.min(c.d, dim) });
-    }
-    return shiftDateOnly(value, -6);
-  }
-
-  // The turn in flight: the earliest cycle that hasn't completed. Unpaid
-  // shares at or behind it are Due; anything further out is Upcoming.
-  const firstOpenNumber =
-    sortedCycles
-      .filter((c) => c.status !== "completed")
-      .map((c) => c.cycle_number)
-      .sort((a, b) => a - b)[0] ?? null;
-
-  function unpaidStatus(cycleNumber: number): "due" | "upcoming" {
-    if (firstOpenNumber === null) return "due";
-    return cycleNumber <= firstOpenNumber ? "due" : "upcoming";
-  }
-
-  // Settled timestamps render as their UTC calendar day — the same reading
-  // `lib/ledger.ts` gives every paid event, so the two surfaces agree.
-  const shortPaidAt = (paidAt: string | null): string | null =>
-    paidAt ? formatCycleDateShort(utcDateOnly(paidAt)) : null;
-
-  const pages: LedgerCyclePage[] = sortedCycles.map((cycle, i) => {
-    const dueShort = formatCycleDateShort(cycle.due_date);
-    const startDue =
-      i > 0
-        ? shiftDateOnly(sortedCycles[i - 1].due_date, 1)
-        : firstCycleStart(cycle.due_date);
+  const periods: LedgerBookPeriod[] = sortedCycles.map((cycle) => {
     const recipient = memberById.get(cycle.recipient_member_id);
-    const payout = payoutByCycle.get(cycle.id);
-    const payoutStatus = payout?.status ?? "pending";
-
-    const rows: LedgerPageRow[] = [];
-    let settledCount = 0;
-    for (const m of orderedMembers) {
-      // No row for turns that ran before the member joined: the notebook
-      // lists who owed that turn, not the whole roster.
-      if (!enrolledIn(m, cycle.due_date)) continue;
+    const cells: LedgerBookCell[] = orderedMembers.map((m) => {
+      const isRecipient = m.id === cycle.recipient_member_id;
+      if (!enrolledIn(m, cycle.due_date)) {
+        return { memberId: m.id, status: "skipped", isRecipient };
+      }
       const raw = contribByKey.get(`${cycle.id}:${m.id}`);
-      const settled = raw?.status === "paid" || raw?.status === "late";
-      if (settled) settledCount += 1;
-      const status: LedgerRowStatus = settled
-        ? (raw.status as "paid" | "late")
-        : unpaidStatus(cycle.cycle_number);
-      rows.push({
-        key: `c:${cycle.id}:${m.id}`,
-        dateLabel: settled ? (shortPaidAt(raw.paidAt) ?? dueShort) : dueShort,
-        memberLabel: memberName(m),
-        contributionLabel:
-          raw?.amount != null
-            ? formatMoney(raw.amount, group.currency)
-            : shareLabel,
-        payoutLabel: null,
-        status,
-      });
-    }
-
-    const potLabel = formatMoney(rows.length * shareAmount, group.currency);
-    const payoutDone = payoutStatus === "completed";
-    const payoutFailed = payoutStatus === "failed";
-    rows.push({
-      key: `p:${cycle.id}`,
-      dateLabel: shortPaidAt(payout?.paidAt ?? null) ?? dueShort,
-      memberLabel: recipient ? memberName(recipient) : "—",
-      contributionLabel: null,
-      payoutLabel:
-        payout?.amount != null
-          ? formatMoney(payout.amount, group.currency)
-          : potLabel,
-      status: payoutDone
-        ? "paid"
-        : payoutFailed
-          ? "due"
-          : unpaidStatus(cycle.cycle_number),
+      if (raw === "paid" || raw === "late") {
+        return { memberId: m.id, status: raw, isRecipient };
+      }
+      return {
+        memberId: m.id,
+        status: cycle.due_date < today ? "overdue" : "pending",
+        isRecipient,
+      };
     });
+
+    const expectedCount = orderedMembers.filter((m) =>
+      enrolledIn(m, cycle.due_date),
+    ).length;
+    const settledCount = cells.filter(
+      (c) => c.status === "paid" || c.status === "late",
+    ).length;
+    const payoutStatus = payoutByCycle.get(cycle.id) ?? "pending";
 
     return {
       cycleNumber: cycle.cycle_number,
-      rangeLabel: formatCycleRange(startDue, cycle.due_date),
-      turnLabel: `Turn ${cycle.cycle_number}/${sortedCycles.length}`,
-      tone: payoutDone ? "paid" : unpaidStatus(cycle.cycle_number),
-      rows,
+      periodLabel: `${periodWord} ${cycle.cycle_number}`,
+      dueLabel: `Due ${formatCycleDate(cycle.due_date)}`,
+      recipientName: recipient ? memberName(recipient) : "—",
+      payoutStatus,
+      expectedCount,
+      settledCount,
       collectedLabel: formatMoney(settledCount * shareAmount, group.currency),
-      paidOutLabel:
-        payoutDone && payout?.amount != null
-          ? formatMoney(payout.amount, group.currency)
-          : potLabel,
-      paidOutDimmed: !payoutDone,
+      expectedLabel: formatMoney(expectedCount * shareAmount, group.currency),
+      outstandingLabel: formatMoney(
+        (expectedCount - settledCount) * shareAmount,
+        group.currency,
+      ),
+      cells,
     };
   });
 
-  // Open on the turn in flight; a finished rotation opens on its last page.
-  const initialPage = (() => {
-    if (pages.length === 0) return 0;
-    if (firstOpenNumber === null) return pages.length - 1;
-    const idx = pages.findIndex((p) => p.cycleNumber === firstOpenNumber);
-    return idx < 0 ? pages.length - 1 : idx;
-  })();
+  const totalsByMember = new Map<string, { paid: number; late: number }>();
+  for (const c of (contributions ?? []) as {
+    member_id: string;
+    status: string;
+  }[]) {
+    const t = totalsByMember.get(c.member_id) ?? { paid: 0, late: 0 };
+    if (c.status === "paid") t.paid += 1;
+    else if (c.status === "late") t.late += 1;
+    totalsByMember.set(c.member_id, t);
+  }
+
+  const memberTotals: LedgerBookMemberTotal[] = orderedMembers.map((m) => {
+    const t = totalsByMember.get(m.id) ?? { paid: 0, late: 0 };
+    const pending = periods.filter((p) =>
+      p.cells.some(
+        (c) => c.memberId === m.id && c.status === "pending",
+      ),
+    ).length;
+    const overdue = periods.filter((p) =>
+      p.cells.some(
+        (c) => c.memberId === m.id && c.status === "overdue",
+      ),
+    ).length;
+    return {
+      memberId: m.id,
+      name: memberName(m),
+      paid: t.paid,
+      late: t.late,
+      pending,
+      overdue,
+      totalPaidLabel: formatMoney(
+        (t.paid + t.late) * shareAmount,
+        group.currency,
+      ),
+    };
+  });
+
+  const rotationExpected = periods.reduce(
+    (sum, p) => sum + p.expectedCount * shareAmount,
+    0,
+  );
+  const rotationCollected = periods.reduce(
+    (sum, p) => sum + p.settledCount * shareAmount,
+    0,
+  );
+  const payoutsDone = periods.filter(
+    (p) => p.payoutStatus === "completed",
+  ).length;
 
   return (
-    <main className="mx-auto flex w-full flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
+    <main className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       <CircleHeader
         group={group}
         memberCount={orderedMembers.length}
@@ -297,11 +247,36 @@ export default async function LedgerPage({
       <LedgerBook
         groupId={group.id}
         groupName={group.name}
+        metaLine={`${group.frequency} · ${orderedMembers.length} members · ${periods.length} ${periodWord.toLowerCase()}s`}
+        shareLabel={shareLabel}
         printedLabel={new Date().toISOString().slice(0, 10)}
-        pages={pages}
-        initialPage={initialPage}
-        currentCycleNumber={firstOpenNumber}
-        empty={pages.length === 0}
+        summary={{
+          rotationExpectedLabel: formatMoney(rotationExpected, group.currency),
+          rotationCollectedLabel: formatMoney(
+            rotationCollected,
+            group.currency,
+          ),
+          outstandingLabel: formatMoney(
+            rotationExpected - rotationCollected,
+            group.currency,
+          ),
+          collectionRate:
+            rotationExpected > 0
+              ? `${Math.round((rotationCollected / rotationExpected) * 100)}%`
+              : "—",
+          payoutsCompleted:
+            periods.length > 0
+              ? `${payoutsDone} of ${periods.length}`
+              : "—",
+        }}
+        members={orderedMembers.map((m, i) => ({
+          id: m.id,
+          name: memberName(m),
+          position: m.payout_position ?? i + 1,
+        }))}
+        periods={periods}
+        memberTotals={memberTotals}
+        empty={periods.length === 0}
       />
     </main>
   );
