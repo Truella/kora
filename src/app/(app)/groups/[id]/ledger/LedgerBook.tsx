@@ -75,7 +75,7 @@ export default function LedgerBook({
   });
 
   return (
-    <div className="ledger-sheet rounded-[12px] bg-surface p-4 shadow-[0_1px_2px_rgba(16,24,20,0.06),0_8px_24px_-16px_rgba(16,24,20,0.18)] sm:p-6">
+    <div className="ledger-sheet min-w-0 rounded-[12px] bg-surface p-4 shadow-[0_1px_2px_rgba(16,24,20,0.06),0_8px_24px_-16px_rgba(16,24,20,0.18)] sm:p-6">
       {/* The scroll area uses the app-wide scrollbar from globals.css —
           no local thumb/track overrides. */}
       <style>{`@media print {

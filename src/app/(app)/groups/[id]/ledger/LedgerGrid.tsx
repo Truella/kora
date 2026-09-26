@@ -126,11 +126,11 @@ export default function LedgerGrid({
                   </p>
                 </td>
               ))}
-              <td className="border-t border-r border-border px-3 py-3" />
-              <td className="border-t border-r border-border px-3 py-3 text-right text-[13px] font-semibold tabular-nums text-text-primary">
+              <td className="sticky bottom-0 z-10 border-t border-r border-border bg-bg px-3 py-3" />
+              <td className="sticky bottom-0 z-10 border-t border-r border-border bg-bg px-3 py-3 text-right text-[13px] font-semibold tabular-nums text-text-primary">
                 {rotationCollectedLabel}
               </td>
-              <td className="border-t border-r border-border px-3 py-3" />
+              <td className="sticky bottom-0 z-10 border-t border-r border-border bg-bg px-3 py-3" />
             </tr>
           </tfoot>
         </table>

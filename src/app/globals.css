@@ -40,9 +40,28 @@ body {
   color: var(--color-text-primary);
 }
 
-/* Tailwind v4 preflight resets buttons to `cursor: default` — restore the
-   pointer on everything clickable, with not-allowed while disabled. */
 @layer base {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-hover);
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  /* Tailwind v4 preflight resets buttons to `cursor: default` — restore the
+     pointer on everything clickable, with not-allowed while disabled. */
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]) {
     cursor: pointer;

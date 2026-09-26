@@ -3,7 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import {
   formatCycleDate,
   formatMoney,
-  parseDateOnly,
   utcDateOnly,
 } from "@/lib/money";
 import CircleHeader from "../components/CircleHeader";
@@ -16,17 +15,6 @@ import LedgerBook, {
 
 export const metadata = { title: "Ledger book" };
 
-const MONTH_ABBR = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
-
-// "2026-09-26" → "26 Sep 2026" — the meta line reads as print, not storage.
-function formatPrintedLabel(dateOnly: string): string {
-  const c = parseDateOnly(dateOnly);
-  if (!c) return dateOnly;
-  return `${c.d} ${MONTH_ABBR[c.m - 1]} ${c.y}`;
-}
 
 export default async function LedgerPage({
   params,
@@ -81,7 +69,6 @@ export default async function LedgerPage({
   }
 
   const shareAmount = Number(group.contribution_amount);
-  const shareLabel = formatMoney(shareAmount, group.currency);
   // Periods read as turns, never calendar weeks — the rotation position is
   // what matters, not the weekday it lands on.
   const periodWord = "Turn";
@@ -192,12 +179,19 @@ export default async function LedgerPage({
       (c) => c.status === "paid" || c.status === "late",
     ).length;
 
+    const recipient = orderedMembers.find(
+      (m) => m.id === cycle.recipient_member_id,
+    );
+
     return {
       cycleNumber: cycle.cycle_number,
       periodLabel: `${periodWord} ${cycle.cycle_number}`,
       dueLabel: `Due ${formatCycleDate(cycle.due_date)}`,
+      recipientName: recipient ? memberName(recipient) : "—",
       expectedCount,
       settledCount,
+      collectedLabel: formatMoney(settledCount * shareAmount, group.currency),
+      expectedLabel: formatMoney(expectedCount * shareAmount, group.currency),
       payoutStatus: payoutByCycle.get(cycle.id) ?? "pending",
       cells,
     };
@@ -252,12 +246,6 @@ export default async function LedgerPage({
     (c) => payoutByCycle.get(c.id) === "completed",
   ).length;
 
-  // The turn in flight: earliest cycle whose payout hasn't completed.
-  // Null once the rotation is fully disbursed.
-  const currentCycleNumber =
-    sortedCycles.find((c) => payoutByCycle.get(c.id) !== "completed")
-      ?.cycle_number ?? null;
-
   return (
     <main className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       <CircleHeader
@@ -270,9 +258,6 @@ export default async function LedgerPage({
       />
       <LedgerBook
         groupId={group.id}
-        groupName={group.name}
-        metaLine={`${group.frequency} · ${orderedMembers.length} members · ${periods.length} ${periodWord.toLowerCase()}s · Share ${shareLabel}`}
-        printedLabel={formatPrintedLabel(today)}
         summary={{
           rotationExpectedLabel: formatMoney(rotationExpected, group.currency),
           rotationCollectedLabel: formatMoney(
@@ -303,7 +288,6 @@ export default async function LedgerPage({
           periods.length * shareAmount,
           group.currency,
         )}
-        currentCycleNumber={currentCycleNumber}
         empty={periods.length === 0}
       />
     </main>
