@@ -18,9 +18,6 @@ const DEFAULT_POINTS = [
   },
 ];
 
-// Shared split layout for the auth family (login / verify / add-phone /
-// onboarding): form column on all screens, hero story panel on desktop.
-// Primary actions inside are petrol; secondary links are text-primary.
 export default function AuthShell({
   kicker,
   title,

@@ -19,8 +19,6 @@ const TABS = [
   { href: "/profile", label: "Profile", icon: UserIcon },
 ];
 
-// Hover spring, matched to animate-ui's radix sidebar default
-// (components/animate-ui/components/radix/sidebar.tsx).
 const HIGHLIGHT_SPRING = { type: "spring", stiffness: 350, damping: 35 } as const;
 
 function isActive(pathname: string, href: string) {
