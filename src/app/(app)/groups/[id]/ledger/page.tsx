@@ -299,6 +299,10 @@ export default async function LedgerPage({
         }))}
         periods={periods}
         memberTotals={memberTotals}
+        expectedPerMemberLabel={formatMoney(
+          periods.length * shareAmount,
+          group.currency,
+        )}
         currentCycleNumber={currentCycleNumber}
         empty={periods.length === 0}
       />
