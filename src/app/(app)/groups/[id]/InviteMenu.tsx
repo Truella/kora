@@ -14,6 +14,13 @@ import InviteByPhone from "./InviteByPhone";
 // `<button>`, not an `<a>`, so it reuses the class rather than the component.
 import { ACTION_TILE } from "./TurnViews";
 
+// Tab-bar styling for the merged circle header: same pill geometry as the
+// sibling Links in CircleTabs (no border, no tile chrome). The dropdown
+// panel is `fixed` on mobile so the tab bar's horizontal scroll container
+// cannot clip it, and a plain absolute dropdown from `sm` up.
+const TAB_BUTTON =
+  "flex shrink-0 items-center gap-1.5 rounded-[12px] px-3 py-2 text-[13px] font-medium whitespace-nowrap text-text-secondary transition-colors hover:bg-black/[0.04] hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+
 // The single entry point for inviting. One CTA opens a custom dropdown with
 // the two paths side by side: anonymous link (works before an account
 // exists) and addressed phone invite (lands on the invitee's home). The
@@ -26,10 +33,12 @@ export default function InviteMenu({
   groupId,
   inviterId,
   grid = false,
+  tab = false,
 }: {
   groupId: string;
   inviterId: string;
   grid?: boolean;
+  tab?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [sheet, setSheet] = useState(false);

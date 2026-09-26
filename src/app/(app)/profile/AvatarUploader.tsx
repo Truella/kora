@@ -44,7 +44,7 @@ export default function AvatarUploader({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4">
+    <div className="flex items-center gap-3 rounded-[14px] border-[0.5px] border-border bg-bg p-4">
       {preview ? (
         <Image
           src={preview}
