@@ -57,13 +57,13 @@ export default function LedgerGrid({
         <table className="ledger-table w-full min-w-[720px] border-separate border-spacing-0 text-xs">
           <thead>
             <tr>
-              <th className="sticky top-0 left-0 z-20 min-w-[132px] border-r border-b-2 border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary">
+              <th className="sticky top-0 left-0 z-30 min-w-[132px] border-b-2 border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary after:absolute after:top-0 after:right-0 after:bottom-0 after:w-px after:bg-border after:content-['']">
                 Period
               </th>
               {members.map((m) => (
                 <th
                   key={m.id}
-                  className="sticky top-0 z-20 max-w-[150px] truncate border-b-2 border-r border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary"
+                  className="sticky top-0 z-20 min-w-[96px] max-w-[150px] truncate border-b-2 border-r border-border bg-surface px-3 py-2.5 text-left font-display text-[11px] font-semibold text-text-primary"
                   title={m.name}
                 >
                   {m.name}
@@ -83,7 +83,7 @@ export default function LedgerGrid({
           <tbody>
             {periods.map((p) => (
               <tr key={p.cycleNumber}>
-                <td className="sticky left-0 z-10 border-r border-b border-border bg-surface px-3 py-3.5">
+                <td className="sticky left-0 z-10 border-b border-border bg-surface px-3 py-3.5 after:absolute after:top-0 after:right-0 after:bottom-0 after:w-px after:bg-border after:content-['']">
                   <p className="text-[13px] font-semibold whitespace-nowrap text-text-primary">
                     {p.periodLabel}
                   </p>
@@ -94,7 +94,7 @@ export default function LedgerGrid({
                 {p.cells.map((c) => (
                   <td
                     key={c.memberId}
-                    className="border-b border-r border-border px-2 py-3.5 text-center align-middle"
+                    className="min-w-[96px] border-b border-r border-border px-2 py-3.5 text-center align-middle"
                   >
                     <GridCell cell={c} />
                   </td>
@@ -116,7 +116,7 @@ export default function LedgerGrid({
           </tbody>
           <tfoot>
             <tr className="bg-bg">
-              <td className="sticky bottom-0 left-0 z-10 border-r border-t border-border bg-bg px-3 py-3 align-top text-[13px] font-semibold text-text-primary">
+              <td className="sticky bottom-0 left-0 z-20 border-t border-border bg-bg px-3 py-3 align-top text-[13px] font-semibold text-text-primary after:absolute after:top-0 after:right-0 after:bottom-0 after:w-px after:bg-border after:content-['']">
                 Total paid
               </td>
               {memberTotals.map((t) => (
