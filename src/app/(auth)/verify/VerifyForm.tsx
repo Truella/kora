@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "motion/react";
@@ -21,10 +21,12 @@ export default function VerifyForm() {
   const to = searchParams.get("to") ?? "";
   const next = safeNext(searchParams.get("next"));
 
-  const [code, setCode] = useState("");
+  const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [error, setError] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [resent, setResent] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const code = digits.join("");
 
   if (!to) {
     return (
@@ -93,10 +95,46 @@ export default function VerifyForm() {
     else setResent(true);
   }
 
-  function onChange(value: string) {
-    const digits = value.replace(/\D/g, "").slice(0, 6);
-    setCode(digits);
-    if (digits.length === 6) void verify(digits);
+  function focusBox(index: number) {
+    inputRefs.current[index]?.focus();
+  }
+
+  function onDigitChange(index: number, value: string) {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    if (!digit && value !== "") return;
+    const next = [...digits];
+    next[index] = digit;
+    setDigits(next);
+    if (digit && index < 5) focusBox(index + 1);
+    const joined = next.join("");
+    if (joined.length === 6) void verify(joined);
+  }
+
+  function onDigitKeyDown(
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) {
+    if (e.key === "Backspace" && digits[index] === "" && index > 0) {
+      e.preventDefault();
+      const next = [...digits];
+      next[index - 1] = "";
+      setDigits(next);
+      focusBox(index - 1);
+    }
+  }
+
+  function onDigitPaste(e: React.ClipboardEvent<HTMLInputElement>) {
+    e.preventDefault();
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    if (!pasted) return;
+    const next = [...digits];
+    for (let i = 0; i < pasted.length; i++) next[i] = pasted[i];
+    setDigits(next);
+    focusBox(Math.min(pasted.length, 5));
+    if (pasted.length === 6) void verify(pasted);
   }
 
   return (
@@ -110,18 +148,30 @@ export default function VerifyForm() {
         </>
       }
     >
-      <label className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5">
           <span className="text-sm font-medium">Code</span>
-          <input
-            value={code}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="••••••"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            className="rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] text-text-primary outline-none placeholder:text-text-secondary/50 focus:border-primary"
-          />
-        </label>
+          <div className="grid grid-cols-6 gap-2" role="group" aria-label="6-digit code">
+            {digits.map((digit, i) => (
+              <input
+                key={i}
+                ref={(el) => {
+                  inputRefs.current[i] = el;
+                }}
+                value={digit}
+                onChange={(e) => onDigitChange(i, e.target.value)}
+                onKeyDown={(e) => onDigitKeyDown(i, e)}
+                onPaste={onDigitPaste}
+                placeholder="•"
+                inputMode="numeric"
+                autoComplete={i === 0 ? "one-time-code" : "off"}
+                autoFocus={i === 0}
+                maxLength={1}
+                aria-label={`Digit ${i + 1}`}
+                className="h-14 rounded-[10px] border-[0.5px] border-border bg-surface text-center font-mono text-2xl text-text-primary outline-none placeholder:text-text-secondary/50 focus:border-primary"
+              />
+            ))}
+          </div>
+        </div>
 
         {error && (
           <p role="alert" className="mt-3 text-sm font-medium text-danger">
