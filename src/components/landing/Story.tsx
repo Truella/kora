@@ -12,6 +12,7 @@ import {
   ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
 import Reveal from "@/components/Reveal";
+import Faq from "./Faq";
 
 const VALUE = [
   {
@@ -156,7 +157,7 @@ export default function Story({ createHref }: { createHref: string }) {
             each other.
           </motion.p>
 
-          <div className="mt-8 max-w-2xl">
+          <div className="mt-8 max-w-2xl lg:max-w-none lg:grid lg:grid-cols-2 lg:gap-10">
             <motion.div
               initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -172,8 +173,11 @@ export default function Story({ createHref }: { createHref: string }) {
                   />
                 </span>
                 <p className="text-sm leading-7 text-text-secondary">
-                  Running a savings circle means keeping track of
-                  contributions, managing the payout order, and making sure
+                  <span className="font-display font-semibold text-text-primary">
+                    Running a savings circle means keeping track of
+                    contributions.{" "}
+                  </span>
+                  Managing the payout order, and making sure
                   everyone&apos;s money reaches the right person at the right
                   time. When all of that depends on one person, a missed
                   payment, unclear record, or misplaced contribution can affect
@@ -188,7 +192,7 @@ export default function Story({ createHref }: { createHref: string }) {
               whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.3, delay: reduceMotion ? 0 : 2.4 }}
-              className="my-6 h-px bg-gradient-to-r from-transparent via-border to-transparent"
+              className="my-6 h-px bg-gradient-to-r from-transparent via-border to-transparent lg:hidden"
             />
 
             <motion.div
@@ -220,7 +224,7 @@ export default function Story({ createHref }: { createHref: string }) {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-5xl px-4 py-14">
+      <section id="why-kora" className="mx-auto w-full max-w-5xl px-4 py-14">
         <motion.div
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -408,6 +412,8 @@ export default function Story({ createHref }: { createHref: string }) {
           </p>
         </Reveal>
       </section>
+
+      <Faq />
 
       <section className="mx-auto w-full max-w-5xl px-4 pb-14">
         <Reveal>
