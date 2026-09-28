@@ -7,12 +7,9 @@ import { motion } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 import AuthShell from "../AuthShell";
 import { friendlyAuthError } from "@/lib/auth-errors";
+import { safeNext } from "@/lib/navigation";
 
 type Flow = "phone" | "add-phone";
-
-function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/home";
-}
 
 export default function VerifyForm() {
   const router = useRouter();

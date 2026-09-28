@@ -6,45 +6,15 @@ import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserGroupIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
-import Dropdown from "@/components/Dropdown";
-import {
-  sanitizeAmountInput,
-  formatAmountDisplay,
-  parseAmount,
-} from "@/lib/inputs";
+import { parseAmount } from "@/lib/inputs";
 import type { CountryKey } from "@/lib/phone";
-
-type Currency = "NGN" | "GHS" | "KES" | "UGX";
-
-const CURRENCIES: { code: Currency; symbol: string; label: string }[] = [
-  { code: "NGN", symbol: "₦", label: "Naira" },
-  { code: "GHS", symbol: "GH₵", label: "Cedi" },
-  { code: "KES", symbol: "KSh", label: "Kenyan shilling" },
-  { code: "UGX", symbol: "USh", label: "Ugandan shilling" },
-];
-
-const COUNTRY_TO_CURRENCY: Record<CountryKey, Currency> = {
-  NG: "NGN",
-  GH: "GHS",
-  KE: "KES",
-  UG: "UGX",
-};
-
-const TIMEZONE_TO_CURRENCY: Record<string, Currency> = {
-  "Africa/Lagos": "NGN",
-  "Africa/Accra": "GHS",
-  "Africa/Nairobi": "KES",
-  "Africa/Kampala": "UGX",
-};
-
-function guessCurrency(): Currency {
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
-    return TIMEZONE_TO_CURRENCY[tz] ?? "NGN";
-  } catch {
-    return "NGN";
-  }
-}
+import { COUNTRY_TO_CURRENCY, CURRENCIES } from "@/constants/circle";
+import { guessCurrency } from "@/lib/circles";
+import type { Currency } from "@/types/circle";
+import { validateGroup } from "./validateGroup";
+import { CircleNameFields } from "./fields/CircleNameFields";
+import { AmountCurrencyFields } from "./fields/AmountCurrencyFields";
+import { RhythmField, ThresholdField } from "./fields/ScheduleFields";
 
 type Status = "idle" | "needs-login";
 
@@ -78,24 +48,9 @@ export default function NewGroupForm() {
   const symbol =
     CURRENCIES.find((c) => c.code === currency)?.symbol ?? currency;
 
-  function validate(): Record<string, string> {
-    const next: Record<string, string> = {};
-    if (name.trim().length < 3)
-      next.name = "Give the circle a name (3+ characters).";
-    if (name.trim().length > 60)
-      next.name = "Keep the name under 60 characters.";
-    if (description.trim().length > 280)
-      next.description = "Keep the description under 280 characters.";
-    if (!/^\d+(\.\d{1,2})?$/.test(amount.replace(/,/g, "")) || parseAmount(amount) <= 0)
-      next.amount = "Enter an amount above zero (max 2 decimals).";
-    if (threshold < 50 || threshold > 100)
-      next.threshold = "Threshold must be between 50 and 100 percent.";
-    return next;
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const problems = validate();
+    const problems = validateGroup({ name, description, amount, threshold });
     setErrors(problems);
     setSubmitError(null);
     if (Object.keys(problems).length > 0) {
@@ -137,10 +92,6 @@ export default function NewGroupForm() {
     }
   }
 
-  const labelClass = "text-sm font-medium text-text-primary";
-  const inputClass =
-    "rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-text-primary outline-none focus:border-primary [&>option]:bg-surface [&>option]:text-text-primary";
-
   return (
     <main className="flex flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
       <div className="flex items-center gap-3">
@@ -162,132 +113,30 @@ export default function NewGroupForm() {
         noValidate
         className="flex flex-col gap-5 rounded-[14px] border-[0.5px] border-border bg-surface p-5"
       >
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="group-name" className={labelClass}>
-            Circle name
-          </label>
-          <input
-            id="group-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Lagos Market Women"
-            maxLength={60}
-            className={inputClass}
-          />
-          {errors.name && <p className="text-sm font-medium text-danger">{errors.name}</p>}
-        </div>
+        <CircleNameFields
+          name={name}
+          onNameChange={setName}
+          description={description}
+          onDescriptionChange={setDescription}
+          errors={errors}
+        />
 
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="group-desc" className={labelClass}>
-            Description{""}
-            <span className="font-normal text-text-secondary">(optional)</span>
-          </label>
-          <textarea
-            id="group-desc"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            maxLength={280}
-            placeholder="What is this circle saving toward?"
-            className={`${inputClass} resize-none`}
-          />
-          {errors.description && (
-            <p className="text-sm font-medium text-danger">{errors.description}</p>
-          )}
-        </div>
+        <AmountCurrencyFields
+          amount={amount}
+          onAmountChange={setAmount}
+          currency={currency}
+          onCurrencyChange={setCurrency}
+          symbol={symbol}
+          errors={errors}
+        />
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="group-amount" className={labelClass}>
-              Contribution per cycle
-            </label>
-            <div className="flex items-center rounded-[10px] border-[0.5px] border-border bg-surface focus-within:border-primary">
-              <span className="pl-4 font-medium text-text-secondary">{symbol}</span>
-              <input
-                id="group-amount"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
-                onBlur={() => setAmount(formatAmountDisplay(amount))}
-                onFocus={() => setAmount(amount.replace(/,/g, ""))}
-                placeholder="5,000"
-                maxLength={16}
-                className="w-full rounded-[10px] bg-transparent px-2 py-3 font-display font-semibold tabular-nums text-text-primary outline-none"
-              />
-            </div>
-            {errors.amount && (
-              <p className="text-sm font-medium text-danger">{errors.amount}</p>
-            )}
-          </div>
+        <RhythmField frequency={frequency} onFrequencyChange={setFrequency} />
 
-          <div className="flex flex-col gap-1.5">
-            <span className={labelClass}>
-              Currency
-            </span>
-            <Dropdown
-              value={currency}
-              onChange={setCurrency}
-              options={CURRENCIES.map((c) => ({
-                value: c.code,
-                label: `${c.code} · ${c.label}`,
-              }))}
-              label="Currency"
-            />
-            <p className="text-xs text-text-secondary">Locked once members join.</p>
-          </div>
-        </div>
-
-        <fieldset className="flex flex-col gap-2">
-          <legend className={labelClass}>Payout rhythm</legend>
-          <div className="flex gap-3">
-            {(["weekly", "monthly"] as const).map((option) => (
-              <label
-                key={option}
-                className={`flex-1 cursor-pointer rounded-[10px] border-[0.5px] px-4 py-3 text-center text-sm capitalize ${
-                  frequency === option
-                    ? "border-primary bg-primary/5 font-medium text-text-primary"
-                    : "border-border text-text-secondary"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="frequency"
-                  value={option}
-                  checked={frequency === option}
-                  onChange={() => setFrequency(option)}
-                  className="sr-only"
-                />
-                {option}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="flex flex-col gap-2">
-          <label htmlFor="group-threshold" className={labelClass}>
-            Votes needed to admit a member:{" "}
-            <span className="font-display font-semibold tabular-nums text-text-primary">
-              {threshold}%
-            </span>
-          </label>
-          <input
-            id="group-threshold"
-            type="range"
-            min={50}
-            max={100}
-            step={1}
-            value={threshold}
-            onChange={(e) => setThreshold(Number(e.target.value))}
-            className="accent-primary"
-          />
-          <p className="text-xs text-text-secondary">
-            In a circle of 5, {threshold}% means{""}
-            {Math.ceil((threshold / 100) * 5)} yes-votes to let someone in.
-          </p>
-          {errors.threshold && (
-            <p className="text-sm font-medium text-danger">{errors.threshold}</p>
-          )}
-        </div>
+        <ThresholdField
+          threshold={threshold}
+          onThresholdChange={setThreshold}
+          error={errors.threshold}
+        />
 
         {status === "needs-login" && (
           <p className="rounded-[10px] bg-[#F8EDD9] px-4 py-3 text-sm text-[#8A5F14]">

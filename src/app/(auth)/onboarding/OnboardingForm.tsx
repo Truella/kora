@@ -2,25 +2,16 @@
 
 import { useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "@/lib/supabase/client";
 import AuthShell from "../AuthShell";
-import { COUNTRY_CODES, type CountryKey } from "@/lib/phone";
+import { type CountryKey } from "@/lib/phone";
+import { safeNext } from "@/lib/navigation";
 import { uploadAvatar, validateAvatarFile } from "@/lib/avatar";
-
-function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/home";
-}
-
-const COUNTRIES: { key: CountryKey; name: string }[] = [
-  { key: "NG", name: "Nigeria" },
-  { key: "KE", name: "Kenya" },
-  { key: "UG", name: "Uganda" },
-  { key: "GH", name: "Ghana" },
-];
-
-const STEP_LABELS = ["Your name", "Home country", "Review"];
+import { StepProgress } from "./StepProgress";
+import { NameStep } from "./steps/NameStep";
+import { CountryStep } from "./steps/CountryStep";
+import { ReviewStep } from "./steps/ReviewStep";
 
 export default function OnboardingForm() {
   const router = useRouter();
@@ -126,32 +117,13 @@ export default function OnboardingForm() {
     }
   }
 
-  const chosen = COUNTRIES.find((c) => c.key === country);
-
   return (
     <AuthShell
       kicker="Onboarding"
       title="You're in."
       intro="Three quick steps. This is the profile your circle members will see."
     >
-      <div className="flex items-center gap-2">
-        {STEP_LABELS.map((label, i) => (
-          <div key={label} className="flex flex-1 flex-col gap-1.5">
-            <span
-              className={`h-1.5 rounded-full ${
-                i <= step ? "bg-primary" : "bg-border"
-              }`}
-            />
-            <span
-              className={`font-mono text-[11px] font-semibold ${
-                i === step ? "text-text-primary" : "text-text-secondary"
-              }`}
-            >
-              {i + 1}. {label}
-            </span>
-          </div>
-        ))}
-      </div>
+      <StepProgress step={step} />
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -163,146 +135,27 @@ export default function OnboardingForm() {
           className="mt-5 flex flex-col gap-3"
         >
           {step === 0 && (
-            <>
-              <label className="flex flex-col gap-1.5">
-                <span className="text-sm font-medium">Full name</span>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Adaeze Okafor"
-                  autoComplete="name"
-                  autoFocus
-                  className="rounded-[10px] border-[0.5px] border-border bg-surface px-4 py-3 text-[16px] text-text-primary outline-none placeholder:text-text-secondary/60 focus:border-primary"
-                />
-              </label>
-              <p className="text-xs leading-5 text-text-secondary">
-                Shows on invites, votes, and the ledger.
-              </p>
-              <div className="flex items-center gap-3">
-                {avatarPreview ? (
-                  <Image
-                    src={avatarPreview}
-                    alt="Your profile photo preview"
-                    width={48}
-                    height={48}
-                    unoptimized
-                    className="h-12 w-12 shrink-0 rounded-[10px] object-cover"
-                  />
-                ) : (
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[10px] bg-primary/10 font-display text-sm font-semibold text-primary">
-                    {name.trim().charAt(0).toUpperCase() || "?"}
-                  </span>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium">
-                    Profile photo <span className="font-normal text-text-secondary">(optional)</span>
-                  </p>
-                  <p className="text-xs text-text-secondary">JPG, PNG, or WebP under 2MB.</p>
-                  {avatarError && (
-                    <p role="alert" className="mt-0.5 text-xs font-medium text-danger">
-                      {avatarError}
-                    </p>
-                  )}
-                </div>
-                <input
-                  ref={avatarInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  aria-label="Choose a profile photo"
-                  onChange={(e) => pickAvatar(e.target.files?.[0])}
-                />
-                {avatarPreview ? (
-                  <button
-                    type="button"
-                    onClick={removeAvatar}
-                    className="shrink-0 rounded-[10px] border-[0.5px] border-border bg-white px-4 py-2 text-xs font-semibold text-text-primary"
-                  >
-                    Remove
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => avatarInputRef.current?.click()}
-                    className="shrink-0 rounded-[10px] border-[0.5px] border-border bg-white px-4 py-2 text-xs font-semibold text-text-primary"
-                  >
-                    Add
-                  </button>
-                )}
-              </div>
-            </>
+            <NameStep
+              name={name}
+              onNameChange={setName}
+              avatarPreview={avatarPreview}
+              avatarError={avatarError}
+              onPickAvatar={pickAvatar}
+              onRemoveAvatar={removeAvatar}
+              avatarInputRef={avatarInputRef}
+            />
           )}
 
           {step === 1 && (
-            <>
-              <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Home country">
-                {COUNTRIES.map((c) => {
-                  const selected = c.key === country;
-                  return (
-                    <button
-                      key={c.key}
-                      type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      onClick={() => setCountry(c.key)}
-                      className={`flex flex-col rounded-[14px] border-[0.5px] px-4 py-3 text-left transition-colors ${
-                        selected
-                          ? "border-primary bg-primary/5"
-                          : "border-border bg-surface"
-                      }`}
-                    >
-                      <span className="text-sm font-semibold text-text-primary">
-                        {c.name}
-                      </span>
-                      <span className="font-mono text-xs text-text-secondary">
-                        +{COUNTRY_CODES[c.key]}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="text-xs leading-5 text-text-secondary">
-                Sets your default dial code and currency.
-              </p>
-            </>
+            <CountryStep country={country} onCountryChange={setCountry} />
           )}
 
           {step === 2 && (
-            <>
-              <dl className="flex flex-col gap-2 rounded-[14px] border-[0.5px] border-border bg-surface p-4">
-                {avatarPreview && (
-                  <div className="flex items-center justify-between gap-3">
-                    <dt className="text-sm text-text-secondary">Photo</dt>
-                    <dd>
-                      <Image
-                        src={avatarPreview}
-                        alt="Your profile photo preview"
-                        width={40}
-                        height={40}
-                        unoptimized
-                        className="h-10 w-10 rounded-[10px] object-cover"
-                      />
-                    </dd>
-                  </div>
-                )}
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="text-sm text-text-secondary">Name</dt>
-                  <dd className="text-sm font-semibold text-text-primary">
-                    {name.trim()}
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between gap-3 border-t border-border pt-2">
-                  <dt className="text-sm text-text-secondary">Home country</dt>
-                  <dd className="text-sm font-semibold text-text-primary">
-                    {chosen?.name} (+{chosen && COUNTRY_CODES[chosen.key]})
-                  </dd>
-                </div>
-              </dl>
-              <p className="text-xs leading-5 text-text-secondary">
-                Looks right? Circle members will recognize you by this name.
-              </p>
-            </>
+            <ReviewStep
+              name={name}
+              country={country}
+              avatarPreview={avatarPreview}
+            />
           )}
 
           {error && (

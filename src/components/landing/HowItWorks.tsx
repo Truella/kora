@@ -1,35 +1,8 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
+import { STEPS } from "@/constants/landing";
 import TypewriterHeading from "./TypewriterHeading";
-
-const STEPS = [
-  {
-    n: "01",
-    title: "Create your circle",
-    body: "Set the contribution amount, schedule, and payout order.",
-  },
-  {
-    n: "02",
-    title: "Invite your people",
-    body: "Share an invite with the people you already trust.",
-  },
-  {
-    n: "03",
-    title: "Let the group vote",
-    body: "Every new member request goes to the circle for approval.",
-  },
-  {
-    n: "04",
-    title: "Contribute on schedule",
-    body: "Members know what they owe and when it is due. Reminders keep everyone on track.",
-  },
-  {
-    n: "05",
-    title: "Track every payout",
-    body: "See contributions, payouts, and the next turn from one shared record.",
-  },
-];
 
 export default function HowItWorks() {
   const reduceMotion = useReducedMotion();

@@ -6,14 +6,11 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Menu01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { CREATE_HREF, NAV_LINKS } from "@/constants/landing";
 
-export const CREATE_HREF = "/login?next=/groups/new";
-
-const LINKS = [
-  ["Why Kora", "#why-kora"],
-  ["How it works", "#how-it-works"],
-  ["FAQ", "#faq"],
-] as const;
+// Re-exported so existing `import { CREATE_HREF } from "@/components/landing/Nav"`
+// call sites keep working.
+export { CREATE_HREF };
 
 export default function Nav({ signedIn }: { signedIn: boolean }) {
   const [open, setOpen] = useState(false);
@@ -36,7 +33,7 @@ export default function Nav({ signedIn }: { signedIn: boolean }) {
           />
         </Link>
         <div className="hidden items-center gap-6 text-sm font-medium text-white/80 md:flex">
-          {LINKS.map(([label, href]) => (
+          {NAV_LINKS.map(({ label, href }) => (
             <Link key={href} href={href} className="hover:text-white">
               {label}
             </Link>
@@ -90,7 +87,7 @@ export default function Nav({ signedIn }: { signedIn: boolean }) {
               className="absolute inset-x-0 top-full z-20 mt-2 rounded-[20px] border-[0.5px] border-border bg-surface p-3 text-text-primary shadow-[0_24px_60px_-24px_rgba(11,38,36,0.35)] md:hidden"
             >
               <div className="flex flex-col">
-                {LINKS.map(([label, href]) => (
+          {NAV_LINKS.map(({ label, href }) => (
                   <Link
                     key={href}
                     href={href}
