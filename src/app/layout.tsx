@@ -79,6 +79,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${sora.variable} ${hind.variable} ${robotoMono.variable} ${caveat.variable} h-full antialiased`}
     >
       <body className="min-h-dvh bg-bg font-sans text-text-primary">

@@ -30,15 +30,18 @@ export default function VerifyForm() {
 
   if (!to) {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-3 px-8 py-12 text-center">
-        <h1 className="font-display text-2xl font-semibold text-text-primary">No code to check</h1>
-        <p className="text-sm text-text-secondary">
-          Start from the sign-in screen so we know where to send the code.
-        </p>
-        <Link href="/login" className="font-semibold text-text-primary">
+      <AuthShell
+        kicker="Check your texts"
+        title="No code to check"
+        intro="Start from the sign-in screen so we know where to send the code."
+      >
+        <Link
+          href="/login"
+          className="mt-1 w-full py-2 text-center text-sm font-semibold text-text-primary"
+        >
           Back to sign in
         </Link>
-      </main>
+      </AuthShell>
     );
   }
 
@@ -139,11 +142,11 @@ export default function VerifyForm() {
 
   return (
     <AuthShell
-      kicker={flow === "add-phone" ? "Add a number" : "Check your texts"}
-      title="Enter your code"
+      kicker={flow === "add-phone" ? "Add a number" : "Verification"}
+      title="Check your messages"
       intro={
         <>
-          6-digit code sent to{""}
+          Enter the 6-digit verification code we sent to{" "}
           <span className="font-mono font-medium text-text-primary">{to}</span>
         </>
       }

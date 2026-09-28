@@ -131,14 +131,14 @@ export default function LoginForm() {
       intro={
         tab === "phone"
           ? "Enter your number. We'll text you a 6-digit code."
-          : undefined
+          : "Enter your email. We'll send you a sign-in link."
       }
     >
 
         <div className="mt-5 flex flex-col gap-3">
           {tab === "phone" ? (
             <div className="flex gap-2">
-              <div className="flex w-32 shrink-0 flex-col gap-1.5">
+              <div className="flex w-24 shrink-0 flex-col gap-1.5">
                 <span className="text-sm font-medium">Country</span>
                 <Dropdown
                   value={country}
