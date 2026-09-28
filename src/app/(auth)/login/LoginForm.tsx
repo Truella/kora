@@ -100,23 +100,48 @@ export default function LoginForm() {
   }
 
   if (linkSentTo) {
+    const domain = linkSentTo.split("@")[1]?.toLowerCase() ?? "";
+    const inboxUrl = domain.includes("gmail") || domain.includes("googlemail")
+      ? "https://mail.google.com/mail/u/0/#inbox"
+      : domain.includes("outlook") ||
+          domain.includes("hotmail") ||
+          domain.includes("live.com") ||
+          domain.includes("msn.com")
+        ? "https://outlook.live.com/mail/0/inbox"
+        : domain.includes("yahoo")
+          ? "https://mail.yahoo.com/"
+          : domain.includes("proton")
+            ? "https://mail.proton.me/"
+            : domain.includes("icloud") || domain.includes("me.com") || domain.includes("mac.com")
+              ? "https://www.icloud.com/mail"
+              : null;
     return (
       <AuthShell
         kicker="Sign in"
         title="Check your inbox"
         intro={
           <>
-            We sent a sign-in link to{""}
+            We sent a sign-in link to{" "}
             <span className="font-display font-semibold text-text-primary">
               {linkSentTo}
             </span>
-            . Tap it on this device and you&apos;re in. No code to type.
+            . Follow the link on this device to sign in.
           </>
         }
       >
+        {inboxUrl && (
+          <a
+            href={inboxUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 block rounded-[10px] bg-primary py-[13px] text-center text-sm font-semibold text-white hover:bg-primary-hover"
+          >
+            Open mail app
+          </a>
+        )}
         <button
           onClick={() => setLinkSentTo(null)}
-          className="mt-4 w-full py-2 text-sm font-semibold text-text-primary"
+          className="mt-1 w-full py-2 text-sm font-semibold text-text-secondary hover:text-text-primary"
         >
           Use a different email
         </button>
