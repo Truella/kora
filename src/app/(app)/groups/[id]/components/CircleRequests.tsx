@@ -1,8 +1,8 @@
-import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
-import VoteButtons from "./VoteButtons";
-
-const ANCHOR_MT = "scroll-mt-[calc(var(--app-header-h)+1rem)]";
+import CircleRequestsLive, {
+  type PendingRequest,
+  type VoteTally,
+} from "./CircleRequestsLive";
 
 type ApplicantRow = {
   request_id: string;
@@ -12,10 +12,8 @@ type ApplicantRow = {
   applicant_avatar: string | null;
 };
 
-function applicantInitial(name: string | null): string {
-  return (name?.trim().charAt(0) || "·").toUpperCase();
-}
-
+// Server snapshot provider — the live wrapper below owns realtime merging,
+// so this stays a thin fetch-and-pass-through.
 export default async function CircleRequests({
   groupId,
   memberId,
@@ -30,96 +28,44 @@ export default async function CircleRequests({
   const { data: applicantRows } = await supabase.rpc("pending_applicants", {
     p_group_id: groupId,
   });
-  const requests = ((applicantRows ?? []) as ApplicantRow[]).map((r) => ({
-    id: r.request_id,
-    applicant_name: r.applicant_name,
-    applicant_phone: r.applicant_phone,
-    inviter_name: r.inviter_name,
-    applicant_avatar: r.applicant_avatar ?? null,
-  }));
-  if (requests.length === 0) return null;
+  const requests: PendingRequest[] = ((applicantRows ?? []) as ApplicantRow[]).map(
+    (r) => ({
+      id: r.request_id,
+      applicant_name: r.applicant_name,
+      applicant_phone: r.applicant_phone,
+      inviter_name: r.inviter_name,
+      applicant_avatar: r.applicant_avatar ?? null,
+    }),
+  );
 
-  const { data: votes } = await supabase
-    .from("join_votes")
-    .select("join_request_id, vote")
-    .in(
-      "join_request_id",
-      requests.map((r) => r.id),
-    );
-
-  const tally = new Map<string, { approve: number; reject: number }>();
-  for (const v of votes ?? []) {
-    const t = tally.get(v.join_request_id) ?? { approve: 0, reject: 0 };
-    if (v.vote === "approve") t.approve += 1;
-    else t.reject += 1;
-    tally.set(v.join_request_id, t);
+  const tally: VoteTally = {};
+  if (requests.length > 0) {    const { data: votes } = await supabase
+      .from("join_votes")
+      .select("join_request_id, vote")
+      .in(
+        "join_request_id",
+        requests.map((r) => r.id),
+      );
+    for (const v of (votes ?? []) as Array<{
+      join_request_id: string;
+      vote: string;
+    }>) {
+      const t = tally[v.join_request_id] ?? { approve: 0, reject: 0 };
+      if (v.vote === "approve") t.approve += 1;
+      else t.reject += 1;
+      tally[v.join_request_id] = t;
+    }
   }
 
+  // Always mounted — the wrapper renders null when empty but keeps its
+  // subscription, so the first application appears without navigation.
   return (
-    <section
-      id="pending-requests"
-      className={`${ANCHOR_MT} flex flex-col gap-3`}
-    >
-      <h2 className="font-display text-lg font-semibold text-text-primary">
-        Pending requests
-      </h2>
-      {isCompleted ? (
-        <p className="rounded-[14px] border-[0.5px] border-border bg-surface p-4 text-xs leading-5 text-text-secondary">
-          The circle is over, so voting is paused. Nobody new can join a
-          finished circle — these requests stay pending.
-        </p>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {requests.map((request) => {
-            const t = tally.get(request.id) ?? { approve: 0, reject: 0 };
-            const name = request.applicant_name ?? "Applicant";
-            return (
-              <li
-                key={request.id}
-                className="flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4"
-              >
-                <div className="flex items-center gap-3">
-                  {request.applicant_avatar ? (
-                    <Image
-                      src={request.applicant_avatar}
-                      alt=""
-                      width={40}
-                      height={40}
-                      className="h-10 w-10 shrink-0 rounded-full object-cover"
-                    />
-                  ) : (
-                    <span
-                      aria-hidden
-                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/[0.04] text-[15px] font-semibold text-text-secondary"
-                    >
-                      {applicantInitial(request.applicant_name)}
-                    </span>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-text-primary">
-                      {name}
-                    </p>
-                    {request.applicant_phone && (
-                      <p className="font-mono text-xs tabular-nums text-text-secondary">
-                        {request.applicant_phone}
-                      </p>
-                    )}
-                    <p className="text-xs text-text-secondary">
-                      {request.inviter_name
-                        ? `Invited by ${request.inviter_name}`
-                        : "Joined via link"}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-black/[0.05] px-2 py-px font-mono text-[11px] font-semibold tabular-nums text-text-secondary">
-                    {t.approve} yes · {t.reject} no
-                  </span>
-                </div>
-                <VoteButtons joinRequestId={request.id} memberId={memberId} />
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </section>
+    <CircleRequestsLive
+      groupId={groupId}
+      memberId={memberId}
+      isCompleted={isCompleted}
+      initialRequests={requests}
+      initialTally={tally}
+    />
   );
 }
