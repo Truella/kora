@@ -5,13 +5,13 @@ import {
   formatMoney,
   utcDateOnly,
 } from "@/lib/money";
-import CircleHeader from "../components/CircleHeader";
-import ExportButton from "./ExportButton";
+
+
 import LedgerBook, {
   type LedgerBookCell,
   type LedgerBookMemberTotal,
   type LedgerBookPeriod,
-} from "./LedgerBook";
+} from "../../ledger/LedgerBook";
 
 export const metadata = { title: "Ledger book" };
 
@@ -247,15 +247,7 @@ export default async function LedgerPage({
   ).length;
 
   return (
-    <main className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
-      <CircleHeader
-        group={group}
-        memberCount={orderedMembers.length}
-        inviterId={user?.id ?? null}
-        showInvite={group.status !== "completed"}
-        active="ledger"
-        trailing={<ExportButton disabled={periods.length === 0} />}
-      />
+    <div className="flex flex-col gap-4">
       <LedgerBook
         groupId={group.id}
         summary={{
@@ -290,6 +282,6 @@ export default async function LedgerPage({
         )}
         empty={periods.length === 0}
       />
-    </main>
+    </div>
   );
 }

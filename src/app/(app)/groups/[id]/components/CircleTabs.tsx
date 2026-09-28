@@ -58,14 +58,20 @@ export default function CircleTabs({
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  // Narrow viewports scroll the pill (overflow-x-auto, hidden scrollbar),
-  // which can leave the active tab out of frame — e.g. Members on the
-  // members page reads as "no active tab". Bring it into view on mount /
-  // route change. block:"nearest" so the page itself never jumps.
+  // Reveal an active tab clipped on narrow screens without scrolling the page.
   useEffect(() => {
-    wrapRef.current
-      ?.querySelector('[data-active="true"]')
-      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+    const container = wrapRef.current?.querySelector<HTMLElement>(
+      '[data-slot="motion-highlight-container"]',
+    );
+    const selected = container?.querySelector<HTMLElement>(
+      '[data-active="true"]',
+    );
+    if (!container || !selected) return;
+    const frame = container.getBoundingClientRect();
+    const tab = selected.getBoundingClientRect();
+    if (tab.left < frame.left) container.scrollLeft += tab.left - frame.left;
+    else if (tab.right > frame.right)
+      container.scrollLeft += tab.right - frame.right;
   }, [active]);
 
   return (
@@ -98,6 +104,7 @@ export default function CircleTabs({
                 render={
                   <Link
                     href={tab.href(groupId)}
+                    scroll={false}
                     aria-current={tab.value === active ? "page" : undefined}
                     className="flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] font-medium whitespace-nowrap text-text-secondary transition-colors data-[active=true]:text-white hover:text-text-primary data-[active=true]:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   />

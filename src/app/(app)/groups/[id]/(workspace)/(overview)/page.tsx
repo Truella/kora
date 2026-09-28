@@ -1,20 +1,20 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
-import PayButton from "./components/PayButton";
-import PayoutAction from "./components/PayoutAction";
-import ConfirmingBanner from "./components/ConfirmingBanner";
-import CircleHeader from "./components/CircleHeader";
-import ScheduleGenerator from "./components/ScheduleGenerator";
-import CircleActivity from "./components/CircleActivity";
-import CircleRequests from "./components/CircleRequests";
+import PayButton from "../../components/PayButton";
+import PayoutAction from "../../components/PayoutAction";
+import ConfirmingBanner from "../../components/ConfirmingBanner";
+
+import ScheduleGenerator from "../../components/ScheduleGenerator";
+import CircleActivity from "../../components/CircleActivity";
+import CircleRequests from "../../components/CircleRequests";
 import {
   TurnHero,
   EventCard,
   TurnRow,
   DueChip,
   SettledChip,
-} from "./components/TurnViews";
+} from "../../components/TurnViews";
 import { utcDateOnly, formatCycleDate, formatCycleDateShort } from "@/lib/money";
 import { collectTurnLabel } from "@/lib/rotation";
 
@@ -446,7 +446,7 @@ export default async function GroupDetailPage({
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-5 px-4 py-6 sm:px-6">
+    <div className="flex flex-col gap-5">
       {confirming && <ConfirmingBanner groupId={group.id} />}
 
       {/* Close-out: every member lands here after the last turn, so the
@@ -484,17 +484,6 @@ export default async function GroupDetailPage({
         </div>
       )}
 
-      {/* Merged header: identity row + section tabs (Overview / Ledger /
-          Members / Invite / Activity). The old standalone quick-action grid
-          lives here now, so it persists across overview, ledger and members
-          instead of existing on one screen only. */}
-      <CircleHeader
-        group={group}
-        memberCount={activeCount ?? rotationTotal}
-        inviterId={user?.id ?? null}
-        showInvite={!!member && !!user && !isCompleted}
-        active="overview"
-      />
 
       {!cycles || cycles.length === 0 ? (
         <>
@@ -725,6 +714,6 @@ export default async function GroupDetailPage({
           isCompleted={isCompleted}
         />
       </Suspense>
-    </main>
+    </div>
   );
 }
