@@ -240,7 +240,9 @@ export default async function GroupDetailPage({
 
   // Per-member settlement for the current turn only — feeds the hero
   // progress bar. One RLS-covered select; history rows show the caller's
-  // own share from byCycle instead.
+  // own share from byCycle instead. Counted enrolled-only below, once the
+  // roster is in hand, so a pre-join orphan share can never cover for a
+  // missing enrolled one.
   const settledByMember = new Map(
     (
       (currentContributions ?? []) as {
@@ -249,9 +251,6 @@ export default async function GroupDetailPage({
       }[]
     ).map((r) => [r.member_id, r.status]),
   );
-  const settledCount = [...settledByMember.values()].filter(
-    (s) => s === "paid" || s === "late",
-  ).length;
 
   // R1 — retroactive contribution bug. generate-schedule's sync mode appends a
   // late joiner's recipient slot at the end of the rotation and never
@@ -322,15 +321,16 @@ export default async function GroupDetailPage({
   const myTurnPosition = myCircleRow?.payout_position ?? null;
   const rotationTotal = circleRows.length;
 
-  // How many shares a pot holds: pot ÷ share. Makes "₦5,700 vs ₦11,400"
-  // legible as 1 share vs 2 shares instead of a math error.
-  const sharesFor = (cycleId: string): number | null => {
-    const row = payoutByCycle.get(cycleId) as
-      | { amount?: number | string }
-      | undefined;
-    const share = Number(group.contribution_amount);
-    if (!row || !share) return null;
-    return Math.round(Number(row.amount) / share);
+  // How many shares a turn asks for: enrolled members on its due day, not
+  // pot ÷ share. The pot used to be snapshotted at schedule time, so a late
+  // joiner enrolled in Turn 1 left Turn 1's payout at the old 2-share figure
+  // while 3 shares were owed — the row then lied ("2 people will pay").
+  // Enrollment is the source of truth; the payout figure only names the pot.
+  const enrolledFor = (dueDate: string): number =>
+    circleRows.filter((m) => utcDateOnly(m.joined_at) <= dueDate).length;
+  const sharesFor = (cycle: { due_date: string }): number | null => {
+    const n = enrolledFor(cycle.due_date);
+    return n > 0 ? n : null;
   };
 
   // Hero derivations for the current turn. R1 enrollment applies here too:
@@ -363,12 +363,24 @@ export default async function GroupDetailPage({
   // enforces. A late joiner never owed this turn, so counting them would
   // stall the button forever.
   const enrolledCount = currentCycle
-    ? circleRows.filter(
-        (m) => utcDateOnly(m.joined_at) <= currentCycle.due_date,
-      ).length
+    ? enrolledFor(currentCycle.due_date)
     : 0;
   const expectedCount =
     enrolledCount > 0 ? enrolledCount : (activeCount ?? rotationTotal);
+  // Enrolled-only settlement: a share from someone who joined after this
+  // turn ran is not part of this pot and must not cover for a missing
+  // enrolled share — same rule process-payout enforces.
+  const enrolledIds = currentCycle
+    ? new Set(
+        circleRows
+          .filter((m) => utcDateOnly(m.joined_at) <= currentCycle.due_date)
+          .map((m) => m.id),
+      )
+    : new Set<string>();
+  const settledCount = [...settledByMember.entries()].filter(
+    ([memberId, s]) =>
+      (s === "paid" || s === "late") && enrolledIds.has(memberId),
+  ).length;
   // The confirm button only exists once the payout can actually complete.
   // Before that the row says what's missing instead of offering a dead tap.
   const payoutReady = expectedCount > 0 && settledCount >= expectedCount;
@@ -399,7 +411,7 @@ export default async function GroupDetailPage({
     const receiver =
       member && cycle.recipient_member_id === member.id ? "You" : recipient;
     const pot = potFor(cycle.id);
-    const shares = sharesFor(cycle.id);
+    const shares = sharesFor(cycle);
     const date = formatCycleDate(cycle.due_date);
     const collectionSentence =
       shares === null

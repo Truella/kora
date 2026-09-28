@@ -336,11 +336,17 @@ export async function getHomeSnapshot(
   // not the user id, and only one membership per group can be the caller's.
   const myMemberIdByGroup = new Map<string, string>();
   const activeCountByGroup = new Map<string, number>();
+  // Roster per group for enrolled-only payout math: a turn's pot is the
+  // members present on its due day, not the current headcount.
+  const membersByGroup = new Map<string, { id: string; joined_at: string }[]>();
   for (const m of members) {
     activeCountByGroup.set(
       m.group_id,
       (activeCountByGroup.get(m.group_id) ?? 0) + 1,
     );
+    const list = membersByGroup.get(m.group_id) ?? [];
+    list.push({ id: m.id, joined_at: m.joined_at });
+    membersByGroup.set(m.group_id, list);
     if (m.user_id !== user.id) continue;
     myMemberIds.add(m.id);
     myMemberIdByGroup.set(m.group_id, m.id);
@@ -768,14 +774,27 @@ export async function getHomeSnapshot(
     // R1-enrolled: a turn due before they joined is never theirs to owe.
     let waitingOnYou = false;
     if (inPlay) {
-      const active = activeCountByGroup.get(group.id) ?? 0;
-      const settled = settledCountByCycle.get(inPlay.id) ?? 0;
-      const outstanding = Math.max(0, active - settled);
+      // Enrolled-only gate: the turn's pot is the members present on its due
+      // day. A pre-join orphan share (crafted request, now refused) must not
+      // cover for a missing enrolled one.
+      const roster = membersByGroup.get(group.id) ?? [];
+      const enrolledIds = new Set(
+        roster
+          .filter((m) => utcDateOnly(m.joined_at) <= inPlay.due_date)
+          .map((m) => m.id),
+      );
+      const settledMembers = settledMembersByCycle.get(inPlay.id);
+      let enrolledSettled = 0;
+      if (settledMembers) {
+        for (const id of settledMembers) {
+          if (enrolledIds.has(id)) enrolledSettled += 1;
+        }
+      }
+      const outstanding = Math.max(0, enrolledIds.size - enrolledSettled);
       // Whether the stalled round pays the caller decides who the note is
       // about — "your payout is waiting on someone" is actionable in a way
       // "a payout is waiting" is not.
       const mine = inPlay.recipient_member_id === myMemberId;
-      const settledMembers = settledMembersByCycle.get(inPlay.id);
       const enrolledInPlay =
         !!myMemberId && !!joinedDate && inPlay.due_date >= joinedDate;
       waitingOnYou =
@@ -803,10 +822,14 @@ export async function getHomeSnapshot(
     const isMyTurnNow =
       !!inPlay && !!myMemberId && inPlay.recipient_member_id === myMemberId;
     const inPlayPayout = inPlay ? payoutByCycle.get(inPlay.id) : undefined;
-    const activeForPot = activeCountByGroup.get(group.id) ?? 0;
+    const enrolledForPot = inPlay
+      ? (membersByGroup.get(group.id) ?? []).filter(
+          (m) => utcDateOnly(m.joined_at) <= inPlay.due_date,
+        ).length
+      : 0;
     const currentPotLabel = inPlay
       ? formatMoney(
-          inPlayPayout ? inPlayPayout.amount : share * activeForPot,
+          inPlayPayout ? inPlayPayout.amount : share * enrolledForPot,
           group.currency,
         )
       : null;
