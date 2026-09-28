@@ -6,27 +6,27 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 const FAQS = [
   {
     q: "Who can join a circle?",
-    a: "Only people you invite — and even then, every join request goes to a member vote. There are no public pools and no strangers: the people already saving together decide who saves with them.",
+    a: "Only people you invite can request to join, and every request goes to a member vote. The people in the circle decide who joins.",
   },
   {
     q: "Who holds the money?",
-    a: "No single collector. The organizer sets up the circle and manages the schedule, but never holds everyone's money. Every contribution and payout is recorded in one shared ledger that all members can see.",
+    a: "No single member holds the group's money. The organizer sets up the circle and manages the schedule, but doesn't collect or keep everyone's contributions. Contributions and payouts are recorded in a shared ledger that every member can see.",
   },
   {
     q: "How do payouts work?",
-    a: "The contribution amount, schedule, and payout order are set when the circle is created, so everyone knows what they owe, when it is due, and who receives next. You can follow every turn from the shared record.",
+    a: "The contribution amount, schedule, and payout order are set when the circle is created. Members contribute according to that schedule, and each member receives the group's payout when their turn comes. The full history is recorded in the shared ledger.",
   },
   {
     q: "What happens if someone misses a payment?",
-    a: "Automatic reminders nudge members to stay on schedule, and because the record is shared, everyone can see exactly where the circle stands — no chasing people for updates.",
+    a: "Automatic reminders help members stay on schedule. If someone misses a contribution, the shared record makes it visible to everyone in the circle.",
+  },
+  {
+    q: "Can I create a circle with people who haven't saved together before?",
+    a: "Yes. Your members don't need to have an existing savings history together. What matters is that the group is built around people who know or trust each other. You create the circle, invite them, and members vote on who joins.",
   },
   {
     q: "Which countries are supported?",
     a: "Kora currently supports savings circles in Nigeria, Kenya, Uganda, and Ghana.",
-  },
-  {
-    q: "How do I start?",
-    a: "Create a circle, set the contribution amount and payout order, then invite the people you trust. Once members approve new requests, everyone contributes on schedule and takes their turn.",
   },
 ];
 
