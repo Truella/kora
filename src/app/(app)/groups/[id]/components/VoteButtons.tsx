@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { Tick01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
 
 // Casts one vote on a join request. voter_id is the caller's
@@ -50,13 +52,51 @@ export default function VoteButtons({
     }
   }
 
+  // Confirmation row: same footprint as the button pair it replaces so
+  // the card doesn't collapse. Approve wears the success wash; reject and
+  // already-voted wear neutral — a no-vote is a counted vote, not an error,
+  // so the danger tint stays reserved for failures.
   if (voted) {
+    const approved = voted === "approve";
     return (
-      <p className="text-xs text-text-secondary">
-        {voted === "already"
-          ? "You already voted on this request."
-          : `You voted ${voted}.`}
-      </p>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className={`flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 ${
+          approved
+            ? "bg-[#E0ECE9]"
+            : "bg-black/[0.04]"
+        }`}
+      >
+        <span
+          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${
+            approved ? "bg-[#1E5A4E] text-white" : "bg-black/[0.08] text-text-primary"
+          }`}
+        >
+          <HugeiconsIcon
+            icon={approved ? Tick01Icon : Cancel01Icon}
+            size={15}
+          />
+        </span>
+        <div className="min-w-0">
+          <p
+            className={`text-xs font-semibold ${
+              approved ? "text-[#1E5A4E]" : "text-text-primary"
+            }`}
+          >
+            {voted === "already"
+              ? "You already voted"
+              : `You voted to ${voted}`}
+          </p>
+          <p className="text-xs text-text-secondary">
+            {voted === "already"
+              ? "One vote per member — yours is counted."
+              : approved
+                ? "Your yes is counted."
+                : "Your no is counted."}
+          </p>
+        </div>
+      </motion.div>
     );
   }
 
