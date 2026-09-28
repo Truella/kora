@@ -50,14 +50,16 @@ export default function AuthShell({
       <aside className="relative hidden min-h-[580px] w-full flex-col justify-between overflow-hidden bg-bg p-8 pb-0 lg:flex">
         {/* Top section: Logo + Animated Headline */}
         <div className="relative z-10 flex flex-col pt-2">
-          <Image
-            src="/brand/kora-logo-primary.svg"
-            alt="Kora"
-            width={152}
-            height={87}
-            priority
-            className="h-9 w-auto self-start"
-          />
+          <Link href="/" aria-label="Kora home" className="self-start">
+            <Image
+              src="/brand/kora-logo-primary.svg"
+              alt="Kora"
+              width={152}
+              height={87}
+              priority
+              className="h-9 w-auto"
+            />
+          </Link>
 
           <div className="mt-24 max-w-lg">
             <h2 className="font-display text-5xl font-semibold leading-[1.05] tracking-tight text-text-primary">
