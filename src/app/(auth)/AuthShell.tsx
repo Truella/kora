@@ -1,9 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import authImg from "../../../public/images/auth/auth.png";
+import ledgerImg from "../../../public/images/landing/ledger_lg.webp";
+
+const CYCLING_WORDS = ["transparent", "effortless", "trusted"];
 
 export default function AuthShell({
   kicker,
@@ -16,10 +19,21 @@ export default function AuthShell({
   intro?: ReactNode;
   children: ReactNode;
 }) {
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % CYCLING_WORDS.length);
+    }, 2800);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <main className="flex w-full flex-1 flex-col lg:grid lg:min-h-0 lg:grid-cols-2">
-      <aside className="relative hidden min-h-[560px] w-full flex-col overflow-hidden lg:flex">
-        <div className="relative z-10 mx-auto w-full max-w-xl p-8 pb-0">
+      {/* Left side shell */}
+      <aside className="relative hidden min-h-[580px] w-full flex-col justify-between overflow-hidden bg-bg p-8 pb-0 lg:flex">
+        {/* Top section: Logo + Animated Headline */}
+        <div className="relative z-10 flex flex-col pt-2">
           <Image
             src="/brand/kora-logo-primary.svg"
             alt="Kora"
@@ -28,19 +42,48 @@ export default function AuthShell({
             priority
             className="h-9 w-auto"
           />
+
+          <div className="mt-12 max-w-md">
+            <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight text-text-primary">
+              Savings circles made{" "}
+              <span className="inline-block relative min-w-[170px] text-accent">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={CYCLING_WORDS[wordIndex]}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.35, ease: "easeInOut" }}
+                    className="absolute left-0 top-0 text-accent font-semibold"
+                  >
+                    {CYCLING_WORDS[wordIndex]}.
+                  </motion.span>
+                </AnimatePresence>
+                {/* Spacer to hold width during animation */}
+                <span className="invisible font-semibold">transparent.</span>
+              </span>
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-text-secondary">
+              Track contributions, payouts, and trust scores in real time with your circle.
+            </p>
+          </div>
         </div>
-        <div className="relative mx-auto flex w-full max-w-xl flex-1 p-6">
-          <Image
-            src={authImg}
-            alt="Kora savings circle app preview"
-            fill
-            priority
-            sizes="70vw"
-            className="h-full w-full object-cover object-center scale-105"
-          />
+
+        {/* Bottom section: Ledger image shifted left so it cuts off on the left edge */}
+        <div className="relative mt-8 h-[400px] w-full overflow-visible">
+          <div className="absolute -left-20 bottom-0 top-0 w-[130%] max-w-none">
+            <Image
+              src={ledgerImg}
+              alt="Kora ledger preview"
+              priority
+              sizes="60vw"
+              className="h-full w-full object-contain object-left-bottom drop-shadow-xs"
+            />
+          </div>
         </div>
       </aside>
 
+      {/* Right side form column */}
       <div className="flex w-full flex-1 flex-col justify-center px-4 py-6 lg:bg-surface lg:px-10 lg:py-10">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
