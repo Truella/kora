@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { PRODUCT_LINKS } from "@/constants/landing";
 
 export default function SiteFooter({ createHref }: { createHref: string }) {
   return (
@@ -24,12 +25,8 @@ export default function SiteFooter({ createHref }: { createHref: string }) {
               <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent">
                 Product
               </p>
-              <ul className="mt-3 flex flex-col gap-2 text-sm">
-                {[
-                  ["Why Kora", "#why-kora"],
-                  ["How it works", "#how-it-works"],
-                  ["FAQ", "#faq"],
-                ].map(([label, href]) => (
+                <ul className="mt-3 flex flex-col gap-2 text-sm">
+                  {PRODUCT_LINKS.map(({ label, href }) => (
                   <li key={href}>
                     <Link href={href} className="text-white/70 hover:text-white">
                       {label}
