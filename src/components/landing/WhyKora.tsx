@@ -2,36 +2,8 @@
 
 import { motion, useReducedMotion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  UserGroupIcon,
-  Activity01Icon,
-  Wallet01Icon,
-  ShieldCheckIcon,
-} from "@hugeicons/core-free-icons";
+import { VALUE } from "@/constants/landing";
 import TypewriterHeading from "./TypewriterHeading";
-
-const VALUE = [
-  {
-    icon: UserGroupIcon,
-    title: "Everyone gets a say.",
-    body: "Invite someone, then let the circle decide. New members join only after the group approves them.",
-  },
-  {
-    icon: Activity01Icon,
-    title: "Everyone sees the same record.",
-    body: "Contributions, payouts, and the circle's activity live in one shared record.",
-  },
-  {
-    icon: Wallet01Icon,
-    title: "The payout order is clear from day one.",
-    body: "Set contributions and payout order once. Everyone knows what they owe, when it is due, and who receives next.",
-  },
-  {
-    icon: ShieldCheckIcon,
-    title: "Everyone stays on schedule.",
-    body: "Automatic reminders keep contributions moving so one missed payment doesn't hold up the circle.",
-  },
-];
 
 export default function WhyKora() {
   const reduceMotion = useReducedMotion();

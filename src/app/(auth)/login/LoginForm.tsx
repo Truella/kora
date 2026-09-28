@@ -8,6 +8,8 @@ import Dropdown from "@/components/Dropdown";
 import { sanitizePhoneInput, MAX_PHONE_LEN } from "@/lib/inputs";
 import AuthShell from "../AuthShell";
 import { friendlyAuthError } from "@/lib/auth-errors";
+import { safeNext } from "@/lib/navigation";
+import { COUNTRY_OPTIONS } from "@/constants/countries";
 import {
   normalizeToE164,
   InvalidPhoneError,
@@ -16,17 +18,6 @@ import {
   COUNTRY_NAMES,
   type CountryKey,
 } from "@/lib/phone";
-
-const COUNTRIES: { key: CountryKey; label: string }[] = [
-  { key: "NG", label: "Nigeria (+234)" },
-  { key: "KE", label: "Kenya (+254)" },
-  { key: "UG", label: "Uganda (+256)" },
-  { key: "GH", label: "Ghana (+233)" },
-];
-
-function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/home";
-}
 
 export default function LoginForm() {
   const router = useRouter();
@@ -168,7 +159,7 @@ export default function LoginForm() {
                 <Dropdown
                   value={country}
                   onChange={setCountry}
-                  options={COUNTRIES.map((c) => ({
+                  options={COUNTRY_OPTIONS.map((c) => ({
                     value: c.key,
                     label: `+${COUNTRY_CODES[c.key]}`,
                   }))}
@@ -177,7 +168,7 @@ export default function LoginForm() {
               </div>
               <label className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <span className="text-sm font-medium">
-                  Phone · {COUNTRIES.find((c) => c.key === country)?.label}
+                  Phone · {COUNTRY_OPTIONS.find((c) => c.key === country)?.name} (+{COUNTRY_CODES[country]})
                 </span>
                 <input
                   type="tel"

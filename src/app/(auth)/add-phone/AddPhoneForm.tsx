@@ -9,6 +9,7 @@ import AuthShell from "../AuthShell";
 import Dropdown from "@/components/Dropdown";
 import { sanitizePhoneInput, MAX_PHONE_LEN } from "@/lib/inputs";
 import { friendlyAuthError } from "@/lib/auth-errors";
+import { safeNext } from "@/lib/navigation";
 import {
   normalizeToE164,
   InvalidPhoneError,
@@ -17,10 +18,6 @@ import {
   COUNTRY_NAMES,
   type CountryKey,
 } from "@/lib/phone";
-
-function safeNext(raw: string | null): string {
-  return raw && raw.startsWith("/") && !raw.startsWith("//") ? raw : "/home";
-}
 
 export default function AddPhoneForm() {
   const router = useRouter();
