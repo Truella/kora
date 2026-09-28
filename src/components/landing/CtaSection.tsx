@@ -10,7 +10,7 @@ export default function CtaSection({ createHref }: { createHref: string }) {
   return (
     <section className="mx-auto w-full max-w-5xl px-4 pb-14">
       <Reveal>
-        <div className="rounded-[20px] bg-hero-bg px-6 py-12 text-center">
+          <div className="relative overflow-hidden rounded-[20px] bg-[radial-gradient(circle_at_88%_8%,rgba(191,154,78,0.26),transparent_34%),linear-gradient(135deg,#0B2624_0%,#14524F_125%)] px-6 py-12 text-center shadow-[0_18px_42px_rgba(11,38,36,0.16)]">
           <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent">
             Start today
           </p>
