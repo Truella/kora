@@ -2,7 +2,10 @@ import Reveal from "@/components/Reveal";
 
 export default function TrustSection() {
   return (
-    <section id="trust" className="bg-hero-bg">
+    <section
+      id="trust"
+      className="bg-[radial-gradient(circle_at_88%_8%,rgba(191,154,78,0.26),transparent_34%),linear-gradient(135deg,#0B2624_0%,#14524F_125%)]"
+    >
       <div className="mx-auto w-full max-w-5xl px-4 py-14">
         <Reveal>
           <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent">
