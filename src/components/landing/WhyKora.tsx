@@ -49,9 +49,9 @@ export default function WhyKora() {
         initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
-        // "Why Kora?" types for ~1.15s (350ms start + 9 chars × 90ms) —
+        // "Why Kora?" types for ~0.85s (250ms start + 9 chars × 65ms) —
         // the sub waits until that has settled.
-        transition={{ duration: 0.35, delay: reduceMotion ? 0 : 1.2 }}
+        transition={{ duration: 0.35, delay: reduceMotion ? 0 : 0.9 }}
         className="mt-4 max-w-2xl font-display text-xl leading-8 text-text-primary sm:text-2xl sm:leading-9"
       >
         Saving together, without the usual uncertainty.
@@ -63,12 +63,12 @@ export default function WhyKora() {
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-40px" }}
-            // Strict chain: sub settles ~1.55s; cards start at 1.6s and
-            // step 0.45s apart so each 0.35s fade settles before the next
-            // begins — one by one, never overlapping.
+            // Strict chain: sub settles ~1.25s; cards start at 1.3s and
+            // step 0.35s apart so each fade settles as the next begins —
+            // one by one, never overlapping.
             transition={{
               duration: 0.35,
-              delay: reduceMotion ? 0 : 1.6 + i * 0.45,
+              delay: reduceMotion ? 0 : 1.3 + i * 0.35,
             }}
           >
             <div className="h-full rounded-[14px] border-[0.5px] border-border bg-surface p-5">

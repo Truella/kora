@@ -35,7 +35,7 @@ export default function TypewriterHeading({
           setTypedCount(n);
           if (n < text.length) typeNext(n + 1);
         },
-        n === 1 ? 350 : 90,
+        n === 1 ? 250 : 65,
       );
     };
     typeNext(1);

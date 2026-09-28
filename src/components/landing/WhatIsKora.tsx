@@ -18,8 +18,8 @@ export default function WhatIsKora() {
         className="pointer-events-none absolute -top-24 right-[-6rem] h-72 w-72 rounded-full bg-primary/[0.07] blur-3xl"
       />
       <div className="relative mx-auto w-full max-w-5xl px-4 py-16 sm:py-20">
-        {/* Strict chain: heading types ~1.5s (350ms start + 13 chars ×
-            90ms); each step below waits for the previous one to settle. */}
+        {/* Strict chain: heading types ~1.1s (250ms start + 13 chars ×
+            65ms); each step below waits for the previous one to settle. */}
         <motion.div
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -32,7 +32,7 @@ export default function WhatIsKora() {
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.35, delay: reduceMotion ? 0 : 1.6 }}
+          transition={{ duration: 0.35, delay: reduceMotion ? 0 : 1.15 }}
           className="mt-4 max-w-2xl font-display text-xl leading-8 text-text-primary sm:text-2xl sm:leading-9"
         >
           Kora is a digital savings circle for people who know and trust
@@ -44,7 +44,7 @@ export default function WhatIsKora() {
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.35, delay: reduceMotion ? 0 : 2.0 }}
+            transition={{ duration: 0.35, delay: reduceMotion ? 0 : 1.55 }}
           >
             <div className="flex gap-4">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary/[0.08]">
@@ -73,7 +73,7 @@ export default function WhatIsKora() {
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.3, delay: reduceMotion ? 0 : 2.4 }}
+            transition={{ duration: 0.3, delay: reduceMotion ? 0 : 1.95 }}
             className="my-6 h-px bg-gradient-to-r from-transparent via-border to-transparent lg:hidden"
           />
 
@@ -81,7 +81,7 @@ export default function WhatIsKora() {
             initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.35, delay: reduceMotion ? 0 : 2.75 }}
+            transition={{ duration: 0.35, delay: reduceMotion ? 0 : 2.3 }}
           >
             <div className="flex gap-4">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-accent/[0.14]">

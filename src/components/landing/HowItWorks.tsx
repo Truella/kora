@@ -36,7 +36,7 @@ export default function HowItWorks() {
   return (
     <section id="how-it-works" className="bg-surface">
       <div className="mx-auto w-full max-w-5xl px-4 py-14">
-        {/* "How it works" types ~1.45s (350ms start + 12 chars × 90ms);
+        {/* "How it works" types ~1.05s (250ms start + 12 chars × 65ms);
             the steps wait until it has settled, then cascade as before. */}
         <motion.div
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
@@ -55,7 +55,7 @@ export default function HowItWorks() {
               viewport={{ once: true, margin: "-40px" }}
               transition={{
                 duration: 0.35,
-                delay: Math.min(i * 0.12, 0.48) + (reduceMotion ? 0 : 1.5),
+                  delay: Math.min(i * 0.12, 0.48) + (reduceMotion ? 0 : 1.1),
               }}
               className="relative flex gap-4"
             >
@@ -71,10 +71,10 @@ export default function HowItWorks() {
                     initial={{ opacity: reduceMotion ? 1 : 0 }}
                     whileInView={{ opacity: 1 }}
                     viewport={{ once: true, margin: "-40px" }}
-                    transition={{
-                      duration: 0.2,
-                      delay: reduceMotion ? 0 : 1.5,
-                    }}
+                      transition={{
+                        duration: 0.2,
+                        delay: reduceMotion ? 0 : 1.1,
+                      }}
                     className="mt-2 min-h-6 w-9 flex-1"
                   >
                     <motion.path
@@ -89,10 +89,10 @@ export default function HowItWorks() {
                       viewport={{ once: true, margin: "-40px" }}
                       transition={{
                         duration: 0.6,
-                        delay:
-                          Math.min(i * 0.12, 0.48) +
-                          0.15 +
-                          (reduceMotion ? 0 : 1.5),
+                          delay:
+                            Math.min(i * 0.12, 0.48) +
+                            0.15 +
+                            (reduceMotion ? 0 : 1.1),
                       }}
                     />
                   </motion.svg>
