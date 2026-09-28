@@ -12,6 +12,7 @@ import {
   ArrowRight01Icon,
 } from "@hugeicons/core-free-icons";
 import Reveal from "@/components/Reveal";
+import Faq from "./Faq";
 
 const VALUE = [
   {
@@ -223,7 +224,7 @@ export default function Story({ createHref }: { createHref: string }) {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-5xl px-4 py-14">
+      <section id="why-kora" className="mx-auto w-full max-w-5xl px-4 py-14">
         <motion.div
           initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -411,6 +412,8 @@ export default function Story({ createHref }: { createHref: string }) {
           </p>
         </Reveal>
       </section>
+
+      <Faq />
 
       <section className="mx-auto w-full max-w-5xl px-4 pb-14">
         <Reveal>

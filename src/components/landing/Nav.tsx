@@ -9,7 +9,11 @@ import { Menu01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
 
 export const CREATE_HREF = "/login?next=/groups/new";
 
-const LINKS = [["How it works", "#how-it-works"]] as const;
+const LINKS = [
+  ["Why Kora", "#why-kora"],
+  ["How it works", "#how-it-works"],
+  ["FAQ", "#faq"],
+] as const;
 
 export default function Nav({ signedIn }: { signedIn: boolean }) {
   const [open, setOpen] = useState(false);
