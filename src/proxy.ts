@@ -79,9 +79,10 @@ export const config = {
     //
     // api/home is excluded because it does its own session check and returns
     // 401 JSON — the redirect below would hand an XHR a 307 to /login and the
-    // client would get HTML where it expects JSON. /api/ussd is public for a
+    // client would get HTML where it expects JSON. /api/members and
+    // /api/circles do the same for their live refetches. /api/ussd is public for a
     // different reason (no Supabase session at all; Africa's Talking
     // identifies callers by phone).
-    "/((?!_next/static|_next/image|favicon.ico|icons|brand|manifest.webmanifest|sw.js|api/home).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icons|brand|manifest.webmanifest|sw.js|api/home|api/members|api/circles).*)",
   ],
 };

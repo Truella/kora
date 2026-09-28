@@ -1,0 +1,354 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { UserGroupIcon, Add01Icon } from "@hugeicons/core-free-icons";
+import { createClient } from "@/lib/supabase/client";
+import type { HomeCircle, HomeSnapshot } from "@/lib/home";
+import { collectTurnLabel } from "@/lib/rotation";
+import { RevealLi } from "@/components/Reveal";
+
+// Same explicit states as the home circle card and the detail header.
+// Paused is danger-tinted (halted), never the forming amber — the four
+// states must scan distinct at a glance.
+const STATUS_LABEL: Record<string, string> = {
+  forming: "Forming",
+  active: "Active",
+  paused: "Paused",
+  completed: "Completed",
+};
+
+const STATUS_BADGE: Record<string, string> = {
+  forming: "bg-[#F8EDD9] text-[#8A5F14]",
+  active: "bg-[#E0ECE9] text-primary",
+  paused: "bg-[#F3E1E0] text-[#8A2A21]",
+  completed: "bg-black/[0.04] text-text-secondary",
+};
+
+// One mark everywhere, tinted by state: circles stop feeling generic
+// without leaving the token palette (no custom artwork, no new hues).
+const IDENTITY_WASH: Record<string, string> = {
+  forming: "bg-[#F8EDD9] text-[#8A5F14]",
+  active: "bg-primary/10 text-primary",
+  paused: "bg-[#F3E1E0] text-[#8A2A21]",
+  completed: "bg-black/[0.04] text-text-secondary",
+};
+
+// Directory order, not home's urgency rank: live circles first,
+// history last, alphabetical within a state.
+const STATUS_RANK: Record<string, number> = {
+  active: 0,
+  forming: 1,
+  paused: 2,
+  completed: 3,
+};
+
+function sortCircles(circles: HomeCircle[]): HomeCircle[] {
+  return [...circles].sort((a, b) => {
+    const byStatus =
+      (STATUS_RANK[a.status] ?? 99) - (STATUS_RANK[b.status] ?? 99);
+    if (byStatus !== 0) return byStatus;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+// "2 total · 1 active · 1 forming" — the total first so the line reads
+// naturally, then only the states the member actually has.
+function countLine(circles: HomeCircle[]): string | null {
+  if (circles.length === 0) return null;
+  const counts = new Map<string, number>();
+  for (const circle of circles) {
+    counts.set(circle.status, (counts.get(circle.status) ?? 0) + 1);
+  }
+  const parts = ["active", "forming", "paused", "completed"]
+    .filter((status) => (counts.get(status) ?? 0) > 0)
+    .map((status) => `${counts.get(status)} ${status}`);
+  return [`${circles.length} total`, ...parts].join(" · ");
+}
+
+// Where am I in it. The position line names my own turn; the member count
+// beside it is a different number — `rotationTotal` is scheduled turns,
+// `memberCount` is the active roster — so both stay.
+// Null while unscheduled: the footer already carries "N members joined",
+// so a member line here would just repeat it.
+function memberLine(circle: HomeCircle): string | null {
+  if (circle.awaitingSchedule) return null;
+  const members = `${circle.memberCount} member${circle.memberCount === 1 ? "" : "s"}`;
+  const position = collectTurnLabel(
+    circle.myRoundNumber,
+    circle.currentTurnNumber,
+  );
+  if (position) {
+    return `${members} · ${position}`;
+  }
+  if (circle.rotationTotal > 0) {
+    return `${members} · ${circle.rotationTotal} turns`;
+  }
+  return members;
+}
+
+// What happens next — mine first (payout, then my due), then the
+// circle-level state for turns that concern someone else.
+function nextEvent(circle: HomeCircle): { text: string; emphasis: boolean } {
+  if (circle.status === "paused") {
+    return { text: "Paused. Contributions halted", emphasis: false };
+  }
+  if (circle.status === "completed") {
+    return { text: "Rotation complete", emphasis: false };
+  }
+  if (circle.awaitingSchedule) {
+    // State-sensitive: an unscheduled circle has no payout stage yet, so the
+    // payout/due branches below must not run for it even when the snapshot
+    // carries turn fields. No fixed target size exists, so "N more" would
+    // be invented — the joined count is the informative part.
+    const members = `${circle.memberCount} member${circle.memberCount === 1 ? "" : "s"}`;
+    return { text: `${members} joined · Waiting to start`, emphasis: false };
+  }
+  // Mirrors the home card footer exactly: the payout line falls back to the
+  // member's share amount when no pending payout row names the turn yet —
+  // requiring a pending row here is what once printed "No contributions due
+  // yet" on a circle home already showed a payout for. Turn-qualified when it
+  // is not the current turn, so a Turn 2 payout never reads as collecting now
+  // while Turn 1 is still blocked.
+  if (circle.myPayoutDateLabel) {
+    const mineNow = circle.isMyTurnNow;
+    const turnSuffix =
+      !mineNow && circle.myRoundNumber !== null
+        ? ` Turn ${circle.myRoundNumber}`
+        : "";
+    return {
+      text: `Your payout${turnSuffix} · ${circle.myPayoutLabel ?? circle.amountLabel} · ${circle.myPayoutDateLabel}`,
+      emphasis: true,
+    };
+  }
+  if (circle.myPayoutLabel) {
+    const mineNow = circle.isMyTurnNow;
+    const turnSuffix =
+      !mineNow && circle.myRoundNumber !== null
+        ? ` Turn ${circle.myRoundNumber}`
+        : "";
+    return {
+      text: `Your payout${turnSuffix} · ${circle.myPayoutLabel}`,
+      emphasis: true,
+    };
+  }
+  if (circle.nextDueLabel) {
+    return {
+      text: `Next contribution ${circle.nextDueLabel} · ${circle.amountLabel}`,
+      emphasis: false,
+    };
+  }
+  if (circle.payoutNote) {
+    return { text: circle.payoutNote, emphasis: false };
+  }
+  return { text: "No contributions due yet", emphasis: false };
+}
+
+// Live directory: server snapshot in, realtime merges on top. A new
+// membership (my own admission included), a status flip, or a decided join
+// request refetches the (RLS-scoped, uncapped) snapshot — so an admitted
+// applicant sees the circle appear without navigating. A reconnect after a
+// drop refetches too, so missed events never leave a silent gap.
+export default function GroupsLive({
+  initialCircles,
+}: {
+  initialCircles: HomeCircle[];
+}) {
+  const [circles, setCircles] = useState(() => sortCircles(initialCircles));
+
+  // A fresh server snapshot must win over state seeded at mount —
+  // otherwise the list sits on stale rows until the next realtime event
+  // happens to arrive.
+  const [synced, setSynced] = useState(initialCircles);
+  if (initialCircles !== synced) {
+    setSynced(initialCircles);
+    setCircles(sortCircles(initialCircles));
+  }
+
+  const router = useRouter();
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/circles", { cache: "no-store" });
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+      if (!res.ok) return;
+      const next = (await res.json()) as HomeSnapshot;
+      if (mounted.current) setCircles(sortCircles(next.circles));
+    } catch {
+      // Keep the stale list; the next event or navigation will retry.
+    }
+  }, [router]);
+
+  // Debounced so the trigger's request-UPDATE + member-INSERT pair
+  // collapses into one refetch instead of two back-to-back.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const subscribedOnce = useRef(false);
+  useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+    const notify = () => {
+      if (cancelled) return;
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        void refresh();
+      }, 300);
+    };
+    // group_members carries no useful per-circle filter for the directory
+    // (my own admission arrives as someone else's circle), and RLS already
+    // scopes every event to rows I can select — same tradeoff LedgerFeed
+    // makes on the money tables.
+    const channel = supabase
+      .channel("circles")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "group_members" },
+        notify,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "groups" },
+        notify,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "join_requests" },
+        notify,
+      )
+      .subscribe((status) => {
+        if (cancelled) return;
+        // First SUBSCRIBED has fresh server data; anything later is a
+        // reconnect after a drop, so resync to cover missed events.
+        if (status === "SUBSCRIBED") {
+          if (subscribedOnce.current) notify();
+          else subscribedOnce.current = true;
+        }
+      });
+    return () => {
+      cancelled = true;
+      if (timer.current) clearTimeout(timer.current);
+      void supabase.removeChannel(channel);
+    };
+  }, [refresh]);
+
+  // Stays mounted when empty so the first circle appears without
+  // navigation — same rule as the other live wrappers.
+  if (circles.length === 0) {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center gap-3 px-8 py-12 text-center">
+        <span className="flex h-14 w-14 items-center justify-center rounded-[14px] bg-primary/10">
+          <HugeiconsIcon
+            icon={UserGroupIcon}
+            size={26}
+            className="text-primary"
+          />
+        </span>
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
+          No circles yet
+        </h1>
+        <p className="max-w-xs text-sm leading-6 text-text-secondary">
+          Create one to get started. Once you join a circle, it will show
+          up here.
+        </p>
+        <Link
+          href="/groups/new"
+          className="mt-2 inline-flex items-center gap-2 rounded-[10px] bg-primary px-5 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
+        >
+          <HugeiconsIcon icon={Add01Icon} size={18} />
+          Create a circle
+        </Link>
+      </main>
+    );
+  }
+
+  const counts = countLine(circles);
+
+  return (
+    <main className="mx-auto flex w-full max-w-[760px] flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-text-primary">
+            Your circles
+          </h1>
+          {counts && (
+            <p className="mt-1 text-xs text-text-secondary">{counts}</p>
+          )}
+        </div>
+        <Link
+          href="/groups/new"
+          aria-label="Create a circle"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white hover:bg-primary-hover"
+        >
+          <HugeiconsIcon icon={Add01Icon} size={20} />
+        </Link>
+      </div>
+      <ul className="flex flex-col gap-4">
+        {circles.map((circle, i) => {
+          const event = nextEvent(circle);
+          const members = memberLine(circle);
+          return (
+            <RevealLi
+              key={circle.groupId}
+              delay={Math.min(i * 0.05, 0.25)}
+              className="rounded-[14px] border-[0.5px] border-border bg-surface transition-colors duration-150 hover:border-primary/25"
+            >
+              <Link href={circle.href} className="flex gap-4 px-5 py-4">
+                <span
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] ${IDENTITY_WASH[circle.status] ?? IDENTITY_WASH.active}`}
+                >
+                  <HugeiconsIcon icon={UserGroupIcon} size={22} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="truncate font-display text-lg font-semibold capitalize tracking-tight text-text-primary">
+                      {circle.name}
+                    </h2>
+                    <span
+                      className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_BADGE[circle.status] ?? STATUS_BADGE.active}`}
+                    >
+                      {STATUS_LABEL[circle.status] ?? circle.status}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-sm">
+                    <span className="font-display font-semibold tabular-nums text-text-primary">
+                      {circle.amountLabel}
+                    </span>{" "}
+                    <span className="text-text-secondary">
+                      {circle.frequency}
+                    </span>
+                  </p>
+                  {members && (
+                    <p className="mt-0.5 text-xs text-text-secondary">
+                      {members}
+                    </p>
+                  )}
+                  <div className="mt-3 flex items-center justify-between gap-3 border-t border-border pt-3">
+                    <p
+                      className={`min-w-0 truncate text-[13px] ${event.emphasis ? "font-semibold text-text-primary" : "text-text-secondary"}`}
+                    >
+                      {event.text}
+                    </p>
+                    <span className="shrink-0 text-[13px] font-semibold text-primary">
+                      View <span aria-hidden="true">→</span>
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </RevealLi>
+          );
+        })}
+      </ul>
+    </main>
+  );
+}

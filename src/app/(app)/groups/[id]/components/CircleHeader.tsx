@@ -1,8 +1,10 @@
 "use client";
 
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserGroupIcon } from "@hugeicons/core-free-icons";
+import { createClient } from "@/lib/supabase/client";
 import CircleTabs from "./CircleTabs";
 import InviteMenu from "./InviteMenu";
 import ExportButton from "../ledger/ExportButton";
@@ -69,12 +71,77 @@ export default function CircleHeader({
   const symbol = SYMBOLS[group.currency] ?? group.currency;
   const amountLabel = `${symbol}${Number(group.contribution_amount).toLocaleString()}`;
 
+  // Live roster count: server snapshot in, realtime merges on top. Admission
+  // or removal fires group_members and the count follows without a refresh.
+  const [count, setCount] = useState(memberCount);
+  const [syncedCount, setSyncedCount] = useState(memberCount);
+  if (memberCount !== syncedCount) {
+    setSyncedCount(memberCount);
+    setCount(memberCount);
+  }
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  const refreshCount = useCallback(async () => {
+    try {
+      const { count: next } = await createClient()
+        .from("group_members")
+        .select("id", { count: "exact", head: true })
+        .eq("group_id", group.id)
+        .eq("status", "active");
+      if (mounted.current && typeof next === "number") setCount(next);
+    } catch {
+      // Keep the stale count; the next event or navigation will retry.
+    }
+  }, [group.id]);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const subscribedOnce = useRef(false);
+  useEffect(() => {
+    const supabase = createClient();
+    let cancelled = false;
+    const notify = () => {
+      if (cancelled) return;
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        void refreshCount();
+      }, 300);
+    };
+    const channel = supabase
+      .channel(`header-count:${group.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "group_members",
+          filter: `group_id=eq.${group.id}`,
+        },
+        notify,
+      )
+      .subscribe((status) => {
+        if (cancelled) return;
+        if (status === "SUBSCRIBED") {
+          if (subscribedOnce.current) notify();
+          else subscribedOnce.current = true;
+        }
+      });
+    return () => {
+      cancelled = true;
+      if (timer.current) clearTimeout(timer.current);
+      void supabase.removeChannel(channel);
+    };
+  }, [group.id, refreshCount]);
+
   // One element, two placements: under the name on desktop, full-width
   // below the title row on mobile (where the actions sit beside the name).
   const meta = (
     <>
       {amountLabel} {group.frequency} ·{" "}
-      {memberCount === 1 ? "1 member" : `${memberCount} members`}
+      {count === 1 ? "1 member" : `${count} members`}
       <span
         className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_BADGE[group.status] ?? STATUS_BADGE.active}`}
       >
