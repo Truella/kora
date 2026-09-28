@@ -131,41 +131,9 @@ export default function LoginForm() {
       intro={
         tab === "phone"
           ? "Enter your number. We'll text you a 6-digit code."
-          : "Enter your email and we'll send a sign-in link. You'll add phone number after. USSD needs one, the PWA doesn't."
+          : undefined
       }
     >
-
-        <div
-          role="tablist"
-          aria-label="Sign-in method"
-          className="grid grid-cols-2 rounded-[10px] border-[0.5px] border-border bg-surface p-1"
-        >
-          {(["phone", "email"] as const).map((t) => (
-            <button
-              key={t}
-              role="tab"
-              aria-selected={tab === t}
-              onClick={() => {
-                setTab(t);
-                setError(null);
-              }}
-              className={`relative rounded-[10px] py-2 text-sm font-semibold transition-colors ${
-                tab === t ? "text-white" : "text-text-secondary"
-              }`}
-            >
-              {tab === t && (
-                <motion.span
-                  layoutId="login-tab"
-                  className="absolute inset-0 rounded-[10px] bg-primary"
-                  transition={{ type: "spring", stiffness: 500, damping: 40 }}
-                />
-              )}
-              <span className="relative">
-                {t === "phone" ? "Phone" : "Email"}
-              </span>
-            </button>
-          ))}
-        </div>
 
         <div className="mt-5 flex flex-col gap-3">
           {tab === "phone" ? (
@@ -233,6 +201,19 @@ export default function LoginForm() {
                 ? "Send code"
                 : "Send sign-in link"}
           </motion.button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setTab(tab === "phone" ? "email" : "phone");
+              setError(null);
+            }}
+            className="w-full py-2 text-sm font-semibold text-text-secondary hover:text-text-primary"
+          >
+            {tab === "phone"
+              ? "Sign in with email instead"
+              : "Sign in with phone instead"}
+          </button>
         </div>
     </AuthShell>
   );
