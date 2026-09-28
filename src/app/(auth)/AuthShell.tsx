@@ -34,14 +34,17 @@ export default function AuthShell({
     <main className="flex w-full flex-1 flex-col lg:grid lg:min-h-0 lg:grid-cols-2">
       {/* Mobile-only hero: ledger art across the top third (desktop uses
           the aside panel below instead). The form sheet overlaps its bottom. */}
-      <div className="relative h-[36svh] min-h-[300px] w-full overflow-hidden bg-bg lg:hidden">
-        <div className="absolute -left-10 top-0 h-full w-[125%] max-w-none [transform:perspective(600px)_rotateX(40deg)]">
+      <div className="relative flex h-[36svh] min-h-[300px] w-full items-center justify-center overflow-hidden bg-bg lg:hidden">
+        {/* Gentler backward lean (22°) plus the right edge tilted outward
+            (positive rotateY brings the right side toward the viewer).
+            Plane sized so the projection lands fully inside the frame. */}
+        <div className="h-[105%] w-[120%] max-w-none shrink-0 [transform:perspective(600px)_rotateX(22deg)_rotateY(24deg)]">
           <Image
             src={homeImg}
             alt="Kora home preview"
             priority
             sizes="100vw"
-            className="h-full w-full object-contain object-bottom"
+            className="h-full w-full object-contain"
           />
         </div>
       </div>
