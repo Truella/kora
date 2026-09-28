@@ -142,11 +142,11 @@ export default function VerifyForm() {
 
   return (
     <AuthShell
-      kicker={flow === "add-phone" ? "Add a number" : "Check your texts"}
-      title="Enter your code"
+      kicker={flow === "add-phone" ? "Add a number" : "Verification"}
+      title="Check your messages"
       intro={
         <>
-          6-digit code sent to{""}
+          Enter the 6-digit verification code we sent to{" "}
           <span className="font-mono font-medium text-text-primary">{to}</span>
         </>
       }
