@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import VoteButtons from "./VoteButtons";
 
@@ -8,7 +9,12 @@ type ApplicantRow = {
   applicant_name: string | null;
   applicant_phone: string | null;
   inviter_name: string | null;
+  applicant_avatar: string | null;
 };
+
+function applicantInitial(name: string | null): string {
+  return (name?.trim().charAt(0) || "·").toUpperCase();
+}
 
 export default async function CircleRequests({
   groupId,
@@ -29,6 +35,7 @@ export default async function CircleRequests({
     applicant_name: r.applicant_name,
     applicant_phone: r.applicant_phone,
     inviter_name: r.inviter_name,
+    applicant_avatar: r.applicant_avatar ?? null,
   }));
   if (requests.length === 0) return null;
 
@@ -65,15 +72,32 @@ export default async function CircleRequests({
         <ul className="flex flex-col gap-3">
           {requests.map((request) => {
             const t = tally.get(request.id) ?? { approve: 0, reject: 0 };
+            const name = request.applicant_name ?? "Applicant";
             return (
               <li
                 key={request.id}
                 className="flex flex-col gap-3 rounded-[14px] border-[0.5px] border-border bg-surface p-4"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  {request.applicant_avatar ? (
+                    <Image
+                      src={request.applicant_avatar}
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 shrink-0 rounded-full object-cover"
+                    />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/[0.04] text-[15px] font-semibold text-text-secondary"
+                    >
+                      {applicantInitial(request.applicant_name)}
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-text-primary">
-                      {request.applicant_name ?? "Applicant"}
+                      {name}
                     </p>
                     {request.applicant_phone && (
                       <p className="font-mono text-xs tabular-nums text-text-secondary">
@@ -86,9 +110,9 @@ export default async function CircleRequests({
                         : "Joined via link"}
                     </p>
                   </div>
-                  <p className="shrink-0 font-mono text-xs tabular-nums text-text-secondary">
+                  <span className="shrink-0 rounded-full bg-black/[0.05] px-2 py-px font-mono text-[11px] font-semibold tabular-nums text-text-secondary">
                     {t.approve} yes · {t.reject} no
-                  </p>
+                  </span>
                 </div>
                 <VoteButtons joinRequestId={request.id} memberId={memberId} />
               </li>

@@ -91,9 +91,7 @@ export default function VoteButtons({
           <p className="text-xs text-text-secondary">
             {voted === "already"
               ? "One vote per member — yours is counted."
-              : approved
-                ? "Your yes is counted."
-                : "Your no is counted."}
+              : "Your vote is counted."}
           </p>
         </div>
       </motion.div>
