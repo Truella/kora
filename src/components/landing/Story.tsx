@@ -156,7 +156,7 @@ export default function Story({ createHref }: { createHref: string }) {
             each other.
           </motion.p>
 
-          <div className="mt-8 max-w-2xl">
+          <div className="mt-8 max-w-2xl lg:max-w-none lg:grid lg:grid-cols-2 lg:gap-10">
             <motion.div
               initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -188,7 +188,7 @@ export default function Story({ createHref }: { createHref: string }) {
               whileInView={{ opacity: 1 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.3, delay: reduceMotion ? 0 : 2.4 }}
-              className="my-6 h-px bg-gradient-to-r from-transparent via-border to-transparent"
+              className="my-6 h-px bg-gradient-to-r from-transparent via-border to-transparent lg:hidden"
             />
 
             <motion.div
