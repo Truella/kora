@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -55,7 +56,26 @@ export default function CircleTabs({
   groupId: string;
   active: TabValue;
 }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Reveal an active tab clipped on narrow screens without scrolling the page.
+  useEffect(() => {
+    const container = wrapRef.current?.querySelector<HTMLElement>(
+      '[data-slot="motion-highlight-container"]',
+    );
+    const selected = container?.querySelector<HTMLElement>(
+      '[data-active="true"]',
+    );
+    if (!container || !selected) return;
+    const frame = container.getBoundingClientRect();
+    const tab = selected.getBoundingClientRect();
+    if (tab.left < frame.left) container.scrollLeft += tab.left - frame.left;
+    else if (tab.right > frame.right)
+      container.scrollLeft += tab.right - frame.right;
+  }, [active]);
+
   return (
+    <div ref={wrapRef} className="min-w-0 max-w-full">
     <TabsRoot
       value={active}
       className="w-auto min-w-0 max-w-full"
@@ -84,6 +104,8 @@ export default function CircleTabs({
                 render={
                   <Link
                     href={tab.href(groupId)}
+                    scroll={false}
+                    aria-current={tab.value === active ? "page" : undefined}
                     className="flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] font-medium whitespace-nowrap text-text-secondary transition-colors data-[active=true]:text-white hover:text-text-primary data-[active=true]:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   />
                 }
@@ -96,5 +118,6 @@ export default function CircleTabs({
         </TabsListPrimitive>
       </TabsHighlight>
     </TabsRoot>
+    </div>
   );
 }

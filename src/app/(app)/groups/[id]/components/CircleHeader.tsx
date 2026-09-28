@@ -1,8 +1,11 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { usePathname } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { UserGroupIcon } from "@hugeicons/core-free-icons";
 import CircleTabs from "./CircleTabs";
 import InviteMenu from "./InviteMenu";
+import ExportButton from "../ledger/ExportButton";
 
 const SYMBOLS: Record<string, string> = {
   NGN: "₦",
@@ -38,15 +41,13 @@ const IDENTITY_WASH: Record<string, string> = {
 // Shared circle header: identity row (mark + name + amount · frequency ·
 // members + status pill) with the section tab bar merged underneath. Used by
 // overview, ledger and members so the tabs persist across all three views.
-// `trailing` renders extra header actions (e.g. the ledger export button)
-// beside Invite on the right of the tab row.
+// On the ledger tab the export action sits beside Invite.
 export default function CircleHeader({
   group,
   memberCount,
   inviterId,
   showInvite,
-  active,
-  trailing,
+  hasCycles,
 }: {
   group: {
     id: string;
@@ -59,9 +60,12 @@ export default function CircleHeader({
   memberCount: number;
   inviterId: string | null;
   showInvite: boolean;
-  active: "overview" | "ledger" | "members";
-  trailing?: ReactNode;
+  hasCycles: boolean;
 }) {
+  const pathname = usePathname();
+  const base = `/groups/${group.id}`;
+  const active = pathname === `${base}/ledger` ? "ledger" : pathname === `${base}/members` ? "members" : "overview";
+  const trailing = active === "ledger" ? <ExportButton disabled={!hasCycles} /> : null;
   const symbol = SYMBOLS[group.currency] ?? group.currency;
   const amountLabel = `${symbol}${Number(group.contribution_amount).toLocaleString()}`;
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { MembersPanel, type MemberRow } from "../components/TurnViews";
-import CircleHeader from "../components/CircleHeader";
+import { MembersPanel, type MemberRow } from "../../components/TurnViews";
+
 
 export const metadata = { title: "Members" };
 
@@ -186,15 +186,7 @@ export default async function MembersPage({
   });
 
   return (
-    <main className="mx-auto flex w-full max-w-[960px] flex-1 flex-col gap-4 px-4 py-6 sm:px-6">
-      <CircleHeader
-        group={group}
-        memberCount={circleRows.length}
-        inviterId={user?.id ?? null}
-        showInvite={group.status !== "completed"}
-        active="members"
-      />
-
+    <div className="flex flex-col gap-4">
       {circleRows.length > 0 ? (
         <MembersPanel count={circleRows.length} rows={memberRows} />
       ) : (
@@ -204,6 +196,6 @@ export default async function MembersPage({
           </p>
         </div>
       )}
-    </main>
+    </div>
   );
 }
