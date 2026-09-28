@@ -32,7 +32,7 @@ const FAQS = [
 
 export default function Faq() {
   const reduceMotion = useReducedMotion();
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(null);
 
   return (
     <section id="faq" className="mx-auto w-full max-w-5xl px-4 py-14">
