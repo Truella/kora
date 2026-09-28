@@ -137,15 +137,24 @@ Deno.serve(async (req) => {
       .select("id, joined_at")
       .eq("group_id", cycle.group_id)
       .eq("status", "active");
-    const expected = (members ?? []).filter((m) =>
-      wasEnrolled(String(m.joined_at), cycle.due_date)
-    ).length;
+    const enrolledIds = new Set(
+      (members ?? [])
+        .filter((m) => wasEnrolled(String(m.joined_at), cycle.due_date))
+        .map((m) => m.id as string),
+    );
+    const expected = enrolledIds.size;
     const { data: settled } = await admin
       .from("contributions")
-      .select("id")
+      .select("id, member_id")
       .eq("cycle_id", cycleId)
       .in("status", ["paid", "late"]);
-    const settledCount = (settled ?? []).length;
+    // Enrolled-only: a share paid by someone who joined after this turn ran
+    // is not part of this pot and must not cover for a missing enrolled
+    // share — otherwise one extra payment could unlock a turn while an
+    // enrolled member still owes.
+    const settledCount = (settled ?? []).filter((s) =>
+      enrolledIds.has(s.member_id as string),
+    ).length;
     if (settledCount < expected) {
       return json(
         {

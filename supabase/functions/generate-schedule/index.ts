@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
     // Active members in payout order; existing rotation, if any.
     const { data: members } = await admin
       .from("group_members")
-      .select("id, payout_position")
+      .select("id, payout_position, joined_at")
       .eq("group_id", groupId)
       .eq("status", "active")
       .order("payout_position", { ascending: true });
@@ -92,8 +92,10 @@ Deno.serve(async (req) => {
       (existing ?? []).map((c) => c.recipient_member_id as string),
     );
 
-    // Pooled pot, snapshotted at generation and locked afterwards.
-    // The repair path below uses the same snapshot for its backfills.
+    // Pooled pot for *new* turns: appended cycles run after every current
+    // member joined, so every active member is enrolled in them.
+    // Backfills below use a per-cycle enrolled count instead — a bare old
+    // turn due before a late joiner arrived must not include their share.
     const pot = Number(group.contribution_amount) * members.length;
 
     // Repair path: a previous run may have written a cycle but failed
@@ -112,10 +114,20 @@ Deno.serve(async (req) => {
       );
       for (const c of existing ?? []) {
         if (withPayout.has(c.id as string)) continue;
+        // Enrolled-only pot: members present on this turn's due day.
+        const due = c.due_date as string;
+        const enrolled = (members ?? []).filter((m) => {
+          const joined = String(
+            (m as { joined_at?: string }).joined_at ?? "",
+          ).slice(0, 10);
+          return joined !== "" && joined <= due;
+        }).length;
+        const backfillPot =
+          Number(group.contribution_amount) * Math.max(enrolled, 1);
         const { error: backfillError } = await admin.from("payouts").insert({
           cycle_id: c.id,
           recipient_member_id: c.recipient_member_id,
-          amount: pot,
+          amount: backfillPot,
           status: "pending",
         });
         if (backfillError) {

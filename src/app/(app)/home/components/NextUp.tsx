@@ -145,8 +145,8 @@ function nextUpContent(snapshot: HomeSnapshot): NextUpContent | null {
   if (atRest) {
     return {
       eyebrow: "NOTHING DUE",
-      // No amount here on purpose. A member collects the *pot* (share × active
-      // members), not their own share, and the snapshot only carries a pot for
+      // No amount here on purpose. A member collects the *pot* (share × enrolled
+      // members on that turn's due day), not their own share, and the snapshot only carries a pot for
       // the current turn — printing `amountLabel` would understate the payout
       // and `currentPotLabel` would name someone else's turn. A state word is
       // the honest thing to show until a real payout row exists.

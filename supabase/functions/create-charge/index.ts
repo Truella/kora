@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     // Cycle → group (amount + currency live on the group).
     const { data: cycle, error: cycleError } = await admin
       .from("cycles")
-      .select("id, group_id, groups!inner(contribution_amount, currency)")
+      .select("id, group_id, due_date, groups!inner(contribution_amount, currency)")
       .eq("id", cycleId)
       .single();
     if (cycleError || !cycle) return json({ error: "Cycle not found" }, 404);
@@ -55,12 +55,24 @@ Deno.serve(async (req) => {
     // Caller must be an active member of this group.
     const { data: member } = await admin
       .from("group_members")
-      .select("id")
+      .select("id, joined_at")
       .eq("group_id", cycle.group_id)
       .eq("user_id", user.id)
       .eq("status", "active")
       .single();
     if (!member) return json({ error: "Not an active member" }, 403);
+
+    // R1 billing boundary: a turn due before the caller joined is not theirs
+    // to pay. The UI hides the button for such turns; this refuses crafted
+    // requests too, so a pre-join share can never become an orphan
+    // contribution that inflates the settled count without growing the pot.
+    const cycleDue = (cycle as { due_date?: string }).due_date;
+    const joinedDay = String(
+      (member as { joined_at?: string }).joined_at ?? "",
+    ).slice(0, 10);
+    if (cycleDue && joinedDay !== "" && joinedDay > cycleDue) {
+      return json({ error: "You joined after this turn" }, 409);
+    }
 
     // Only the current turn is payable: the first open cycle of the
     // group. UI buttons already hide for later turns; this refuses
