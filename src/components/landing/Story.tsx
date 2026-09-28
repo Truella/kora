@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   UserGroupIcon,
@@ -25,7 +26,7 @@ const VALUE = [
   },
   {
     icon: Wallet01Icon,
-    title: "The order is clear from day one.",
+    title: "The payout order is clear from day one.",
     body: "Set contributions and payout order once. Everyone knows what they owe, when it is due, and who receives next.",
   },
   {
@@ -63,50 +64,197 @@ const STEPS = [
   },
 ];
 
+// Shared typewriter headline — one size, one animation everywhere it's used.
+// Typing starts when the heading scrolls into view so below-fold instances
+// don't finish before the user ever sees them.
+function TypewriterHeading({
+  text,
+  className = "",
+}: {
+  text: string;
+  className?: string;
+}) {
+  const reduceMotion = useReducedMotion();
+  const ref = useRef<HTMLHeadingElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  // Render-phase read only — no state updates here. The full text is the
+  // initial state under reduced motion so no effect needs to catch up.
+  const [typedCount, setTypedCount] = useState(() =>
+    reduceMotion ? text.length : 0,
+  );
+
+  useEffect(() => {
+    if (reduceMotion || !inView) return;
+    let alive = true;
+    let timer: ReturnType<typeof setTimeout>;
+    // One-shot timeout chain (not an interval): each tick schedules the
+    // next, the updater itself stays pure, and nothing fires after unmount.
+    const typeNext = (n: number) => {
+      timer = setTimeout(
+        () => {
+          if (!alive) return;
+          setTypedCount(n);
+          if (n < text.length) typeNext(n + 1);
+        },
+        n === 1 ? 350 : 90,
+      );
+    };
+    typeNext(1);
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [reduceMotion, inView, text]);
+
+  const typingDone = typedCount >= text.length;
+  return (
+    <h2
+      ref={ref}
+      aria-label={text}
+      className={`font-display text-5xl font-semibold tracking-tight text-primary sm:text-6xl ${className}`}
+    >
+      <span aria-hidden>{text.slice(0, typedCount)}</span>
+      <span
+        aria-hidden
+        className={`ml-1 inline-block h-[0.9em] w-[3px] translate-y-[0.1em] bg-primary ${
+          typingDone ? "animate-pulse" : ""
+        }`}
+      />
+    </h2>
+  );
+}
+
 export default function Story({ createHref }: { createHref: string }) {
   const reduceMotion = useReducedMotion();
   return (
     <>
-      <section className="bg-surface">
-        <div className="mx-auto w-full max-w-5xl px-4 py-14">
-          <Reveal>
-            <h2 className="max-w-xl font-display text-3xl font-semibold tracking-tight text-primary">
-              What is Kora?
-            </h2>
-            <p className="mt-2 font-display text-xl text-text-secondary">
-              Kora is a digital savings circle for people who know and trust
-              each other.
-            </p>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-text-secondary">
-              Running a savings circle means keeping track of contributions,
-              managing the payout order, and making sure everyone&apos;s money
-              reaches the right person at the right time. When all of that
-              depends on one person, a missed payment, unclear record, or
-              misplaced contribution can affect the whole group.
-            </p>
-            <p className="mt-4 max-w-2xl text-sm leading-7 text-text-secondary">
-              Kora gives the circle a shared system to run on. Members vote on
-              who joins, contributions and payouts follow an agreed schedule,
-              and every transaction is recorded in a ledger everyone can see.
-              The organizer sets up and manages the circle without having to
-              hold everyone&apos;s money.
-            </p>
-          </Reveal>
+      <section className="relative overflow-hidden bg-gradient-to-b from-surface via-surface to-bg">
+        {/* Faint wash so the section lifts off the page without a card */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-24 right-[-6rem] h-72 w-72 rounded-full bg-primary/[0.07] blur-3xl"
+        />
+        <div className="relative mx-auto w-full max-w-5xl px-4 py-16 sm:py-20">
+          {/* Strict chain: heading types ~1.5s (350ms start + 13 chars ×
+              90ms); each step below waits for the previous one to settle. */}
+          <motion.div
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.35 }}
+          >
+            <TypewriterHeading text="What is Kora?" className="min-h-[1.15em]" />
+          </motion.div>
+          <motion.p
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.35, delay: reduceMotion ? 0 : 1.6 }}
+            className="mt-4 max-w-2xl font-display text-xl leading-8 text-text-primary sm:text-2xl sm:leading-9"
+          >
+            Kora is a digital savings circle for people who know and trust
+            each other.
+          </motion.p>
+
+          <div className="mt-8 max-w-2xl">
+            <motion.div
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.35, delay: reduceMotion ? 0 : 2.0 }}
+            >
+              <div className="flex gap-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-primary/[0.08]">
+                  <HugeiconsIcon
+                    icon={Wallet01Icon}
+                    size={20}
+                    className="text-primary"
+                  />
+                </span>
+                <p className="text-sm leading-7 text-text-secondary">
+                  Running a savings circle means keeping track of
+                  contributions, managing the payout order, and making sure
+                  everyone&apos;s money reaches the right person at the right
+                  time. When all of that depends on one person, a missed
+                  payment, unclear record, or misplaced contribution can affect
+                  the whole group.
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              aria-hidden
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.3, delay: reduceMotion ? 0 : 2.4 }}
+              className="my-6 h-px bg-gradient-to-r from-transparent via-border to-transparent"
+            />
+
+            <motion.div
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.35, delay: reduceMotion ? 0 : 2.75 }}
+            >
+              <div className="flex gap-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-accent/[0.14]">
+                  <HugeiconsIcon
+                    icon={ShieldCheckIcon}
+                    size={20}
+                    className="text-accent"
+                  />
+                </span>
+                <p className="text-sm leading-7 text-text-secondary">
+                  <span className="font-display font-semibold text-text-primary">
+                    Kora gives the circle a shared system to run on.{" "}
+                  </span>
+                  Members vote on who joins, contributions and payouts follow
+                  an agreed schedule, and every transaction is recorded in a
+                  ledger everyone can see. The organizer sets up and manages
+                  the circle without having to hold everyone&apos;s money.
+                </p>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
       <section className="mx-auto w-full max-w-5xl px-4 py-14">
-        <Reveal>
-          <p className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-text-secondary">
-            Why Kora
-          </p>
-          <h2 className="mt-2 font-display text-3xl font-semibold tracking-tight text-text-primary">
-            Saving together, without the usual uncertainty.
-          </h2>
-        </Reveal>
+        <motion.div
+          initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.35 }}
+        >
+          <TypewriterHeading text="Why Kora?" className="min-h-[1.15em]" />
+        </motion.div>
+        <motion.p
+          initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          // "Why Kora?" types for ~1.15s (350ms start + 9 chars × 90ms) —
+          // the sub waits until that has settled.
+          transition={{ duration: 0.35, delay: reduceMotion ? 0 : 1.2 }}
+          className="mt-4 max-w-2xl font-display text-xl leading-8 text-text-primary sm:text-2xl sm:leading-9"
+        >
+          Saving together, without the usual uncertainty.
+        </motion.p>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           {VALUE.map((v, i) => (
-            <Reveal key={v.title} delay={Math.min(i * 0.06, 0.2)}>
+            <motion.div
+              key={v.title}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              // Strict chain: sub settles ~1.55s; cards start at 1.6s and
+              // step 0.45s apart so each 0.35s fade settles before the next
+              // begins — one by one, never overlapping.
+              transition={{
+                duration: 0.35,
+                delay: reduceMotion ? 0 : 1.6 + i * 0.45,
+              }}
+            >
               <div className="h-full rounded-[14px] border-[0.5px] border-border bg-surface p-5">
                 <span className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-primary/10">
                   <HugeiconsIcon
@@ -122,8 +270,90 @@ export default function Story({ createHref }: { createHref: string }) {
                   {v.body}
                 </p>
               </div>
-            </Reveal>
+            </motion.div>
           ))}
+        </div>
+      </section>
+
+      <section id="how-it-works" className="bg-surface">
+        <div className="mx-auto w-full max-w-5xl px-4 py-14">
+          {/* "How it works" types ~1.45s (350ms start + 12 chars × 90ms);
+              the steps wait until it has settled, then cascade as before. */}
+          <motion.div
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.35 }}
+          >
+            <TypewriterHeading text="How it works" className="min-h-[1.15em]" />
+          </motion.div>
+          <ol className="mt-6 flex flex-col">
+            {STEPS.map((s, i) => (
+              <motion.li
+                key={s.n}
+                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-40px" }}
+                transition={{
+                  duration: 0.35,
+                  delay: Math.min(i * 0.12, 0.48) + (reduceMotion ? 0 : 1.5),
+                }}
+                className="relative flex gap-4"
+              >
+                <span aria-hidden className="flex flex-col items-center">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary font-mono text-xs font-bold text-white">
+                    {s.n}
+                  </span>
+                  {i < STEPS.length - 1 && (
+                    <motion.svg
+                      viewBox="0 0 36 100"
+                      preserveAspectRatio="none"
+                      aria-hidden
+                      initial={{ opacity: reduceMotion ? 1 : 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true, margin: "-40px" }}
+                      transition={{
+                        duration: 0.2,
+                        delay: reduceMotion ? 0 : 1.5,
+                      }}
+                      className="mt-2 min-h-6 w-9 flex-1"
+                    >
+                      <motion.path
+                        d="M18 2 C 30 30, 6 65, 18 98"
+                        fill="none"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        vectorEffect="non-scaling-stroke"
+                        className="stroke-primary/25"
+                        initial={{ pathLength: reduceMotion ? 1 : 0 }}
+                        whileInView={{ pathLength: 1 }}
+                        viewport={{ once: true, margin: "-40px" }}
+                        transition={{
+                          duration: 0.6,
+                          delay:
+                            Math.min(i * 0.12, 0.48) +
+                            0.15 +
+                            (reduceMotion ? 0 : 1.5),
+                        }}
+                      />
+                    </motion.svg>
+                  )}
+                </span>
+                <div
+                  className={`flex-1 rounded-[14px] border-[0.5px] border-border bg-surface p-4 ${
+                    i < STEPS.length - 1 ? "mb-6" : ""
+                  }`}
+                >
+                  <p className="font-display text-lg font-semibold text-text-primary">
+                    {s.title}
+                  </p>
+                  <p className="mt-0.5 text-sm leading-6 text-text-secondary">
+                    {s.body}
+                  </p>
+                </div>
+              </motion.li>
+            ))}
+          </ol>
         </div>
       </section>
 
@@ -160,111 +390,6 @@ export default function Story({ createHref }: { createHref: string }) {
               ))}
             </ul>
           </Reveal>
-        </div>
-      </section>
-
-      <section id="ledger" className="mx-auto w-full max-w-5xl px-4 py-14">
-        <div className="grid gap-8 lg:grid-cols-2">
-          <Reveal>
-            <h2 className="font-display text-3xl font-semibold tracking-tight text-text-primary">
-              No more asking, “Did you pay?”
-            </h2>
-            <p className="mt-1 font-display text-xl text-text-secondary">
-              Open the ledger and see it.
-            </p>
-            <p className="mt-3 text-sm leading-7 text-text-secondary">
-              Contributions are recorded as they happen, payouts have a clear
-              history, and every member can check the same record.
-            </p>
-            <p className="mt-3 font-display text-sm font-semibold text-text-primary">
-              One circle. One record. No confusion.
-            </p>
-          </Reveal>
-          <Reveal delay={0.08}>
-            <h2 className="font-display text-3xl font-semibold tracking-tight text-text-primary">
-              Who joins the circle? Everyone gets a say.
-            </h2>
-            <p className="mt-3 text-sm leading-7 text-text-secondary">
-              When someone requests to join, the decision goes to the people
-              already in the group. Members review the request and vote before
-              access is granted.
-            </p>
-            <p className="mt-3 font-display text-sm font-semibold text-text-primary">
-              Because the people saving together should decide who saves with
-              them.
-            </p>
-          </Reveal>
-        </div>
-      </section>
-
-      <section id="how-it-works" className="bg-surface">
-        <div className="mx-auto w-full max-w-5xl px-4 py-14">
-          <Reveal>
-            <h2 className="font-display text-3xl font-semibold tracking-tight text-text-primary">
-              From invitation to payout
-            </h2>
-          </Reveal>
-          <ol className="mt-6 flex flex-col">
-            {STEPS.map((s, i) => (
-              <motion.li
-                key={s.n}
-                initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{
-                  duration: 0.35,
-                  delay: Math.min(i * 0.12, 0.48),
-                }}
-                className="relative flex gap-4"
-              >
-                <span aria-hidden className="flex flex-col items-center">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary font-mono text-xs font-bold text-white">
-                    {s.n}
-                  </span>
-                  {i < STEPS.length - 1 && (
-                    <motion.svg
-                      viewBox="0 0 36 100"
-                      preserveAspectRatio="none"
-                      aria-hidden
-                      initial={{ opacity: reduceMotion ? 1 : 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true, margin: "-40px" }}
-                      transition={{ duration: 0.2 }}
-                      className="mt-2 min-h-6 w-9 flex-1"
-                    >
-                      <motion.path
-                        d="M18 2 C 30 30, 6 65, 18 98"
-                        fill="none"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        vectorEffect="non-scaling-stroke"
-                        className="stroke-primary/25"
-                        initial={{ pathLength: reduceMotion ? 1 : 0 }}
-                        whileInView={{ pathLength: 1 }}
-                        viewport={{ once: true, margin: "-40px" }}
-                        transition={{
-                          duration: 0.6,
-                          delay: Math.min(i * 0.12, 0.48) + 0.15,
-                        }}
-                      />
-                    </motion.svg>
-                  )}
-                </span>
-                <div
-                  className={`flex-1 rounded-[14px] border-[0.5px] border-border bg-surface p-4 ${
-                    i < STEPS.length - 1 ? "mb-6" : ""
-                  }`}
-                >
-                  <p className="font-display text-lg font-semibold text-text-primary">
-                    {s.title}
-                  </p>
-                  <p className="mt-0.5 text-sm leading-6 text-text-secondary">
-                    {s.body}
-                  </p>
-                </div>
-              </motion.li>
-            ))}
-          </ol>
         </div>
       </section>
 

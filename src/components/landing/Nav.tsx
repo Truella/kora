@@ -11,7 +11,6 @@ export const CREATE_HREF = "/login?next=/groups/new";
 
 const LINKS = [
   ["How it works", "#how-it-works"],
-  ["Ledger", "#ledger"],
   ["Trust", "#trust"],
 ] as const;
 
