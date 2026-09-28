@@ -103,19 +103,9 @@ Deno.serve(async (req) => {
       return json({ status: "failed", payoutReference: failRef });
     }
 
-    // Collection opens on the turn's due date, even when every share
-    // arrived early. Without this the rotation compresses: collecting on
-    // day 1 completes the turn, the next turn opens on day 1, and due
-    // dates stop meaning anything. UTC calendar basis, same as the
-    // enrollment boundary below.
-    const today = new Date().toISOString().slice(0, 10);
-    if (cycle.due_date > today) {
-      return json(
-        { error: "Turn not due for collection", dueDate: cycle.due_date },
-        409,
-      );
-    }
-
+    // Demo rule: the moment every enrolled share lands, the receiver can
+    // collect — no waiting for the due date. The app offers the confirm
+    // button on the same basis, so the two can never disagree.
     // Complete: all active members must have settled shares. A missing
     // contribution row means that member never started payment — unpaid.
     //

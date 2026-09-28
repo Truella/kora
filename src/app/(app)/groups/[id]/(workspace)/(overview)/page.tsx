@@ -383,13 +383,10 @@ export default async function GroupDetailPage({
   ).length;
   // The confirm button only exists once the payout can actually complete.
   // Before that the row says what's missing instead of offering a dead tap.
+  // Demo rule: the moment every enrolled share lands, the receiver can
+  // collect — no waiting for the due date. process-payout enforces the same,
+  // so the two can never disagree.
   const payoutReady = expectedCount > 0 && settledCount >= expectedCount;
-  // Collection opens on the turn's due date even when every share is in
-  // early — the confirm card stays a waiting note until then. Same basis
-  // process-payout enforces, so the two can never disagree by a day.
-  const collectOpen = currentCycle
-    ? today >= currentCycle.due_date
-    : false;
 
   // Compressed rows for the upcoming turns, via the shared TurnRow. Only
   // the current turn is payable (hero + event card), so these rows are
@@ -558,8 +555,7 @@ export default async function GroupDetailPage({
           {member &&
             currentPayoutStatus === "pending" &&
             payoutReady &&
-            isMyTurn &&
-            collectOpen && (
+            isMyTurn && (
               <EventCard
                 tone="teal"
                 eyebrow="Everyone has paid"
@@ -578,24 +574,6 @@ export default async function GroupDetailPage({
                     />
                   </div>
                 }
-              />
-            )}
-          {member &&
-            currentPayoutStatus === "pending" &&
-            payoutReady &&
-            isMyTurn &&
-            !collectOpen && (
-              <EventCard
-                tone="teal"
-                eyebrow="Everyone has paid"
-                title={
-                  <>
-                    Turn {currentCycle.cycle_number}: {currentPot ?? "The money"}{" "}
-                    is ready.
-                  </>
-                }
-                sub={`You can collect it on ${formatCycleDate(currentCycle.due_date)}.`}
-                action={null}
               />
             )}
           <div className="flex flex-col gap-4">
