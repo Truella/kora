@@ -298,8 +298,8 @@ export default async function GroupDetailPage({
       ? unpaidCycles.filter((c) => c.due_date <= soonCutoff)
       : [];
 
-  // Below-fold sections (Recent activity, Pending requests) fetch for
-  // themselves inside CircleActivity / CircleRequests and stream in
+  // Below-fold sections (Pending requests, Recent activity) fetch for
+  // themselves inside CircleRequests / CircleActivity and stream in
   // behind Suspense — the hero above never waits on them.
 
   // Active roster — feeds the caller's collector position, the payout-gate
@@ -687,21 +687,6 @@ export default async function GroupDetailPage({
 
       <Suspense
         fallback={
-          <div aria-hidden className="flex flex-col gap-2">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-14 animate-pulse rounded-[14px] bg-black/[0.05]"
-              />
-            ))}
-          </div>
-        }
-      >
-        <CircleActivity groupId={id} memberId={member?.id ?? null} />
-      </Suspense>
-
-      <Suspense
-        fallback={
           <div
             aria-hidden
             className="h-32 animate-pulse rounded-[14px] bg-black/[0.05]"
@@ -713,6 +698,21 @@ export default async function GroupDetailPage({
           memberId={member?.id ?? null}
           isCompleted={isCompleted}
         />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <div aria-hidden className="flex flex-col gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="h-14 animate-pulse rounded-[14px] bg-black/[0.05]"
+              />
+            ))}
+          </div>
+        }
+      >
+        <CircleActivity groupId={id} memberId={member?.id ?? null} />
       </Suspense>
     </div>
   );
