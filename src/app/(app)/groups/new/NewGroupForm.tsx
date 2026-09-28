@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  UserGroupIcon,
-  ArrowRight01Icon,
-  CheckmarkBadge01Icon,
-} from "@hugeicons/core-free-icons";
+import { UserGroupIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { createClient } from "@/lib/supabase/client";
 import Dropdown from "@/components/Dropdown";
 import {
@@ -49,9 +46,10 @@ function guessCurrency(): Currency {
   }
 }
 
-type Status = "idle" | "needs-login" | "created";
+type Status = "idle" | "needs-login";
 
 export default function NewGroupForm() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -62,7 +60,6 @@ export default function NewGroupForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const homeCurrency = useRef<Currency | null>(null);
 
   useEffect(() => {
     createClient()
@@ -73,7 +70,6 @@ export default function NewGroupForm() {
           | undefined;
         const mapped = stored ? COUNTRY_TO_CURRENCY[stored] : undefined;
         if (mapped) {
-          homeCurrency.current = mapped;
           setCurrency(mapped);
         }
       });
@@ -131,7 +127,7 @@ export default function NewGroupForm() {
         );
         return;
       }
-      setStatus("created");
+      router.push("/groups");
     } catch {
       setSubmitError(
         "Could not reach the database. Check your connection and try again.",
@@ -139,57 +135,6 @@ export default function NewGroupForm() {
     } finally {
       setSaving(false);
     }
-  }
-
-  function reset() {
-    setName("");
-    setDescription("");
-    setAmount("");
-    setCurrency(homeCurrency.current ?? guessCurrency());
-    setFrequency("weekly");
-    setThreshold(60);
-    setErrors({});
-    setSubmitError(null);
-    setStatus("idle");
-  }
-
-  if (status === "created") {
-    return (
-      <main className="flex flex-1 flex-col items-center px-8 py-12 text-center">
-        <span className="flex h-14 w-14 items-center justify-center rounded-[14px] bg-primary/10">
-          <HugeiconsIcon icon={CheckmarkBadge01Icon} size={28} className="text-primary" />
-        </span>
-        <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight text-text-primary">
-          {name.trim()} is live
-        </h1>
-        <p className="mt-2 max-w-xs font-display text-sm font-semibold tabular-nums text-text-secondary">
-          {symbol}
-          {parseAmount(amount).toLocaleString()} {currency} · {frequency}
-        </p>
-        <p className="mt-1 max-w-xs text-sm leading-6 text-text-secondary">
-          {threshold}% vote to admit · you are member 1.
-        </p>
-        <p className="mt-1 max-w-xs text-sm leading-6 text-text-secondary">
-          Open your circle from View circles and tap Invite to share the
-          join link.
-        </p>
-        <div className="mt-5 flex gap-3">
-          <Link
-            href="/groups"
-            className="rounded-[10px] border-[0.5px] border-border bg-white px-6 py-[13px] text-sm font-semibold text-text-primary"
-          >
-            View circles
-          </Link>
-          <button
-            type="button"
-            onClick={reset}
-            className="rounded-[10px] bg-primary px-6 py-[13px] text-sm font-semibold text-white hover:bg-primary-hover"
-          >
-            Create another
-          </button>
-        </div>
-      </main>
-    );
   }
 
   const labelClass = "text-sm font-medium text-text-primary";

@@ -187,41 +187,36 @@ function Highlight<T extends React.ElementType = 'div'>({
     });
   };
 
-  const safeSetBoundsRef = React.useRef<
-    ((bounds: DOMRect) => void) | undefined
-  >(undefined);
+  // The active item's mount effect measures before the parent's effects run.
+  // Keep the setter available during that first pass (including in production,
+  // where Strict Mode does not replay mount effects).
+  const safeSetBounds = React.useCallback((bounds: DOMRect) => {
+    if (!localRef.current) return;
 
-  React.useEffect(() => {
-    safeSetBoundsRef.current = (bounds: DOMRect) => {
-      if (!localRef.current) return;
-
-      const containerRect = localRef.current.getBoundingClientRect();
-      const offset = boundsOffsetRef.current;
-      const newBounds: Bounds = {
-        top: bounds.top - containerRect.top + offset.top,
-        left: bounds.left - containerRect.left + offset.left,
-        width: bounds.width + offset.width,
-        height: bounds.height + offset.height,
-      };
-
-      setBoundsState((prev) => {
-        if (
-          prev &&
-          prev.top === newBounds.top &&
-          prev.left === newBounds.left &&
-          prev.width === newBounds.width &&
-          prev.height === newBounds.height
-        ) {
-          return prev;
-        }
-        return newBounds;
-      });
+    const container = localRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const offset = boundsOffsetRef.current;
+    // The backdrop is positioned in the scroll container's content coordinates.
+    const newBounds: Bounds = {
+      top: bounds.top - containerRect.top + container.scrollTop + offset.top,
+      left: bounds.left - containerRect.left + container.scrollLeft + offset.left,
+      width: bounds.width + offset.width,
+      height: bounds.height + offset.height,
     };
-  });
 
-  const safeSetBounds = (bounds: DOMRect) => {
-    safeSetBoundsRef.current?.(bounds);
-  };
+    setBoundsState((prev) => {
+      if (
+        prev &&
+        prev.top === newBounds.top &&
+        prev.left === newBounds.left &&
+        prev.width === newBounds.width &&
+        prev.height === newBounds.height
+      ) {
+        return prev;
+      }
+      return newBounds;
+    });
+  }, []);
 
   const clearBounds = React.useCallback(() => {
     setBoundsState((prev) => (prev === null ? prev : null));
@@ -244,13 +239,12 @@ function Highlight<T extends React.ElementType = 'div'>({
       const activeEl = container.querySelector<HTMLElement>(
         `[data-value="${activeValue}"][data-highlight="true"]`,
       );
-      if (activeEl)
-        safeSetBoundsRef.current?.(activeEl.getBoundingClientRect());
+      if (activeEl) safeSetBounds(activeEl.getBoundingClientRect());
     };
 
     container.addEventListener('scroll', onScroll, { passive: true });
     return () => container.removeEventListener('scroll', onScroll);
-  }, [mode, activeValue]);
+  }, [mode, activeValue, safeSetBounds]);
 
   const render = (children: React.ReactNode) => {
     if (mode === 'parent') {

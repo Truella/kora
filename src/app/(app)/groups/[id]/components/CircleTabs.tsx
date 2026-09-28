@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -55,7 +56,20 @@ export default function CircleTabs({
   groupId: string;
   active: TabValue;
 }) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  // Narrow viewports scroll the pill (overflow-x-auto, hidden scrollbar),
+  // which can leave the active tab out of frame — e.g. Members on the
+  // members page reads as "no active tab". Bring it into view on mount /
+  // route change. block:"nearest" so the page itself never jumps.
+  useEffect(() => {
+    wrapRef.current
+      ?.querySelector('[data-active="true"]')
+      ?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [active]);
+
   return (
+    <div ref={wrapRef} className="min-w-0 max-w-full">
     <TabsRoot
       value={active}
       className="w-auto min-w-0 max-w-full"
@@ -84,6 +98,7 @@ export default function CircleTabs({
                 render={
                   <Link
                     href={tab.href(groupId)}
+                    aria-current={tab.value === active ? "page" : undefined}
                     className="flex items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] font-medium whitespace-nowrap text-text-secondary transition-colors data-[active=true]:text-white hover:text-text-primary data-[active=true]:hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   />
                 }
@@ -96,5 +111,6 @@ export default function CircleTabs({
         </TabsListPrimitive>
       </TabsHighlight>
     </TabsRoot>
+    </div>
   );
 }
