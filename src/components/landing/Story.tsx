@@ -14,8 +14,8 @@ export default function Story({ createHref }: { createHref: string }) {
       <WhyKora />
       <HowItWorks />
       <TrustSection />
-      <NamesStrip />
       <Faq />
+      <NamesStrip />
       <CtaSection createHref={createHref} />
       <SiteFooter createHref={createHref} />
     </>

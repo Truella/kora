@@ -62,7 +62,7 @@ export default function SiteFooter({ createHref }: { createHref: string }) {
         </div>
         <div className="mt-10 flex flex-col gap-2 border-t border-white/10 pt-6 font-mono text-xs text-white/50 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Kora</p>
-          <p>Invite-only savings circles · Nigeria · Kenya · Uganda · Ghana</p>
+          <p>Nigeria · Kenya · Uganda · Ghana</p>
         </div>
       </div>
     </footer>
