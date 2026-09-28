@@ -16,7 +16,6 @@ const PUBLIC_PATHS = [
   "/offline",
   "/auth/callback",
   "/api/ussd",
-  "/demo-voting", // demo-only preview, remove before shipping
 ];
 
 export async function proxy(request: NextRequest) {
