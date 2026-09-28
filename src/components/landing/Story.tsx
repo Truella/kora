@@ -172,8 +172,11 @@ export default function Story({ createHref }: { createHref: string }) {
                   />
                 </span>
                 <p className="text-sm leading-7 text-text-secondary">
-                  Running a savings circle means keeping track of
-                  contributions, managing the payout order, and making sure
+                  <span className="font-display font-semibold text-text-primary">
+                    Running a savings circle means keeping track of
+                    contributions.{" "}
+                  </span>
+                  Managing the payout order, and making sure
                   everyone&apos;s money reaches the right person at the right
                   time. When all of that depends on one person, a missed
                   payment, unclear record, or misplaced contribution can affect
