@@ -44,6 +44,10 @@ export function friendlyAuthError(
     return "Could not reach the sign-in service. Check your connection and try again.";
   }
 
+  if (msg.includes("signup") || msg.includes("sign up")) {
+    return "New sign-ups are paused at the moment. Try again later.";
+  }
+
   if (
     msg.includes("sms") ||
     msg.includes("phone") ||
@@ -53,10 +57,6 @@ export function friendlyAuthError(
     msg.includes("vonage")
   ) {
     return "We couldn't send the text right now. The line may be down. Try again shortly, or use email instead.";
-  }
-
-  if (msg.includes("signup") || msg.includes("sign up")) {
-    return "New sign-ups are paused at the moment. Try again later.";
   }
 
   if (kind === "send") {
